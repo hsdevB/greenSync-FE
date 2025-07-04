@@ -5,9 +5,9 @@
   margin-bottom: 24px;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 700px) {
   .dashboard-cards-row {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -238,4 +238,16 @@
   .dashboard-main-charts-row {
     grid-template-columns: 1fr;
   }
+}
+
+.dashboard-gauge.large {
+  width: 80px;
+  height: 80px;
+}
+.dashboard-gauge-center.large {
+  font-size: 1.4rem;
+}
+.dashboard-ph-dot.large {
+  width: 20px;
+  height: 20px;
 }
