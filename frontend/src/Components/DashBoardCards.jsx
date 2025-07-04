@@ -1,8 +1,9 @@
 import React from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar
+  BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
+import { Thermometer, Activity, Droplets, Sun, Zap } from "lucide-react";
 import "./DashBoardCards.css";
 
 const waterData = [
@@ -31,66 +32,234 @@ const nutrientHourData = [
   { time: "12:00", value: 19 }, { time: "16:00", value: 15 }, { time: "20:00", value: 13 }
 ];
 
+const growthData = [
+  { value: 8 }, { value: 8 }, { value: 8 }, { value: 8 }, { value: 8 }, { value: 8 }, { value: 8 }, { value: 8 }
+];
+const temperatureData = [
+  { time: "00:00", temp: 15 }, { time: "04:00", temp: 18 }, { time: "08:00", temp: 20 }, { time: "12:00", temp: 22 }, { time: "16:00", temp: 25 }, { time: "20:00", temp: 24 }, { time: "24:00", temp: 20 }
+];
+const environmentData = [
+  { time: "00:00", co2: 360, humidity: 55 }, { time: "04:00", co2: 400, humidity: 60 }, { time: "08:00", co2: 420, humidity: 62 }, { time: "12:00", co2: 380, humidity: 58 }, { time: "16:00", co2: 350, humidity: 53 }, { time: "20:00", co2: 370, humidity: 57 }, { time: "24:00", co2: 360, humidity: 55 }
+];
+const humidityPieData = [
+  { value: 55, color: "#3b82f6" }, { value: 45, color: "#e5e7eb" }
+];
+const ecValue = 1.8;
+const phValue = 6.2;
+
 const DashBoardCards = () => (
-  <div className="dashboard-graph-grid">
-    {/* 일일 총 급수량 */}
-    <div className="dashboard-graph-card">
-      <div className="dashboard-graph-title">일일 총 급수량</div>
-      <ResponsiveContainer width="100%" height={120}>
-        <LineChart data={waterData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="time" fontSize={10} />
-          <YAxis fontSize={10} />
-          <Tooltip />
-          <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-    {/* 일일 양액 급여량 */}
-    <div className="dashboard-graph-card">
-      <div className="dashboard-graph-title">일일 양액 급여량</div>
-      <ResponsiveContainer width="100%" height={120}>
-        <BarChart data={nutrientDayData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="day" fontSize={10} />
-          <YAxis fontSize={10} />
-          <Tooltip />
-          <Bar dataKey="value" fill="#8b5cf6" />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-    {/* 일일 온/습도 모니터링 */}
-    <div className="dashboard-graph-card">
-      <div className="dashboard-graph-title">일일 온/습도 모니터링</div>
-      <ResponsiveContainer width="100%" height={120}>
-        <LineChart data={tempHumidData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="time" fontSize={10} />
-          <YAxis yAxisId="left" fontSize={10} />
-          <YAxis yAxisId="right" orientation="right" fontSize={10} />
-          <Tooltip />
-          <Line yAxisId="left" type="monotone" dataKey="temp" stroke="#ef4444" strokeWidth={2} />
-          <Line yAxisId="right" type="monotone" dataKey="humid" stroke="#3b82f6" strokeWidth={2} />
-        </LineChart>
-      </ResponsiveContainer>
-      <div className="dashboard-graph-desc">
-        평균 온도 <span style={{ color: "#ef4444" }}>23.8°C</span> / 평균 습도 <span style={{ color: "#3b82f6" }}>60.3%</span>
+  <div>
+    {/* 상단 카드들 */}
+    <div className="dashboard-cards-row">
+      {/* 조도 */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-value orange">904</div>
+        <div className="dashboard-card-unit">lux</div>
+        <div className="dashboard-card-label">조도</div>
+      </div>
+      {/* CO2 */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-value green">479</div>
+        <div className="dashboard-card-unit">ppm</div>
+        <div className="dashboard-card-label">CO2</div>
+      </div>
+      {/* 습윤 */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-value">습윤</div>
+        <div className="dashboard-card-unit">토양 상태</div>
+      </div>
+      {/* 생육 예측 차트 */}
+      <div className="dashboard-card">
+        <div className="dashboard-predict-label">생육 예측: 94.2%</div>
+        <div className="dashboard-predict-bad">● 부실생 예측: 3.1%</div>
+        <div className="dashboard-predict-good">● 성장 속도: 예상보다 8% 빠름</div>
+        <ResponsiveContainer width="100%" height={60}>
+          <BarChart data={growthData}>
+            <Bar dataKey="value" fill="#10b981" />
+          </BarChart>
+        </ResponsiveContainer>
+        <button className="dashboard-predict-btn">새 품종 시뮬레이션</button>
       </div>
     </div>
-    {/* 일일 양액 급여량 (시간별) */}
-    <div className="dashboard-graph-card">
-      <div className="dashboard-graph-title">일일 양액 급여량</div>
-      <ResponsiveContainer width="100%" height={120}>
-        <BarChart data={nutrientHourData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="time" fontSize={10} />
-          <YAxis fontSize={10} />
-          <Tooltip />
-          <Bar dataKey="value" fill="#22c55e" />
-        </BarChart>
-      </ResponsiveContainer>
-      <div className="dashboard-graph-desc">
-        일평균 양액량 <span style={{ color: "#22c55e" }}>88.0L</span> / 평균 EC <span style={{ color: "#3b82f6" }}>1.87</span> / 평균 pH <span style={{ color: "#10b981" }}>6.18</span>
+    {/* 메인 차트 영역 - 2분할로 넓게 */}
+    <div className="dashboard-main-charts-row">
+      {/* 온도 모니터링 */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-section">
+          <Thermometer className="dashboard-card-icon red" />
+          <h3 className="dashboard-card-title">온도 모니터링</h3>
+        </div>
+        <div className="dashboard-card-value red">24.7°C</div>
+        <div className="dashboard-card-status">최적</div>
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={temperatureData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+            <YAxis domain={[10, 30]} axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+            <Tooltip />
+            <Line type="monotone" dataKey="temp" stroke="#ef4444" strokeWidth={2} dot={{ fill: '#ef4444', r: 4 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      {/* CO2, 습도 */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-section">
+          <Activity className="dashboard-card-icon blue" />
+          <h3 className="dashboard-card-title">CO2, 습도</h3>
+        </div>
+        <div className="dashboard-card-value blue">360</div>
+        <div className="dashboard-card-status">ppm 양호</div>
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={environmentData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+            <Tooltip />
+            <Line type="monotone" dataKey="co2" stroke="#3b82f6" strokeWidth={2} />
+            <Line type="monotone" dataKey="humidity" stroke="#f59e0b" strokeWidth={2} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+    {/* 하단 카드들 */}
+    <div className="dashboard-cards-row">
+      {/* 습도 관리 */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-section">
+          <Droplets className="dashboard-card-icon blue" />
+          <h3 className="dashboard-card-title">습도 관리</h3>
+        </div>
+        <div className="dashboard-card-value blue">55%</div>
+        <div className="dashboard-card-status">습도</div>
+        <ResponsiveContainer width="100%" height={120}>
+          <PieChart>
+            <Pie data={humidityPieData} cx="50%" cy="50%" innerRadius={30} outerRadius={50} dataKey="value">
+              {humidityPieData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="dashboard-card-desc">목표 습도 60-70%</div>
+      </div>
+      {/* 광량 */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-section">
+          <Sun className="dashboard-card-icon yellow" />
+          <h3 className="dashboard-card-title">광량</h3>
+        </div>
+        <div className="dashboard-card-status">조도 센서</div>
+        <div className="dashboard-card-value yellow">850</div>
+        <div className="dashboard-card-status">μmol/m²/s</div>
+        <div className="dashboard-card-desc">DLI 18.5 mol/m²/d</div>
+        <div className="dashboard-bar-bg"><div className="dashboard-bar-fill"></div></div>
+      </div>
+      {/* 전기전도도 */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-section">
+          <Zap className="dashboard-card-icon yellow" />
+          <h3 className="dashboard-card-title">전기전도도</h3>
+        </div>
+        <div className="dashboard-card-status">EC 값</div>
+        <div className="dashboard-gauge-wrap">
+          <svg className="dashboard-gauge" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="#e5e7eb" strokeWidth="2" fill="none" />
+            <circle cx="12" cy="12" r="10" stroke="#f59e0b" strokeWidth="2" fill="none" strokeDasharray={`${(ecValue / 3) * 62.83} 62.83`} />
+          </svg>
+          <div className="dashboard-gauge-center">
+            <div className="dashboard-gauge-value yellow">{ecValue}</div>
+            <div className="dashboard-gauge-label">mS/cm</div>
+          </div>
+        </div>
+        <div className="dashboard-gauge-desc">
+          <div>EC 수치</div>
+          <div className="dashboard-gauge-range">적정: 1.2-2.0</div>
+        </div>
+      </div>
+      {/* pH 수치 */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-section">
+          <div className="dashboard-ph-dot"></div>
+          <h3 className="dashboard-card-title">pH 수치</h3>
+        </div>
+        <div className="dashboard-card-status">산도 측정</div>
+        <div className="dashboard-gauge-wrap">
+          <svg className="dashboard-gauge" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="#e5e7eb" strokeWidth="2" fill="none" />
+            <circle cx="12" cy="12" r="10" stroke="#10b981" strokeWidth="2" fill="none" strokeDasharray={`${((phValue - 5) / 3) * 62.83} 62.83`} />
+          </svg>
+          <div className="dashboard-gauge-center">
+            <div className="dashboard-gauge-value green">{phValue}</div>
+            <div className="dashboard-gauge-label">pH</div>
+          </div>
+        </div>
+        <div className="dashboard-gauge-desc">
+          <div>pH 레벨</div>
+          <div className="dashboard-gauge-range">적정: 5.5-7.5</div>
+        </div>
+      </div>
+    </div>
+    {/* 기존 하단 그래프들(일일 총 급수량 등) */}
+    <div className="dashboard-graph-grid">
+      {/* 일일 총 급수량 */}
+      <div className="dashboard-graph-card">
+        <div className="dashboard-graph-title">일일 총 급수량</div>
+        <ResponsiveContainer width="100%" height={120}>
+          <LineChart data={waterData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="time" fontSize={10} />
+            <YAxis fontSize={10} />
+            <Tooltip />
+            <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      {/* 일일 양액 급여량 */}
+      <div className="dashboard-graph-card">
+        <div className="dashboard-graph-title">일일 양액 급여량</div>
+        <ResponsiveContainer width="100%" height={120}>
+          <BarChart data={nutrientDayData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="day" fontSize={10} />
+            <YAxis fontSize={10} />
+            <Tooltip />
+            <Bar dataKey="value" fill="#8b5cf6" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      {/* 일일 온/습도 모니터링 */}
+      <div className="dashboard-graph-card">
+        <div className="dashboard-graph-title">일일 온/습도 모니터링</div>
+        <ResponsiveContainer width="100%" height={120}>
+          <LineChart data={tempHumidData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="time" fontSize={10} />
+            <YAxis yAxisId="left" fontSize={10} />
+            <YAxis yAxisId="right" orientation="right" fontSize={10} />
+            <Tooltip />
+            <Line yAxisId="left" type="monotone" dataKey="temp" stroke="#ef4444" strokeWidth={2} />
+            <Line yAxisId="right" type="monotone" dataKey="humid" stroke="#3b82f6" strokeWidth={2} />
+          </LineChart>
+        </ResponsiveContainer>
+        <div className="dashboard-graph-desc">
+          평균 온도 <span style={{ color: "#ef4444" }}>23.8°C</span> / 평균 습도 <span style={{ color: "#3b82f6" }}>60.3%</span>
+        </div>
+      </div>
+      {/* 일일 양액 급여량 (시간별) */}
+      <div className="dashboard-graph-card">
+        <div className="dashboard-graph-title">일일 양액 급여량</div>
+        <ResponsiveContainer width="100%" height={120}>
+          <BarChart data={nutrientHourData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="time" fontSize={10} />
+            <YAxis fontSize={10} />
+            <Tooltip />
+            <Bar dataKey="value" fill="#22c55e" />
+          </BarChart>
+        </ResponsiveContainer>
+        <div className="dashboard-graph-desc">
+          일평균 양액량 <span style={{ color: "#22c55e" }}>88.0L</span> / 평균 EC <span style={{ color: "#3b82f6" }}>1.87</span> / 평균 pH <span style={{ color: "#10b981" }}>6.18</span>
+        </div>
       </div>
     </div>
   </div>
