@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Unity , useUnityContext } from "react-unity-webgl";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell
@@ -60,6 +61,16 @@ function getCurrentTimeString() {
 }
 
 const DashBoardCards = () => {
+  const { unityProvider,
+    isLoaded, loadingProgression } = useUnityContext({
+    loaderUrl: "Build/Build.loader.js",
+    dataUrl: "Build/Build.data.unityweb",
+    frameworkUrl: "Build/Build.framework.js.unityweb",
+    codeUrl: "Build/Build.wasm.unityweb",
+  });
+  //제공해주는 유니티 로딩부분
+  const loadingPercentage = Math.round(loadingProgression * 100);
+  
   const [currentTime, setCurrentTime] = useState(getCurrentTimeString());
   useEffect(() => {
     const timer = setInterval(() => {
@@ -75,6 +86,20 @@ const DashBoardCards = () => {
         <div className="dashboard-title">대시보드</div>
         <div className="dashboard-realtime">{currentTime}</div>
       </div>
+      {isLoaded === false && (
+         <div className="loading-overlay">
+            <p>Loading... ({loadingPercentage}%)</p> 
+         </div>
+       )}
+       <Unity style={{
+           width: '100%',
+           height: '70%',
+           justifySelf: 'center',
+           alignSelf: 'center',
+          }}
+             unityProvider={unityProvider}
+             devicePixelRatio={devicePixelRatio}
+            />
       {/* 상단 카드 4개 */}
       <div className="dashboard-cards-row">
         {/* 조도 */}
