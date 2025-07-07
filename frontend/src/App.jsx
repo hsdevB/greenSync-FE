@@ -1,15 +1,14 @@
 import './App.css'
 import Sidebar from './Components/Sidebar.jsx';
 import DashBoard from './Components/DashBoard.jsx';
-import DashBoardCards from './Components/DashBoardCards.jsx';
+// import DashBoardCards from './Components/DashBoardCards.jsx';
 
 function App() {
   return (
-    <div className="bg-gray-100" style={{ width: '1920px', height: '1080px', margin: '0 auto' }}>
+    <div className="app-root">
       <Sidebar selected="dashboard" />
-      <main className="flex-1 p-8" style={{ marginLeft: '16rem', width: 'calc(1920px - 16rem)', height: '100%' }}>
+      <main className="dashboard-area">
         <DashBoard />
-        <DashBoardCards />
       </main>
     </div>
   )

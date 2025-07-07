@@ -1,8 +1,12 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+#root, .app-root {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  background: none;
+  height: 100vh;
+  width: 100vw;
+  box-sizing: border-box;
 }
 
 .logo {
@@ -39,4 +43,32 @@
 
 .read-the-docs {
   color: #888;
+}
+
+.dashboard-area {
+  flex: 1;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  overflow-y: auto;
+  flex-direction: column;
+  background: none;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 24px;
+  width: 100%;
+}
+
+.dashboard-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 24px;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
