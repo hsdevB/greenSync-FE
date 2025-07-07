@@ -10,17 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-<<<<<<< HEAD
     "lucide-react": "^0.525.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-unity-webgl": "^9.9.0",
     "recharts": "^3.0.2"
-=======
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-unity-webgl": "^9.9.0"
->>>>>>> dev
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
