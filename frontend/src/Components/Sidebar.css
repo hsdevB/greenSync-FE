@@ -1,0 +1,113 @@
+.sidebar {
+  width: 256px;
+  background: #f3f4f6;
+  border-right: 1px solid #bfdbfe;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 32px 24px 16px 24px;
+}
+
+.sidebar-avatar {
+  width: 64px;
+  height: 64px;
+  background: #e5e7eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.sidebar-avatar-icon {
+  width: 32px;
+  height: 32px;
+  color: #6b7280;
+}
+
+.sidebar-username {
+  font-weight: 600;
+  color: #374151;
+  margin-top: 8px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 0 0 0 8px;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: #374151;
+  cursor: pointer;
+  border-radius: 8px 0 0 8px;
+  margin-bottom: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-menu-btn.selected {
+  background: #fff;
+  color: #2563eb;
+  font-weight: bold;
+  border-left: 4px solid #2563eb;
+}
+
+.sidebar-menu-btn:hover {
+  background: #e0e7ef;
+}
+
+.sidebar-menu-icon {
+  margin-right: 12px;
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 16px 0;
+}
+
+.sidebar-logout {
+  padding: 16px 24px;
+}
+
+.sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: #374151;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 10px 0;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-logout-btn:hover {
+  background: #e0e7ef;
+  color: #ef4444;
+}
