@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { Unity , useUnityContext } from "react-unity-webgl";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -6,6 +6,15 @@ import {
 } from "recharts";
 import { Thermometer, Activity, Droplets, Sun, Zap } from "lucide-react";
 import "./DashBoardCards.css";
+
+class UnityMessage {
+  constructor(name, data) {
+    this.name = name;
+    this.data = data;
+  }
+}
+//Unity의 메시지모델과 동일하게 맞춤
+
 
 const waterData = [
   { time: "0:00", value: 30 }, { time: "2:00", value: 50 }, { time: "4:00", value: 40 },
@@ -61,7 +70,7 @@ function getCurrentTimeString() {
 }
 
 const DashBoardCards = () => {
-  const { unityProvider,
+  const { unityProvider,sendMessage,
     isLoaded, loadingProgression } = useUnityContext({
     loaderUrl: "Build/Build.loader.js",
     dataUrl: "Build/Build.data.unityweb",
@@ -70,6 +79,21 @@ const DashBoardCards = () => {
   });
   //제공해주는 유니티 로딩부분
   const loadingPercentage = Math.round(loadingProgression * 100);
+
+  // Unity로 메시지 보내기 함수
+  const sendToUnity = useCallback((eventName, payload) => {
+    const message = new UnityMessage(eventName, payload);
+    sendMessage("MessageHandler", "ReceiveMessage", JSON.stringify(message));
+  }, [sendMessage]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      sendToUnity("envInfo", {
+        temperature: 24.7,
+        humidity: 55
+      });
+    }
+  }, [isLoaded]);
   
   const [currentTime, setCurrentTime] = useState(getCurrentTimeString());
   useEffect(() => {
@@ -99,7 +123,22 @@ const DashBoardCards = () => {
           }}
              unityProvider={unityProvider}
              devicePixelRatio={devicePixelRatio}
-            />
+      />
+      {/* 임의데이터 테스트 */}
+      <button onClick={() => sendToUnity("startWater", { duration: 3 })}>
+        수동 급수
+      </button>
+      <button onClick={() => sendToUnity("toggleDayNight", { isDay: true })}>
+        낮/밤
+      </button>
+      <button onClick={() => sendToUnity("ledLevel", { level: 3 })}>
+        led레벨
+      </button>
+      <button onClick={() => sendToUnity("fanStatus", { isActive: true })}>
+        팬 가동 
+      </button>
+
+
       {/* 상단 카드 4개 */}
       <div className="dashboard-cards-row">
         {/* 조도 */}
