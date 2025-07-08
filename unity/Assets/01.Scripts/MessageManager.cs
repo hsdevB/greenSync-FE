@@ -49,6 +49,7 @@ public class MessageManager : MonoBehaviour
             case "toggleDayNight":
                 bool isDay = data["isDay"].ToObject<bool>();
                 RenderSettings.skybox = isDay ? daySkybox : nightSkybox;
+                DynamicGI.UpdateEnvironment(); // 라이팅 즉시 반영
                 break;
 
             case "ledLevel":
