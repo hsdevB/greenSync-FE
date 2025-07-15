@@ -3,20 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|c:\\users\\uvc\\desktop\\greensync-fe\\unity\\assets\\01.scripts\\messagemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|solutionrelative:assets\\01.scripts\\messagemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\assets\\01.scripts\\lodsetuptool.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|solutionrelative:assets\\01.scripts\\lodsetuptool.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{33C3DCDC-76CB-1FCD-751B-4E7E18D0E2DF}|Assembly-CSharp-Editor.csproj|c:\\users\\uvc\\desktop\\greensync-fe\\unity\\assets\\editor\\lodsetupeditor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{33C3DCDC-76CB-1FCD-751B-4E7E18D0E2DF}|Assembly-CSharp-Editor.csproj|C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\assets\\editor\\lodsetupeditor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{33C3DCDC-76CB-1FCD-751B-4E7E18D0E2DF}|Assembly-CSharp-Editor.csproj|solutionrelative:assets\\editor\\lodsetupeditor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\assets\\01.scripts\\customlodcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|solutionrelative:assets\\01.scripts\\customlodcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\assets\\01.scripts\\messagemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|solutionrelative:assets\\01.scripts\\messagemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,11 +26,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "CustomLODController.cs",
               "DocumentMoniker": "C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\Assets\\01.Scripts\\CustomLODController.cs",
               "RelativeDocumentMoniker": "Assets\\01.Scripts\\CustomLODController.cs",
@@ -38,12 +38,11 @@
               "RelativeToolTip": "Assets\\01.Scripts\\CustomLODController.cs",
               "ViewState": "AgIAAA0AAAAAAAAAAAAQwBgAAAATAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-14T07:46:27.558Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-14T07:46:27.558Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "LODSetupEditor.cs",
               "DocumentMoniker": "C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\Assets\\Editor\\LODSetupEditor.cs",
               "RelativeDocumentMoniker": "Assets\\Editor\\LODSetupEditor.cs",
@@ -51,12 +50,11 @@
               "RelativeToolTip": "Assets\\Editor\\LODSetupEditor.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAB4AAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-14T05:40:40.884Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-14T05:40:40.884Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "LODSetupTool.cs",
               "DocumentMoniker": "C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\Assets\\01.Scripts\\LODSetupTool.cs",
               "RelativeDocumentMoniker": "Assets\\01.Scripts\\LODSetupTool.cs",
@@ -64,20 +62,20 @@
               "RelativeToolTip": "Assets\\01.Scripts\\LODSetupTool.cs",
               "ViewState": "AgIAAEIAAAAAAAAAAAAYwFUAAAAOAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-14T05:03:40.443Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-14T05:03:40.443Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 0,
               "Title": "MessageManager.cs",
               "DocumentMoniker": "C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\Assets\\01.Scripts\\MessageManager.cs",
               "RelativeDocumentMoniker": "Assets\\01.Scripts\\MessageManager.cs",
               "ToolTip": "C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\Assets\\01.Scripts\\MessageManager.cs",
               "RelativeToolTip": "Assets\\01.Scripts\\MessageManager.cs",
-              "ViewState": "AgIAAAcAAAAAAAAAAAAgwDoAAAAYAAAAAAAAAA==",
+              "ViewState": "AgIAABUAAAAAAAAAAAAkwDYAAABIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-08T05:38:19.93Z"
+              "WhenOpened": "2025-07-08T05:38:19.93Z",
+              "EditorCaption": ""
             }
           ]
         }

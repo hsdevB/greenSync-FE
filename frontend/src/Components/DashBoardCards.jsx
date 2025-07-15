@@ -83,7 +83,7 @@ const DashBoardCards = () => {
   // Unity로 메시지 보내기 함수
   const sendToUnity = useCallback((eventName, payload) => {
     const message = new UnityMessage(eventName, payload);
-    sendMessage("MessageHandler", "ReceiveMessage", JSON.stringify(message));
+    sendMessage("MessageManager", "ReceiveMessage", JSON.stringify(message));
   }, [sendMessage]);
 
   useEffect(() => {
@@ -134,8 +134,11 @@ const DashBoardCards = () => {
       <button onClick={() => sendToUnity("ledLevel", { level: 3 })}>
         led레벨
       </button>
-      <button onClick={() => sendToUnity("fanStatus", { isActive: true })}>
+      <button onClick={() => sendToUnity("fanStatus", { status: true })}>
         팬 가동 
+      </button>
+      <button onClick={() => sendToUnity("fanStatus", { status: false })}>
+        팬 정지
       </button>
 
 
