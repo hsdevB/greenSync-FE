@@ -13,15 +13,19 @@ public class MessageManager : MonoBehaviour
 {
     public GameObject fanObject; // 팬 회전 대상
     public Light[] ledLights;       // 일사량 조절용 라이트
-    public Material waterShaderMaterial; // 급수 흐름 표현용 머티리얼
+    public ParticleSystem[] waterParticle;  // 급수 흐름 표현용 머티리얼
     public GameObject temperatureUI; // 온도 텍스트 UI
     public GameObject humidityUI;    // 습도 텍스트 UI
     public Material daySkybox;
     public Material nightSkybox;
 
     private bool isFanOn = false;
+
     private bool isWatering = false;
     private float wateringTimer = 0f;
+    public float flowDuration = 5f;
+    public float flowSpeed = 1f;
+    private Vector2 startOffset;
 
 
     [DllImport("__Internal")]
@@ -48,6 +52,11 @@ public class MessageManager : MonoBehaviour
                 // 급수 시작
                 isWatering = true;
                 wateringTimer = 5f; // 5초 동안 물 흐름 표현
+
+                isWatering = true;
+                wateringTimer = flowDuration;
+                foreach (ParticleSystem wp in waterParticle)
+                    wp.Play();
                 break;
 
             case "toggleDayNight": // 시간 정보 받아와서 처리하도록 바꾸기
@@ -82,11 +91,8 @@ public class MessageManager : MonoBehaviour
             if (wateringTimer <= 0f)
             {
                 isWatering = false;
-                waterShaderMaterial.SetFloat("_FlowSpeed", 0f);
-            }
-            else
-            {
-                waterShaderMaterial.SetFloat("_FlowSpeed", 1.0f);
+                foreach (ParticleSystem wp in waterParticle)
+                    wp.Stop();
             }
         }
 
