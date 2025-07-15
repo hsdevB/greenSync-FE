@@ -1,0 +1,45 @@
+{
+  "waterData": [
+    { "time": "0:00", "value": 30 }, { "time": "2:00", "value": 50 }, { "time": "4:00", "value": 40 },
+    { "time": "6:00", "value": 60 }, { "time": "8:00", "value": 80 }, { "time": "10:00", "value": 70 },
+    { "time": "12:00", "value": 90 }, { "time": "14:00", "value": 100 }, { "time": "16:00", "value": 110 },
+    { "time": "18:00", "value": 80 }, { "time": "20:00", "value": 60 }, { "time": "22:00", "value": 40 }
+  ],
+  "nutrientDayData": [
+    { "day": "1일", "value": 80 }, { "day": "2일", "value": 100 }, { "day": "3일", "value": 70 },
+    { "day": "4일", "value": 120 }, { "day": "5일", "value": 110 }, { "day": "6일", "value": 90 }, { "day": "7일", "value": 95 }
+  ],
+  "tempHumidData": [
+    { "time": "0:00", "temp": 21, "humid": 60 },
+    { "time": "4:00", "temp": 20, "humid": 62 },
+    { "time": "8:00", "temp": 22, "humid": 58 },
+    { "time": "12:00", "temp": 24, "humid": 55 },
+    { "time": "16:00", "temp": 25, "humid": 53 },
+    { "time": "20:00", "temp": 23, "humid": 61 }
+  ],
+  "nutrientHourData": [
+    { "time": "0:00", "value": 10 }, { "time": "4:00", "value": 20 }, { "time": "8:00", "value": 18 },
+    { "time": "12:00", "value": 19 }, { "time": "16:00", "value": 15 }, { "time": "20:00", "value": 13 }
+  ],
+  "growthData": [
+    { "value": 8 }, { "value": 8 }, { "value": 8 }, { "value": 8 }, { "value": 8 }, { "value": 8 }, { "value": 8 }, { "value": 8 }
+  ],
+  "temperatureData": [
+    { "time": "00:00", "temp": 15 }, { "time": "04:00", "temp": 18 }, { "time": "08:00", "temp": 20 }, { "time": "12:00", "temp": 22 }, { "time": "16:00", "temp": 25 }, { "time": "20:00", "temp": 24 }, { "time": "24:00", "temp": 20 }
+  ],
+  "humidityPieData": [
+    { "value": 55, "color": "#3b82f6" }, { "value": 45, "color": "#e5e7eb" }
+  ],
+  "ecValue": 1.8,
+  "phValue": 6.2,
+  "weather": {
+    "location": "서울특별시 구로구",
+    "outsideTemp": 21.0,
+    "tempDiff": -1.0,
+    "humidity": 22,
+    "sunrise": "05:17",
+    "sunset": "19:42",
+    "windSpeed": 5.7
+  }
+} 
+

@@ -1,16 +1,40 @@
-import './App.css'
-import Sidebar from './Components/Sidebar.jsx';
-import DashBoard from './Components/DashBoard.jsx';
-// import DashBoardCards from './Components/DashBoardCards.jsx';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Sidebar from './Components/Sidebar';
+import Dashboard from './Components/DashBoard';
+import MainPage from './Page/MainPage';
+import LoginPage from './Page/LoginPage';
+import SignupPage from './Page/SignupPage';
+import './App.css';
+
+function DashboardLayout() {
+  // 기존 대시보드 레이아웃을 별도 컴포넌트로 분리
+  const [selectedMenu, setSelectedMenu] = React.useState('dashboard');
+  const handleLogout = () => { /* 로그아웃 처리 */ };
+  return (
+    <div className="main-layout">
+      <Sidebar
+        selected={selectedMenu}
+        onSelect={setSelectedMenu}
+        onLogout={handleLogout}
+      />
+      <main className="dashboard-area">
+          <Dashboard selectedMenu={selectedMenu} />
+      </main>
+    </div>
+  );
+}
 
 function App() {
   return (
-    <div className="app-root">
-      <Sidebar selected="dashboard" />
-      <main className="dashboard-area">
-        <DashBoard />
-      </main>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<MainPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/dashboard" element={<DashboardLayout />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
