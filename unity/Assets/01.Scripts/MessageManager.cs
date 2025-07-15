@@ -12,30 +12,38 @@ public class UnityDataMessage
 public class MessageManager : MonoBehaviour
 {
     public GameObject fanObject; // 팬 회전 대상
-    public Light ledLight;       // 일사량 조절용 라이트
-    public Material waterShaderMaterial; // 급수 흐름 표현용 머티리얼
+    public Light[] ledLights;       // 일사량 조절용 라이트
+    public ParticleSystem[] waterParticle;  // 급수 흐름 표현용 머티리얼
     public GameObject temperatureUI; // 온도 텍스트 UI
     public GameObject humidityUI;    // 습도 텍스트 UI
     public Material daySkybox;
     public Material nightSkybox;
 
+    private bool isFanOn = false;
+
     private bool isWatering = false;
     private float wateringTimer = 0f;
+    public float flowDuration = 5f;
+    public float flowSpeed = 1f;
+    private Vector2 startOffset;
+
 
     [DllImport("__Internal")]
     private static extern void SendMessageToReact(string msg);
 
     public void ReceiveMessage(string json)
     {
-        UnityDataMessage message = JsonConvert.DeserializeObject<UnityDataMessage>(json);
-        JObject data = message.data;
+        UnityDataMessage jsonData = JsonConvert.DeserializeObject<UnityDataMessage>(json);
+        JObject jobj = jsonData.data;
 
-        switch (message.name)
+        Debug.Log($"Event name: {jsonData.name}, Data: {jobj}");
+
+        switch (jsonData.name)
         {
             case "envInfo":
                 // 온도/습도 표시
-                string temp = data["temperature"].ToString();
-                string humid = data["humidity"].ToString();
+                string temp = jobj["temperature"].ToString();
+                string humid = jobj["humidity"].ToString();
                 temperatureUI.GetComponent<TextMesh>().text = $"온도: {temp}°C";
                 humidityUI.GetComponent<TextMesh>().text = $"습도: {humid}%";
                 break;
@@ -44,20 +52,28 @@ public class MessageManager : MonoBehaviour
                 // 급수 시작
                 isWatering = true;
                 wateringTimer = 5f; // 5초 동안 물 흐름 표현
+
+                isWatering = true;
+                wateringTimer = flowDuration;
+                foreach (ParticleSystem wp in waterParticle)
+                    wp.Play();
                 break;
 
-            case "toggleDayNight":
-                bool isDay = data["isDay"].ToObject<bool>();
+            case "toggleDayNight": // 시간 정보 받아와서 처리하도록 바꾸기
+                bool isDay = jobj["isDay"].ToObject<bool>();
                 RenderSettings.skybox = isDay ? daySkybox : nightSkybox;
+                DynamicGI.UpdateEnvironment(); // 라이팅 즉시 반영
                 break;
 
             case "ledLevel":
-                int level = data["level"].ToObject<int>();
-                ledLight.intensity = level * 0.5f; // 0 ~ 1.5
+                int level = jobj["level"].ToObject<int>();
+                foreach (Light light in ledLights)
+                    if (light != null)
+                        light.intensity = level * 0.5f; // 0 ~ 1.5
                 break;
 
             case "fanStatus":
-                bool isFanOn = data["status"].ToObject<bool>();
+                isFanOn = jobj["status"].ToObject<bool>();
                 fanObject.SetActive(isFanOn);
                 break;
 
@@ -75,16 +91,13 @@ public class MessageManager : MonoBehaviour
             if (wateringTimer <= 0f)
             {
                 isWatering = false;
-                waterShaderMaterial.SetFloat("_FlowSpeed", 0f);
-            }
-            else
-            {
-                waterShaderMaterial.SetFloat("_FlowSpeed", 1.0f);
+                foreach (ParticleSystem wp in waterParticle)
+                    wp.Stop();
             }
         }
 
         // 팬 회전
-        if (fanObject.activeSelf)
+        if (isFanOn)
         {
             fanObject.transform.Rotate(Vector3.forward * 200 * Time.deltaTime);
         }
