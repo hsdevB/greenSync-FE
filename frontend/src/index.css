@@ -24,10 +24,29 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+  min-width: 0;
   min-height: 100vh;
+  width: 100vw;
+  box-sizing: border-box;
+  overflow-x: hidden; /* 강제 가로 스크롤 방지 */
+}
+
+.main-layout {
+  display: flex;
+  width: 100vw;
+  min-height: 100vh;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.dashboard-area {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 h1 {

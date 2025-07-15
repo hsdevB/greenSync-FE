@@ -1,0 +1,43 @@
+{
+  "response": {
+    "header": {
+      "resultCode": "00",
+      "resultMsg": "NORMAL SERVICE."
+    },
+    "body": {
+      "items": {
+        "item": [
+          {
+            "dateTime": "2024-06-01T14:00:00",
+            "inTp": 25.1,
+            "outTp": 28.3,
+            "inHd": 60,
+            "outHd": 55,
+            "inCo2": 450,
+            "ws": 2.3,
+            "windDirection": "NW",
+            "acSlrdQy": 18.5,
+            "dliValue": 22.1,
+            "dliTarget": 25,
+            "dliChartData": [
+              {"time": "09:00", "value": 2.1},
+              {"time": "12:00", "value": 8.5},
+              {"time": "15:00", "value": 11.5}
+            ],
+            "ec": 2.1,
+            "ph": 6.2,
+            "moistureDeficit": 12,
+            "moistureDeficitPercent": 40,
+            "dewPoint": 17.2,
+            "dewPointData": [
+              {"time": "09:00", "temperature": 20, "dewPoint": 15},
+              {"time": "12:00", "temperature": 25, "dewPoint": 17},
+              {"time": "15:00", "temperature": 28, "dewPoint": 18}
+            ],
+            "frtCnt": 5
+          }
+        ]
+      }
+    }
+  }
+}

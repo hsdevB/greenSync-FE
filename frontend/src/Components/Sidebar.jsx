@@ -2,7 +2,7 @@
 import { User, BarChart3, Settings, Bell, Users } from "lucide-react";
 import "./Sidebar.css";
 
-const Sidebar = ({ selected }) => (
+const Sidebar = ({ selected, onSelect, onLogout }) => (
   <aside className="sidebar">
     {/* 프로필 */}
     <div className="sidebar-profile">
@@ -17,6 +17,7 @@ const Sidebar = ({ selected }) => (
         <li>
           <button
             className={`sidebar-menu-btn${selected === 'dashboard' ? ' selected' : ''}`}
+            onClick={() => onSelect && onSelect('dashboard')}
           >
             <BarChart3 className="sidebar-menu-icon" /> 대시보드
           </button>
@@ -24,6 +25,7 @@ const Sidebar = ({ selected }) => (
         <li>
           <button
             className={`sidebar-menu-btn${selected === 'remote' ? ' selected' : ''}`}
+            onClick={() => onSelect && onSelect('remote')}
           >
             <Settings className="sidebar-menu-icon" /> 원격제어
           </button>
@@ -31,6 +33,7 @@ const Sidebar = ({ selected }) => (
         <li>
           <button
             className={`sidebar-menu-btn${selected === 'alarm' ? ' selected' : ''}`}
+            onClick={() => onSelect && onSelect('alarm')}
           >
             <Bell className="sidebar-menu-icon" /> 알림
           </button>
@@ -40,7 +43,7 @@ const Sidebar = ({ selected }) => (
     <div className="sidebar-divider"></div>
     {/* 로그아웃 */}
     <div className="sidebar-logout">
-      <button className="sidebar-logout-btn">
+      <button className="sidebar-logout-btn" onClick={onLogout}>
         <Users className="sidebar-menu-icon" /> 로그아웃
       </button>
     </div>

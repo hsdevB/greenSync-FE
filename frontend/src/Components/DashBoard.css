@@ -2,6 +2,7 @@
   min-height: 100vh;
   background: #f3f4f6;
   display: flex;
+  font-family: 'Freesentation-9Black', sans-serif !important;
 }
 
 .dashboard-sidebar {
@@ -68,12 +69,12 @@
 .dashboard-main {
   flex: 1;
   min-width: 0;
-  padding: 0;
-  margin: 0;
-  background: none;
-  overflow-y: auto;
+  padding: 0px 0px 0px 256px;
+  margin-top: -22px;
+  background: transparent;
   display: flex;
   flex-direction: column;
+  /* overflow-y: auto; */
 }
 
 .dashboard-header {
@@ -84,7 +85,7 @@
 }
 
 .dashboard-title {
-  font-size: 2rem;
+  font-size: 1rem;
   font-weight: bold;
   color: #1f2937;
 }
@@ -121,6 +122,8 @@
   justify-content: flex-start;
   min-height: 120px;
   position: relative;
+  align-items: center;
+  text-align: center;
 }
 
 .dashboard-card-value {
