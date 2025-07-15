@@ -12,7 +12,7 @@ public class UnityDataMessage
 public class MessageManager : MonoBehaviour
 {
     public GameObject fanObject; // 팬 회전 대상
-    public Light ledLight;       // 일사량 조절용 라이트
+    public Light[] ledLights;       // 일사량 조절용 라이트
     public Material waterShaderMaterial; // 급수 흐름 표현용 머티리얼
     public GameObject temperatureUI; // 온도 텍스트 UI
     public GameObject humidityUI;    // 습도 텍스트 UI
@@ -54,7 +54,9 @@ public class MessageManager : MonoBehaviour
 
             case "ledLevel":
                 int level = data["level"].ToObject<int>();
-                ledLight.intensity = level * 0.5f; // 0 ~ 1.5
+                foreach (Light light in ledLights)
+                    if (light != null)
+                        light.intensity = level * 0.5f; // 0 ~ 1.5
                 break;
 
             case "fanStatus":
