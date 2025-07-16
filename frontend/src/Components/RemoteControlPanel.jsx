@@ -1,6 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./RemoteControlPanel.css";
 import { useIotData } from '../api/useIotData.js';
+import useControlStore from '../store/useControlStore.jsx';
+
+class UnityMessage {
+  constructor(name, data) {
+    this.name = name;
+    this.data = data;
+  }
+}
 
 // SVG 아이콘 직접 삽입 (또는 public 폴더에 이미지 파일로 넣어도 됨)
 const RefreshIcon = () => (
@@ -9,20 +17,28 @@ const RefreshIcon = () => (
   </svg>
 );
 
-export default function RemoteControlPanel() {
+export default function RemoteControlPanel({unityContext}) {
   const iotData = useIotData();
+  const { sendMessage } = unityContext;
+
+  const sendToUnity = useCallback((eventName, payload) => {
+    const message = new UnityMessage(eventName, payload);
+    sendMessage("MessageManager", "ReceiveMessage", JSON.stringify(message));
+  }, [sendMessage]);
+
+  // 전역 store 업데이트 및 저장
+  const {
+    water, fan, ledLevel, temp, humid,
+    setWater, setFan, setLedLevel, setTemp, setHumid,
+    persistToLocal
+  } = useControlStore();
+  
 
   // 기기 제어 상태
   const [controls, setControls] = useState({
     autoMode: false,
-    manualMode: false,
+    manualMode: true,
   });
-
-  // 제어판 카드 상태
-  const [water, setWater] = useState(false); // on/off만 관리
-  const [fan, setFan] = useState(false);
-  const [led, setLed] = useState({ on: true });
-  const [temp, setTemp] = useState(22);
 
   // 새로고침 비활성화 상태 및 타이머
   const [refreshDisabled, setRefreshDisabled] = useState(false);
@@ -71,36 +87,66 @@ export default function RemoteControlPanel() {
 
   // 온도 제어 ▲▼
   const handleTempChange = (delta) => {
-    setTemp(prev => {
-      const newValue = Math.max(10, Math.min(40, prev + delta));
-      // 센서로 newValue 전달 (sendToSensor('temp', newValue))
-      return newValue;
-    });
+    const newValue = Math.max(10, Math.min(40, temp + delta));
+    setTemp(newValue);
+    // 센서로는 온도 조절 할 때마다 led 꺼졌다 켜졌다 전달해야 함.
+    sendToUnity("envInfo", { value: newValue });
+    persistToLocal();
   };
+
+  // 습도 제어 ▲▼
+  const handleHumidChange = (delta) => {
+    const newValue = Math.max(30, Math.min(90, humid + delta));
+    setHumid(newValue);
+    // 센서로는 습도도 조절 할 때마다 led 꺼졌다 켜졌다 전달해야 함.
+    sendToUnity("humidControl", { value: newValue });
+    persistToLocal();
+  };
+  
 
   // 관개 시스템 토글
   const handleWaterToggle = () => {
-    setWater(prev => {
-      // 센서로 on/off 전달 (sendToSensor('water', !prev))
-      return !prev;
-    });
+    // 센서로 on/off 전달 (sendToSensor('water', !prev))
+    const newState = !water;
+    setWater(newState);
+    sendToUnity("startWater", { status: newState });
+    persistToLocal();
   };
 
   // 환기 시스템 토글
   const handleFanToggle = () => {
-    setFan(prev => {
-      // 센서로 on/off 전달 (sendToSensor('fan', !prev))
-      return !prev;
-    });
+    // 센서로 on/off 전달 (sendToSensor('fan', !prev))
+    const newState = !fan;
+    setFan(newState);
+    sendToUnity("fanStatus", { status: newState });
+    persistToLocal();
   };
 
   // LED 조명
-  const handleLedToggle = () => {
-    setLed(prev => {
-      // 센서로 on/off 전달 (sendToSensor('led', !prev.on))
-      return { on: !prev.on };
+  const handleLedToggle = (e) => {
+    // 센서로는 밝기기 조절 할 때마다 led 꺼졌다 켜졌다 전달해야 함.
+    const level = parseInt(e.target.value);
+    setLedLevel(level);
+    sendToUnity("ledLevel", { level });
+    persistToLocal();
+  };
+
+  const handleAutoModeToggle = () => {
+    setControls(prev => {
+      const newAuto = !prev.autoMode;
+      const newManual = !newAuto;
+      return { autoMode: newAuto, manualMode: newManual };
     });
   };
+
+  const handleManualModeToggle = () => {
+    setControls(prev => {
+      const newManual = !prev.manualMode;
+      return { autoMode: !newManual, manualMode: newManual };
+    });
+  };
+
+  const controlDisabled = controls.autoMode;
 
   return (
     <div className="remote-panel-root">
@@ -156,14 +202,14 @@ export default function RemoteControlPanel() {
           <div className="section-title">공조 설비 기기 - 원격제어</div>
           <div className="control-row">
             <span>자동모드</span>
-            <button onClick={() => setControls(prev => ({ ...prev, autoMode: !prev.autoMode }))}>
+            <button onClick={handleAutoModeToggle}>
               {controls.autoMode ? "ON" : "OFF"}
             </button>
           </div>
           <div className="control-row">
             <span>수동모드</span>
             <button 
-              onClick={() => setControls(prev => ({ ...prev, manualMode: !prev.manualMode }))}
+              onClick={handleManualModeToggle}
               disabled={controls.autoMode} // 자동모드가 ON이면 비활성화
             >
               {controls.manualMode ? "ON" : "OFF"}
@@ -185,7 +231,7 @@ export default function RemoteControlPanel() {
             </div>
             <div className="control-card-body">
               <label className="switch">
-                <input type="checkbox" checked={water} onChange={handleWaterToggle} />
+                <input type="checkbox" checked={water} onChange={handleWaterToggle} disabled={controlDisabled} />
                 <span className="slider"></span>
               </label>
               <div className="control-card-desc">자동 물 공급</div>
@@ -199,7 +245,7 @@ export default function RemoteControlPanel() {
             </div>
             <div className="control-card-body">
               <label className="switch">
-                <input type="checkbox" checked={fan} onChange={handleFanToggle} />
+                <input type="checkbox" checked={fan} onChange={handleFanToggle} disabled={controlDisabled} />
                 <span className="slider"></span>
               </label>
               <div className="control-card-desc">자동 환기</div>
@@ -212,26 +258,39 @@ export default function RemoteControlPanel() {
               <span className="control-card-title" style={{ color: "#ffd600" }}>LED 조명</span>
             </div>
             <div className="control-card-body">
-              <label className="switch">
-                <input type="checkbox" checked={led.on} onChange={handleLedToggle} />
-                <span className="slider"></span>
-              </label>
-              <div className="control-card-desc">LED 조명 제어</div>
+              <input
+                type="range"
+                min={0}
+                max={3}
+                value={ledLevel}
+                onChange={handleLedToggle}
+                disabled={controlDisabled}
+                className="slider-range"
+                />
+              <div className="control-card-desc">LED 밝기 제어({ledLevel})</div>
             </div>
           </div>
           {/* 온도 제어 */}
           <div className="control-card">
             <div className="control-card-header">
-              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️</span>
-              <span className="control-card-title" style={{ color: "#e57373" }}>온도 제어</span>
+              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️💧</span>
+              <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어</span>
             </div>
             <div className="control-card-body">
               <div className="temp-control-row">
-                <button className="temp-btn" onClick={() => handleTempChange(-1)}>-</button>
+                <button className="temp-btn" onClick={() => handleTempChange(-1)} disabled={controlDisabled}>-</button>
                 <span className="temp-value">{temp}℃</span>
-                <button className="temp-btn" onClick={() => handleTempChange(1)}>+</button>
+                <button className="temp-btn" onClick={() => handleTempChange(1)} disabled={controlDisabled}>+</button>
               </div>
               <div className="control-card-desc">난방 시스템</div>
+
+              {/* 습도 제어 */}
+              <div className="temp-control-row" style={{ marginTop: "12px" }}>
+                <button className="temp-btn" onClick={() => handleHumidChange(-1)} disabled={controlDisabled}>-</button>
+                <span className="temp-value">{humid}%</span>
+                <button className="temp-btn" onClick={() => handleHumidChange(1)} disabled={controlDisabled}>+</button>
+              </div>
+              <div className="control-card-desc">가습 시스템</div>
             </div>
           </div>
         </div>
