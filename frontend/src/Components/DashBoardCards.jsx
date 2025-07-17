@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Unity, useUnityContext } from "react-unity-webgl";
+import React, { useState, useEffect, useCallback } from "react";
+import { Unity } from "react-unity-webgl";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
@@ -9,8 +9,13 @@ import DashBoardData from './DashBoardData.json';
 import OpenWeather from "./OpenWheater.jsx";
 import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
-
-
+import useControlStore from '../store/useControlStore.jsx';
+class UnityMessage {
+  constructor(name, data) {
+    this.name = name;
+    this.data = data;
+  }
+}
 
 function getCurrentTimeString() {
   const now = new Date();
@@ -27,13 +32,8 @@ function getCurrentTimeString() {
   return `${year}년 ${month}월 ${date}일 ${days[day]}요일 ${ampm} ${hour}:${min}`;
 }
 
-const DashBoardCards = () => {
-  const { unityProvider, isLoaded, loadingProgression } = useUnityContext({
-    loaderUrl: "Build/Build.loader.js",
-    dataUrl: "Build/Build.data.unityweb",
-    frameworkUrl: "Build/Build.framework.js.unityweb",
-    codeUrl: "Build/Build.wasm.unityweb",
-  });
+const DashBoardCards = ({ unityContext }) => {
+  const { unityProvider, isLoaded, loadingProgression, sendMessage } = unityContext;
   const loadingPercentage = Math.round(loadingProgression * 100); // 로딩 퍼센트
 
 <div style={{ width: '100%', minHeight: '400px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', position: 'relative', marginTop: '32px' }}>
@@ -72,6 +72,31 @@ const DashBoardCards = () => {
   const [nutrient, setNutrient] = useState('--');
   const [elcDT, setElcDT] = useState('--');
 
+
+  // unity 초기화할 때 보내줄 제어값
+  const sendToUnity = useCallback((eventName, payload) => {
+    const message = new UnityMessage(eventName, payload);
+    sendMessage("MessageManager", "ReceiveMessage", JSON.stringify(message));
+  }, [sendMessage]);
+
+  const {
+    water, fan, led, temp, humid, restoreFromLocal
+  } = useControlStore();
+
+  useEffect(() => {
+  // 상태 복원 (로컬스토리지에 저장한 상태 있다면)
+  restoreFromLocal();
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      sendToUnity("startWater", { status: water });
+      sendToUnity("fanStatus", { status: fan });
+      sendToUnity("ledLevel", { level: led ? 3 : 0 });
+      sendToUnity("tempControl", { value: temp });
+      sendToUnity("humidControl", { value: humid });
+    }
+  }, [isLoaded]);
 
   useEffect(() => {
     // 새로고침 상태 복원
