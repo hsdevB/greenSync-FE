@@ -60,11 +60,18 @@ const DashBoardCards = ({ unityContext }) => {
   </div>
 </div>
 
+  // 상태 관리 초기화
   const [currentTime, setCurrentTime] = useState(getCurrentTimeString()); // 현재 시간
   const [refreshDisabled, setRefreshDisabled] = useState(false); // 새로고침 비활성화 상태
   const [refreshTimer, setRefreshTimer] = useState(0); // 새로고침 타이머
   const iotData = useIotData(); // 온실 내 IoT 데이터
-  const [indoorTemp, setIndoorTemp] = useState('--');
+  const [indoorTemp, setIndoorTemp] = useState('--'); 
+  const [indoorHumi, setIndoorHumi] = useState('--');
+  const [phValue, setPhValue] = useState('--');
+  const [carbonDioxide, setCarbonDioxide] = useState('--');
+  const [nutrient, setNutrient] = useState('--');
+  const [elcDT, setElcDT] = useState('--');
+
 
   // unity 초기화할 때 보내줄 제어값
   const sendToUnity = useCallback((eventName, payload) => {
@@ -146,13 +153,16 @@ const DashBoardCards = ({ unityContext }) => {
   // 실내온도 데이터 가져오기
   useEffect(() => {
     console.log('fetchIndoorTemp called');
-    const fetchIndoorTemp = async () => {
+    const fetchIndoorTemp = async () => { // 화살표 함수 사용 
       try {
         // 프록시를 사용하지 않고 직접 주소로 요청
-        const res = await axios.get('/sensor/temperature/1');
+        const id = 1;
+        const res = await axios.get(`/sensor/temperature/${id}`);// 1인 수정 해야함 변수 추가 해야함
         console.log(res);
+        
         // 데이터가 잘 받아오는지 확인
-        console.log('indoorTemp data:', res.data);
+        console.log('indoorTemp data:', res.data); // 데이터 확인
+        // alert(JSON.stringify(res.data));
         if (res.data && typeof res.data === 'number') {
           setIndoorTemp(res.data);
         } else if (res.data && res.data.temperature) {
@@ -167,6 +177,119 @@ const DashBoardCards = ({ unityContext }) => {
     };
     fetchIndoorTemp();
   }, []);
+
+//실내습도 데이터 가져오기
+useEffect(() => {
+  console.log('fetchIndoorHumi called');
+  const fetchIndoorHumi = async () => {
+    try {
+      const id = 1;
+      const res = await axios.get(`/sensor/humidity/${id}`);
+      console.log(res);
+      console.log('indoorHumi data:', res.data);
+      alert(JSON.stringify(res.data));
+      // API 응답이 배열이라면, 가장 마지막(최신) 값을 사용해야 함
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        setIndoorHumi(res.data[0].humidity); // 또는 최신값 기준으로 정렬해서 사용
+      } else if (res.data && typeof res.data === 'number') {
+        setIndoorHumi(res.data);
+      } else if (res.data && res.data.humidity) {
+        setIndoorHumi(res.data.humidity);
+      } else {
+        setIndoorHumi('--');
+      }
+    } catch (e) {
+      setIndoorHumi('--');
+      console.error(e);
+    }
+  };
+  fetchIndoorHumi();
+}, []);
+
+// 산도(phLevel)와 전기전도도(elcDT) 한 번에 가져오기
+useEffect(() => {
+  const fetchNutrient = async () => {
+    try {
+      const id = 1;
+      const res = await axios.get(`/sensor/nutrient/${id}`);
+      console.log(res);
+      console.log('fetchNutrient data:', res.data);
+      alert(JSON.stringify(res.data));
+      let ph = '--';
+      let ec = '--';
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        if (res.data[0].phLevel !== undefined) ph = res.data[0].phLevel;
+        if (res.data[0].elcDT !== undefined) ec = res.data[0].elcDT;
+      } else if (res.data) {
+        if (res.data.phLevel !== undefined) ph = res.data.phLevel;
+        if (res.data.elcDT !== undefined) ec = res.data.elcDT;
+      }
+      setPhValue(ph);
+      setElcDT(ec);
+    } catch {
+      setPhValue('--');
+      setElcDT('--');
+    }
+  };
+  fetchNutrient();
+}, []);
+
+//이산화탄소 데이터 가져오기
+useEffect(() => {
+  console.log('fetchCarbonDioxide called');
+  const fetchCarbonDioxide = async () => {
+    try {
+      const id = 1;
+      const res = await axios.get(`/sensor/CarbonDioxide/${id}`);
+      console.log(res);
+      console.log('CarbonDioxide data:', res.data);
+      alert(JSON.stringify(res.data));
+
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        setCarbonDioxide(res.data[0].co2); // co2로 수정
+      } else if (res.data && typeof res.data === 'number') {
+        setCarbonDioxide(res.data);
+      } else if (res.data && res.data.co2) { // co2로 수정
+        setCarbonDioxide(res.data.co2);
+      } else {
+        setCarbonDioxide('--');
+      }
+    } catch (e) {
+      setCarbonDioxide('--');
+      console.error(e);
+    }
+  };
+  fetchCarbonDioxide();
+}, []);
+
+//양액 데이터 가져오기
+useEffect(() => {
+  console.log('fetchNutrient called');
+  const fetchNutrient = async () => {
+    try {
+      const id = 1;
+      const res = await axios.get(`/sensor/nutrient/${id}`);
+      console.log(res);
+      console.log('nutrient data:', res.data);
+      alert(JSON.stringify(res.data));
+      // API 응답이 배열이라면, 가장 마지막(최신) 값을 사용
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        setNutrient(res.data[0].nutrientValue); // 실제 key로 수정
+      } else if (res.data && typeof res.data === 'number') {
+        setNutrient(res.data);
+      } else if (res.data && res.data.nutrientValue) {
+        setNutrient(res.data.nutrientValue);
+      } else {
+        setNutrient('--');
+      }
+    } catch (e) {
+      setNutrient('--');
+      console.error(e);
+    }
+  };
+  fetchNutrient();
+}, []);
+
 
   return (
     <div className="dashboard-cards-container">
@@ -273,6 +396,7 @@ const DashBoardCards = ({ unityContext }) => {
       </div>
       {/* 실내온도, 실내습도, 산도, 전기전도도 카드를 한 줄로 배치 */}
       <div className="dashboard-cards-row">
+       
         {/* 실내온도 */}
         <div className="dashboard-card">
           <h3 className="dashboard-card-title">실내온도</h3>
@@ -282,19 +406,19 @@ const DashBoardCards = ({ unityContext }) => {
         {/* 실내습도 */}
         <div className="dashboard-card">
           <h3 className="dashboard-card-title">실내습도</h3>
-          <div className="dashboard-card-value blue">{iotData ? iotData.inHumi : '--'} %</div>
+          <div className="dashboard-card-value blue">{indoorHumi} %</div>
           <div className="dashboard-card-desc">실시간 측정값</div>
         </div>
         {/* 산도 */}
         <div className="dashboard-card">
           <h3 className="dashboard-card-title">산도(pH)</h3>
-          <div className="dashboard-card-value green">{iotData ? iotData.ph : '--'}</div>
+          <div className="dashboard-card-value green">{phValue}</div>
           <div className="dashboard-card-desc">실시간 측정값</div>
         </div>
         {/* 전기전도도 */}
         <div className="dashboard-card">
           <h3 className="dashboard-card-title">전기전도도(EC)</h3>
-          <div className="dashboard-card-value yellow">{iotData ? iotData.ec : '--'} mS/cm</div>
+          <div className="dashboard-card-value yellow">{elcDT} mS/cm</div>
           <div className="dashboard-card-desc">실시간 측정값</div>
         </div>
       </div>
@@ -346,22 +470,28 @@ const DashBoardCards = ({ unityContext }) => {
       {/* 상단 카드 4개 */}
       <div className="dashboard-cards-row">
         {/* 풍향/풍속 (기상청 API) */}
-        <div className="dashboard-card">
-          <div className="dashboard-card-value orange">{iotData ? iotData.windSpeed : '--'} m/s</div>
-          <div className="dashboard-card-unit">{iotData ? iotData.windDirection : '--'}°</div>
-          <div className="dashboard-card-label">풍향/풍속(기상청)</div>
+        <div className="dashboard-card dashboard-card-center">
+          <h3 className="dashboard-card-title">풍향/풍속(기상청)</h3>
+          <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flex:1, height:'100%'}}>
+            <div className="dashboard-card-value orange" style={{fontSize:'2rem', margin:'16px 0 4px 0', textAlign:'center'}}>{iotData ? iotData.windSpeed : '--'} m/s</div>
+            <div className="dashboard-card-unit" style={{textAlign:'center'}}>{iotData ? iotData.windDirection : '--'}°</div>
+          </div>
         </div>
-        {/* CO2 */}
-        <div className="dashboard-card">
-          <div className="dashboard-card-value green">{iotData ? iotData.inCo2 : '--'}</div>
-          <div className="dashboard-card-unit">ppm</div>
-          <div className="dashboard-card-label">CO2</div>
+        {/* CO2(이산화탄소) */}
+        <div className="dashboard-card dashboard-card-center">
+          <h3 className="dashboard-card-title">이산화탄소</h3>
+          <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flex:1, height:'100%'}}>
+            <div className="dashboard-card-value green" style={{fontSize:'2rem', margin:'16px 0 4px 0', textAlign:'center'}}>{carbonDioxide}</div>
+            <div className="dashboard-card-unit" style={{textAlign:'center'}}>ppm</div>
+          </div>
         </div>
-        {/* 수확량 */}
-        <div className="dashboard-card">
-          <div className="dashboard-card-value">{iotData ? iotData.frtCnt : '--'}</div>
-          <div className="dashboard-card-unit">회</div>
-          <div className="dashboard-card-label">수확량</div>
+        {/* 양액 */}
+        <div className="dashboard-card dashboard-card-center">
+          <h3 className="dashboard-card-title">양액</h3>
+          <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flex:1, height:'100%'}}>
+            <div className="dashboard-card-value blue" style={{fontSize:'2rem', margin:'16px 0 4px 0', textAlign:'center'}}>{nutrient}</div>
+            <div className="dashboard-card-unit" style={{textAlign:'center'}}>L</div>
+          </div>
         </div>
         {/* 생육 예측 차트 (임시) */}
         <div className="dashboard-card">
