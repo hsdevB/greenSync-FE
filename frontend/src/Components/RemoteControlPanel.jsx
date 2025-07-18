@@ -6,7 +6,7 @@ import useControlStore from '../store/useControlStore.jsx';
 class UnityMessage {
   constructor(name, data) {
     this.name = name;
-    this.data = data;
+    this.data = JSON.stringify(data);
   }
 }
 
@@ -23,13 +23,14 @@ export default function RemoteControlPanel({unityContext}) {
 
   const sendToUnity = useCallback((eventName, payload) => {
     const message = new UnityMessage(eventName, payload);
+    console.log("Sending to Unity:", JSON.stringify(message));
     sendMessage("MessageManager", "ReceiveMessage", JSON.stringify(message));
   }, [sendMessage]);
 
   // 전역 store 업데이트 및 저장
   const {
     water, fan, ledLevel, temp, humid,
-    setWater, setFan, setLedLevel, setTemp, setHumid,
+    setWater, setFan, setLed, setTemp, setHumid,
     persistToLocal
   } = useControlStore();
   
@@ -88,37 +89,43 @@ export default function RemoteControlPanel({unityContext}) {
   // 온도 제어 ▲▼
   const handleTempChange = (delta) => {
     const newValue = Math.max(10, Math.min(40, temp + delta));
-    setTemp(newValue);
     // 센서로는 온도 조절 할 때마다 led 꺼졌다 켜졌다 전달해야 함.
-    sendToUnity("envInfo", { value: newValue });
+    sendToUnity("tempControl", { value: newValue });
+    setTemp(newValue);
     persistToLocal();
   };
 
   // 습도 제어 ▲▼
   const handleHumidChange = (delta) => {
     const newValue = Math.max(30, Math.min(90, humid + delta));
-    setHumid(newValue);
     // 센서로는 습도도 조절 할 때마다 led 꺼졌다 켜졌다 전달해야 함.
     sendToUnity("humidControl", { value: newValue });
+    setHumid(newValue);
     persistToLocal();
   };
   
 
-  // 관개 시스템 토글
-  const handleWaterToggle = () => {
+  // 관개 시스템
+  const handleWaterClick = () => {
     // 센서로 on/off 전달 (sendToSensor('water', !prev))
-    const newState = !water;
-    setWater(newState);
-    sendToUnity("startWater", { status: newState });
+    if(water) return; // 이미 급수 중이면 무시
+    sendToUnity("startWater", { status: true });
+    setWater(true);
     persistToLocal();
+
+    // 5초 후 자동 종료
+    setTimeout(() => {
+      setWater(false);
+      persistToLocal();
+    }, 5000);
   };
 
   // 환기 시스템 토글
   const handleFanToggle = () => {
     // 센서로 on/off 전달 (sendToSensor('fan', !prev))
     const newState = !fan;
-    setFan(newState);
     sendToUnity("fanStatus", { status: newState });
+    setFan(newState);
     persistToLocal();
   };
 
@@ -126,8 +133,9 @@ export default function RemoteControlPanel({unityContext}) {
   const handleLedToggle = (e) => {
     // 센서로는 밝기기 조절 할 때마다 led 꺼졌다 켜졌다 전달해야 함.
     const level = parseInt(e.target.value);
-    setLedLevel(level);
+    console.log("LED 밝기 설정:", level);
     sendToUnity("ledLevel", { level });
+    setLed(level);
     persistToLocal();
   };
 
@@ -202,17 +210,22 @@ export default function RemoteControlPanel({unityContext}) {
           <div className="section-title">공조 설비 기기 - 원격제어</div>
           <div className="control-row">
             <span>자동모드</span>
-            <button onClick={handleAutoModeToggle}>
-              {controls.autoMode ? "ON" : "OFF"}
+            <button 
+              onClick={handleAutoModeToggle}
+              disabled={!controls.manualMode} // 수동모드가 꺼져 있으면 자동모드도 못 누르게
+              className={controls.autoMode ? "btn-on" : "btn-off"}
+            >
+              ON
             </button>
           </div>
           <div className="control-row">
             <span>수동모드</span>
             <button 
               onClick={handleManualModeToggle}
-              disabled={controls.autoMode} // 자동모드가 ON이면 비활성화
+              disabled={!controls.autoMode} // 자동모드가 꺼져 있으면 수동모드도 못 누르게게
+              className={controls.manualMode ? "btn-on" : "btn-off"}
             >
-              {controls.manualMode ? "ON" : "OFF"}
+              ON
             </button>
           </div>
         </div>
@@ -230,10 +243,13 @@ export default function RemoteControlPanel({unityContext}) {
               <span className="control-card-title" style={{ color: "#2196f3" }}>관개 시스템</span>
             </div>
             <div className="control-card-body">
-              <label className="switch">
-                <input type="checkbox" checked={water} onChange={handleWaterToggle} disabled={controlDisabled} />
-                <span className="slider"></span>
-              </label>
+              <button 
+                onClick={handleWaterClick}
+                disabled={water || controlDisabled}
+                className={water ? "btn-disabled" : water ? "btn-on" : "btn-off"}
+              >
+                {water ? "급수 중..." : "급수하기"}
+              </button>
               <div className="control-card-desc">자동 물 공급</div>
             </div>
           </div>
@@ -262,12 +278,12 @@ export default function RemoteControlPanel({unityContext}) {
                 type="range"
                 min={0}
                 max={3}
-                value={ledLevel}
+                value={ledLevel ?? 0}
                 onChange={handleLedToggle}
                 disabled={controlDisabled}
                 className="slider-range"
                 />
-              <div className="control-card-desc">LED 밝기 제어({ledLevel})</div>
+              <div className="control-card-desc">LED 밝기 제어({ledLevel ?? 0})</div>
             </div>
           </div>
           {/* 온도 제어 */}

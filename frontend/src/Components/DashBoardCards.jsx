@@ -13,7 +13,7 @@ import useControlStore from '../store/useControlStore.jsx';
 class UnityMessage {
   constructor(name, data) {
     this.name = name;
-    this.data = data;
+    this.data = JSON.stringify(data);
   }
 }
 
@@ -68,12 +68,22 @@ const DashBoardCards = ({ unityContext }) => {
 
   // unity 초기화할 때 보내줄 제어값
   const sendToUnity = useCallback((eventName, payload) => {
-    const message = new UnityMessage(eventName, payload);
-    sendMessage("MessageManager", "ReceiveMessage", JSON.stringify(message));
-  }, [sendMessage]);
+    if (!isLoaded) {
+      console.log("Unity not loaded yet, skipping message:", eventName);
+      return;
+    }
+    
+    try {
+      const message = new UnityMessage(eventName, payload);
+      console.log("Sending to Unity:", JSON.stringify(message));
+      sendMessage("MessageManager", "ReceiveMessage", JSON.stringify(message));
+    } catch (error) {
+      console.error("Error sending message to Unity:", error);
+    }
+  }, [sendMessage, isLoaded]);
 
   const {
-    water, fan, led, temp, humid, restoreFromLocal
+    water, fan, ledLevel, temp, humid, restoreFromLocal
   } = useControlStore();
 
   useEffect(() => {
@@ -83,13 +93,25 @@ const DashBoardCards = ({ unityContext }) => {
 
   useEffect(() => {
     if (isLoaded) {
-      sendToUnity("startWater", { status: water });
-      sendToUnity("fanStatus", { status: fan });
-      sendToUnity("ledLevel", { level: led ? 3 : 0 });
-      sendToUnity("tempControl", { value: temp });
-      sendToUnity("humidControl", { value: humid });
+      // Unity 로드 완료 후 약간의 지연을 두고 메시지 전송
+      setTimeout(() => {
+        try {
+          sendToUnity("startWater", { status: water });
+          sendToUnity("fanStatus", { status: fan });
+          sendToUnity("ledLevel", { level: ledLevel ? 3 : 0 });
+          sendToUnity("tempControl", { value: temp });
+          sendToUnity("humidControl", { value: humid });
+          
+          // 주간/야간 설정
+          const currentHour = new Date().getHours();
+          const isDay = currentHour >= 6 && currentHour < 18;
+          sendToUnity("toggleDayNight", { isDay: isDay });
+        } catch (error) {
+          console.error("Error initializing Unity:", error);
+        }
+      }, 500); // 500ms 지연
     }
-  }, [isLoaded]);
+  }, [isLoaded, sendToUnity, water, fan, ledLevel, temp, humid]);
 
   useEffect(() => {
     // 새로고침 상태 복원
@@ -202,7 +224,7 @@ const DashBoardCards = ({ unityContext }) => {
               transition: 'opacity 0.3s'
             }}
             unityProvider={unityProvider}
-            devicePixelRatio={window.devicePixelRatio}
+            devicePixelRatio={Math.min(window.devicePixelRatio, 2)} // 최대 2배로 제한
           />
         </div>
         {/* 새로고침 버튼 */}

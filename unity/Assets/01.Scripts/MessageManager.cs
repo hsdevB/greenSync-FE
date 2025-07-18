@@ -2,102 +2,330 @@ using UnityEngine;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 
+[System.Serializable]
 public class UnityDataMessage
 {
     public string name;
-    public JObject data;
+    public string data; // JObject 대신 string으로 변경
 }
 
 public class MessageManager : MonoBehaviour
 {
     public GameObject fanObject; // 팬 회전 대상
     public Light[] ledLights;       // 일사량 조절용 라이트
-    public ParticleSystem[] waterParticle;  // 급수 흐름 표현용 머티리얼
+    public ParticleSystem[] waterParticle;  // 급수 흐름 표현용 파티클
     public GameObject temperatureUI; // 온도 텍스트 UI
     public GameObject humidityUI;    // 습도 텍스트 UI
     public Material daySkybox;
     public Material nightSkybox;
 
     private bool isFanOn = false;
-
     private bool isWatering = false;
     private float wateringTimer = 0f;
-    public float flowDuration = 5f;
+    public float flowDuration = 10f;
     public float flowSpeed = 1f;
     private Vector2 startOffset;
-
 
     [DllImport("__Internal")]
     private static extern void SendMessageToReact(string msg);
 
+    void Start()
+    {
+        // 컴포넌트 확인
+        if (temperatureUI != null)
+        {
+            Debug.Log("Temperature UI assigned");
+        }
+        else
+        {
+            Debug.LogError("Temperature UI is not assigned!");
+        }
+
+        if (humidityUI != null)
+        {
+            Debug.Log("Humidity UI assigned");
+        }
+        else
+        {
+            Debug.LogError("Humidity UI is not assigned!");
+        }
+
+        if (ledLights != null && ledLights.Length > 0)
+        {
+            Debug.Log($"LED Lights assigned: {ledLights.Length} lights");
+        }
+        else
+        {
+            Debug.LogError("LED Lights array is not assigned or empty!");
+        }
+
+        // 초기화 시 모든 파티클 시스템 정지
+        if (waterParticle != null)
+        {
+            foreach (ParticleSystem wp in waterParticle)
+            {
+                if (wp != null)
+                {
+                    wp.Stop();
+                    wp.Clear();
+                }
+            }
+        }
+
+        // 초기 상태 설정
+        isWatering = false;
+        wateringTimer = 0f;
+    }
+
     public void ReceiveMessage(string json)
     {
-        UnityDataMessage jsonData = JsonConvert.DeserializeObject<UnityDataMessage>(json);
-        JObject jobj = jsonData.data;
-
-        Debug.Log($"Event name: {jsonData.name}, Data: {jobj}");
-
-        switch (jsonData.name)
+        try
         {
-            case "envInfo":
-                // 온도/습도 표시
-                string temp = jobj["temperature"].ToString();
-                string humid = jobj["humidity"].ToString();
-                temperatureUI.GetComponent<TextMesh>().text = $"온도: {temp}°C";
-                humidityUI.GetComponent<TextMesh>().text = $"습도: {humid}%";
+            Debug.Log($"Received JSON: {json}");
+
+            // JSON 파싱 시도
+            UnityDataMessage jsonData = JsonConvert.DeserializeObject<UnityDataMessage>(json);
+
+            if (jsonData == null)
+            {
+                Debug.LogError("Failed to deserialize JSON message");
+                return;
+            }
+
+            Debug.Log($"Event name: {jsonData.name}");
+
+            // data가 null이 아닌 경우에만 JObject로 파싱
+            JObject jobj = null;
+            if (!string.IsNullOrEmpty(jsonData.data))
+            {
+                try
+                {
+                    jobj = JObject.Parse(jsonData.data);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"Failed to parse data as JObject: {e.Message}");
+                    return;
+                }
+            }
+
+            ProcessMessage(jsonData.name, jobj);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error in ReceiveMessage: {e.Message}");
+        }
+    }
+
+    private void ProcessMessage(string eventName, JObject jobj)
+    {
+        switch (eventName)
+        {
+            case "tempControl":
+                if (jobj != null && jobj["value"] != null) // "temperature" -> "value"로 변경
+                {
+                    string temp = jobj["value"].ToString();
+                    Debug.Log($"Temperature updated to: {temp}°C");
+
+                    if (temperatureUI != null)
+                    {
+                        Debug.Log("Temperature UI found, attempting to update text");
+                        // TextMesh 컴포넌트 시도
+                        TextMesh textMesh = temperatureUI.GetComponent<TextMesh>();
+                        if (textMesh != null)
+                        {
+                            textMesh.text = $"{temp}°C";
+                            Debug.Log($"TextMesh updated: {textMesh.text}");
+                        }
+                        else
+                        {
+                            // Text 컴포넌트 (UI Text) 시도
+                            UnityEngine.UI.Text uiText = temperatureUI.GetComponent<UnityEngine.UI.Text>();
+                            if (uiText != null)
+                            {
+                                uiText.text = $"온도: {temp}°C";
+                                Debug.Log($"UI Text updated: {uiText.text}");
+                            }
+                            else
+                            {
+                                Debug.LogError("No TextMesh or UI Text component found on temperatureUI");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError("temperatureUI is null");
+                    }
+                }
+                break;
+
+            case "humidControl":
+                if (jobj != null && jobj["value"] != null) // "humidity" -> "value"로 변경
+                {
+                    string humid = jobj["value"].ToString();
+                    Debug.Log($"Humidity updated to: {humid}%");
+
+                    if (humidityUI != null)
+                    {
+                        Debug.Log("Humidity UI found, attempting to update text");
+                        // TextMesh 컴포넌트 시도
+                        TextMesh textMesh = humidityUI.GetComponent<TextMesh>();
+                        if (textMesh != null)
+                        {
+                            textMesh.text = $"{humid}%";
+                            Debug.Log($"TextMesh updated: {textMesh.text}");
+                        }
+                        else
+                        {
+                            // Text 컴포넌트 (UI Text) 시도
+                            UnityEngine.UI.Text uiText = humidityUI.GetComponent<UnityEngine.UI.Text>();
+                            if (uiText != null)
+                            {
+                                uiText.text = $"습도: {humid}%";
+                                Debug.Log($"UI Text updated: {uiText.text}");
+                            }
+                            else
+                            {
+                                Debug.LogError("No TextMesh or UI Text component found on humidityUI");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError("humidityUI is null");
+                    }
+                }
                 break;
 
             case "startWater":
-                // 급수 시작
-                isWatering = true;
-                wateringTimer = 5f; // 5초 동안 물 흐름 표현
+                if (jobj != null && jobj["status"] != null)
+                {
+                    bool waterStatus = jobj["status"].ToObject<bool>();
+                    Debug.Log($"Water control: {waterStatus}");
 
-                isWatering = true;
-                wateringTimer = flowDuration;
-                foreach (ParticleSystem wp in waterParticle)
-                    wp.Play();
+                    // 급수 시작 조건: 요청이 true이고 현재 급수 중이 아닐 때만
+                    if (waterStatus && !isWatering)
+                    {
+                        isWatering = true;
+                        wateringTimer = flowDuration;
+                        Debug.Log("Starting water flow");
+
+                        if (waterParticle != null)
+                        {
+                            foreach (ParticleSystem wp in waterParticle)
+                            {
+                                if (wp != null)
+                                {
+                                    wp.Play();
+                                }
+                            }
+                        }
+                    }
+                    // 급수 중지 요청
+                    else if (!waterStatus && isWatering)
+                    {
+                        isWatering = false;
+                        wateringTimer = 0f;
+                        Debug.Log("Stopping water flow");
+
+                        if (waterParticle != null)
+                        {
+                            foreach (ParticleSystem wp in waterParticle)
+                            {
+                                if (wp != null)
+                                {
+                                    wp.Stop();
+                                }
+                            }
+                        }
+                    }
+                }
                 break;
 
-            case "toggleDayNight": // 시간 정보 받아와서 처리하도록 바꾸기
-                bool isDay = jobj["isDay"].ToObject<bool>();
-                RenderSettings.skybox = isDay ? daySkybox : nightSkybox;
-                DynamicGI.UpdateEnvironment(); // 라이팅 즉시 반영
+            case "toggleDayNight":
+                if (jobj != null && jobj["isDay"] != null)
+                {
+                    bool isDay = jobj["isDay"].ToObject<bool>();
+                    RenderSettings.skybox = isDay ? daySkybox : nightSkybox;
+                    DynamicGI.UpdateEnvironment();
+                }
                 break;
 
             case "ledLevel":
-                int level = jobj["level"].ToObject<int>();
-                foreach (Light light in ledLights)
-                    if (light != null)
-                        light.intensity = level * 0.5f; // 0 ~ 1.5
+                if (jobj != null && jobj["level"] != null)
+                {
+                    int level = jobj["level"].ToObject<int>();
+                    Debug.Log($"LED Level set to: {level}");
+
+                    if (ledLights != null && ledLights.Length > 0)
+                    {
+                        Debug.Log($"Found {ledLights.Length} LED lights");
+                        for (int i = 0; i < ledLights.Length; i++)
+                        {
+                            if (ledLights[i] != null)
+                            {
+                                // 0,1,2,3 레벨을 0.0, 0.5, 1.0, 1.5 intensity로 매핑
+                                float intensity = level * 0.5f;
+                                float previousIntensity = ledLights[i].intensity;
+                                ledLights[i].intensity = intensity;
+                                Debug.Log($"Light {i}: intensity changed from {previousIntensity} to {intensity}");
+                            }
+                            else
+                            {
+                                Debug.LogError($"LED Light at index {i} is null");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError("ledLights array is null or empty");
+                    }
+                }
                 break;
 
             case "fanStatus":
-                isFanOn = jobj["status"].ToObject<bool>();
-                fanObject.SetActive(isFanOn);
+                if (jobj != null && jobj["status"] != null)
+                {
+                    isFanOn = jobj["status"].ToObject<bool>();
+                    if (fanObject != null)
+                    {
+                        fanObject.SetActive(isFanOn);
+                    }
+                }
                 break;
 
             default:
-                Debug.Log("Unknown message received");
+                Debug.Log($"Unknown message received: {eventName}");
                 break;
         }
     }
 
     void Update()
     {
+        // 급수 타이머 처리
         if (isWatering)
         {
             wateringTimer -= Time.deltaTime;
             if (wateringTimer <= 0f)
             {
                 isWatering = false;
-                foreach (ParticleSystem wp in waterParticle)
-                    wp.Stop();
+                Debug.Log("Water Flow timer ended");
+
+                if (waterParticle != null)
+                {
+                    foreach (ParticleSystem wp in waterParticle)
+                    {
+                        if (wp != null)
+                            wp.Stop();
+                    }
+                }
             }
         }
 
         // 팬 회전
-        if (isFanOn)
+        if (isFanOn && fanObject != null)
         {
             fanObject.transform.Rotate(Vector3.forward * 200 * Time.deltaTime);
         }

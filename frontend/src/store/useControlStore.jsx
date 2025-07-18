@@ -1,16 +1,15 @@
-// store/controlStore.js
 import { create } from 'zustand'; // redux보다 훨씬 가볍고 쓰기 쉬운 상태 라이브러리
 
 const useControlStore = create((set) => ({
   water: false,
   fan: false,
-  led: 3,
+  ledLevel: 3,
   temp: 22,
   humid: 60,
 
   setWater: (value) => set({ water: value }),
   setFan: (value) => set({ fan: value }),
-  setLed: (value) => set({ led: value }),
+  setLed: (value) => set({ ledLevel: value }),
   setTemp: (value) => set({ temp: value }),
   setHumid: (value) => set({ humid: value }),
 
@@ -27,7 +26,7 @@ const useControlStore = create((set) => ({
       set({
         water: data.water,
         fan: data.fan,
-        led: data.led,
+        ledLevel: data.ledLevel,
         temp: data.temp,
         humid: data.humid,
       });

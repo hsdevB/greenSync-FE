@@ -107,8 +107,6 @@
 }
 
 .control-row button {
-  background: #e0f7ef;
-  color: #219653;
   border: none;
   border-radius: 6px;
   padding: 5px 18px;
@@ -116,17 +114,25 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
-}
-
-.control-row button:hover,
-.control-row button:active {
-  background: #219653;
   color: #fff;
 }
 
-.control-row button[aria-pressed="true"] {
-  background: #219653;
-  color: #fff;
+/* ON 상태 */
+.btn-on {
+  background-color: #219653; /* 초록 */
+  opacity: 1;
+}
+
+/* OFF 상태 */
+.btn-off {
+  background-color: #ccc; /* 회색 */
+  color: #333;
+}
+
+.btn-on:disabled,
+.btn-off:disabled {
+  /* opacity: 0.6; */
+  cursor: not-allowed;
 }
 
 /* 제어판 카드 UI */
