@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using TMPro;
 
 [System.Serializable]
 public class UnityDataMessage
@@ -132,25 +133,35 @@ public class MessageManager : MonoBehaviour
                     if (temperatureUI != null)
                     {
                         Debug.Log("Temperature UI found, attempting to update text");
-                        // TextMesh 컴포넌트 시도
-                        TextMesh textMesh = temperatureUI.GetComponent<TextMesh>();
-                        if (textMesh != null)
+                        // TextMeshProGUI 컴포넌트 (UI Canvas용)
+                        TextMeshProUGUI textMeshProUI = temperatureUI.GetComponent<TextMeshProUGUI>();
+                        if (textMeshProUI != null)
                         {
-                            textMesh.text = $"{temp}°C";
-                            Debug.Log($"TextMesh updated: {textMesh.text}");
+                            textMeshProUI.text = $"{temp}°C";
+                            Debug.Log($"TextMesh updated: {textMeshProUI.text}");
                         }
                         else
                         {
-                            // Text 컴포넌트 (UI Text) 시도
-                            UnityEngine.UI.Text uiText = temperatureUI.GetComponent<UnityEngine.UI.Text>();
-                            if (uiText != null)
+                            // TextMeshPro 컴포넌트 (3D World Space용)
+                            TextMeshPro textMeshPro = temperatureUI.GetComponent<TextMeshPro>();
+                            if (textMeshPro != null)
                             {
-                                uiText.text = $"온도: {temp}°C";
-                                Debug.Log($"UI Text updated: {uiText.text}");
+                                textMeshPro.text = $"온도: {temp}°C";
+                                Debug.Log($"UI Text updated: {textMeshPro.text}");
                             }
                             else
                             {
-                                Debug.LogError("No TextMesh or UI Text component found on temperatureUI");
+                                // 기본 UI Text 컴포넌트 (Legacy)
+                                UnityEngine.UI.Text legacyText = temperatureUI.GetComponent<UnityEngine.UI.Text>();
+                                if (legacyText != null)
+                                {
+                                    legacyText.text = $"온도: {temp}°C";
+                                    Debug.Log($"Legacy UI Text updated: {legacyText.text}");
+                                }
+                                else
+                                {
+                                    Debug.LogError("No TextMeshProUGUI, TextMeshPro, or UI Text component found on temperatureUI");
+                                }
                             }
                         }
                     }
@@ -170,25 +181,35 @@ public class MessageManager : MonoBehaviour
                     if (humidityUI != null)
                     {
                         Debug.Log("Humidity UI found, attempting to update text");
-                        // TextMesh 컴포넌트 시도
-                        TextMesh textMesh = humidityUI.GetComponent<TextMesh>();
-                        if (textMesh != null)
+                        // TextMeshProUGUI 컴포넌트 (UI Canvas용)
+                        TextMeshProUGUI textMeshProUI = humidityUI.GetComponent<TextMeshProUGUI>();
+                        if (textMeshProUI != null)
                         {
-                            textMesh.text = $"{humid}%";
-                            Debug.Log($"TextMesh updated: {textMesh.text}");
+                            textMeshProUI.text = $"{humid}%";
+                            Debug.Log($"TextMesh updated: {textMeshProUI.text}");
                         }
                         else
                         {
-                            // Text 컴포넌트 (UI Text) 시도
-                            UnityEngine.UI.Text uiText = humidityUI.GetComponent<UnityEngine.UI.Text>();
-                            if (uiText != null)
+                            // TextMeshPro 컴포넌트 (3D World Space용)
+                            TextMeshPro textMeshPro = humidityUI.GetComponent<TextMeshPro>();
+                            if (textMeshPro != null)
                             {
-                                uiText.text = $"습도: {humid}%";
-                                Debug.Log($"UI Text updated: {uiText.text}");
+                                textMeshPro.text = $"습도: {humid}%";
+                                Debug.Log($"UI Text updated: {textMeshPro.text}");
                             }
                             else
                             {
-                                Debug.LogError("No TextMesh or UI Text component found on humidityUI");
+                                // 기본 UI Text 컴포넌트 (Legacy)
+                                UnityEngine.UI.Text legacyText = humidityUI.GetComponent<UnityEngine.UI.Text>();
+                                if (legacyText != null)
+                                {
+                                    legacyText.text = $"습도: {humid}%";
+                                    Debug.Log($"Legacy UI Text updated: {legacyText.text}");
+                                }
+                                else
+                                {
+                                    Debug.LogError("No TextMeshProUGUI, TextMeshPro, or UI Text component found on humidityUI");
+                                }
                             }
                         }
                     }
