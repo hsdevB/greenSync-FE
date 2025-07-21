@@ -305,7 +305,85 @@ export default function RemoteControlPanel({unityContext}) {
           <div className="control-card">
             <div className="control-card-header">
               <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️💧</span>
-              <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어</span>
+              <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어1</span>
+            </div>
+            <div className="control-card-body">
+              <div className="temp-control-row">
+                <button className="temp-btn" onClick={() => handleTempChange(-1)} disabled={controlDisabled}>-</button>
+                <span className="temp-value">{temp}℃</span>
+                <button className="temp-btn" onClick={() => handleTempChange(1)} disabled={controlDisabled}>+</button>
+              </div>
+              <div className="control-card-desc">
+                {autoMode ? "자동 난방 제어" : "수동 난방 시스템"}
+              </div>
+
+              {/* 습도 제어 */}
+              <div className="temp-control-row" style={{ marginTop: "12px" }}>
+                <button className="temp-btn" onClick={() => handleHumidChange(-1)} disabled={controlDisabled}>-</button>
+                <span className="temp-value">{humid}%</span>
+                <button className="temp-btn" onClick={() => handleHumidChange(1)} disabled={controlDisabled}>+</button>
+              </div>
+              <div className="control-card-desc">
+                {autoMode ? "자동 가습 제어" : "수동 가습 시스템"}
+              </div>
+            </div>
+          </div>
+          <div className="control-card">
+            <div className="control-card-header">
+              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️💧</span>
+              <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어2</span>
+            </div>
+            <div className="control-card-body">
+              <div className="temp-control-row">
+                <button className="temp-btn" onClick={() => handleTempChange(-1)} disabled={controlDisabled}>-</button>
+                <span className="temp-value">{temp}℃</span>
+                <button className="temp-btn" onClick={() => handleTempChange(1)} disabled={controlDisabled}>+</button>
+              </div>
+              <div className="control-card-desc">
+                {autoMode ? "자동 난방 제어" : "수동 난방 시스템"}
+              </div>
+
+              {/* 습도 제어 */}
+              <div className="temp-control-row" style={{ marginTop: "12px" }}>
+                <button className="temp-btn" onClick={() => handleHumidChange(-1)} disabled={controlDisabled}>-</button>
+                <span className="temp-value">{humid}%</span>
+                <button className="temp-btn" onClick={() => handleHumidChange(1)} disabled={controlDisabled}>+</button>
+              </div>
+              <div className="control-card-desc">
+                {autoMode ? "자동 가습 제어" : "수동 가습 시스템"}
+              </div>
+            </div>
+          </div>
+          <div className="control-card">
+            <div className="control-card-header">
+              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️💧</span>
+              <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어3</span>
+            </div>
+            <div className="control-card-body">
+              <div className="temp-control-row">
+                <button className="temp-btn" onClick={() => handleTempChange(-1)} disabled={controlDisabled}>-</button>
+                <span className="temp-value">{temp}℃</span>
+                <button className="temp-btn" onClick={() => handleTempChange(1)} disabled={controlDisabled}>+</button>
+              </div>
+              <div className="control-card-desc">
+                {autoMode ? "자동 난방 제어" : "수동 난방 시스템"}
+              </div>
+
+              {/* 습도 제어 */}
+              <div className="temp-control-row" style={{ marginTop: "12px" }}>
+                <button className="temp-btn" onClick={() => handleHumidChange(-1)} disabled={controlDisabled}>-</button>
+                <span className="temp-value">{humid}%</span>
+                <button className="temp-btn" onClick={() => handleHumidChange(1)} disabled={controlDisabled}>+</button>
+              </div>
+              <div className="control-card-desc">
+                {autoMode ? "자동 가습 제어" : "수동 가습 시스템"}
+              </div>
+            </div>
+          </div>
+          <div className="control-card">
+            <div className="control-card-header">
+              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️💧</span>
+              <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어4</span>
             </div>
             <div className="control-card-body">
               <div className="temp-control-row">

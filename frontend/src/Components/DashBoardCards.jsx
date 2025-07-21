@@ -425,12 +425,60 @@ useEffect(() => {
       {autoMode && (
         <div className="dashboard-info-row">
           <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 온도</h3>
+            <h3 className="dashboard-card-title">자동 제어 기준 온도1</h3>
             <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
             <div className="dashboard-card-desc">자동 모드 기준값</div>
           </div>
           <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 습도</h3>
+            <h3 className="dashboard-card-title">자동 제어 기준 습도1</h3>
+            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+        </div>
+      )}
+
+      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
+      {autoMode && (
+        <div className="dashboard-info-row">
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 온도2</h3>
+            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 습도2</h3>
+            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+        </div>
+      )}
+
+      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
+      {autoMode && (
+        <div className="dashboard-info-row">
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 온도3</h3>
+            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 습도3</h3>
+            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+        </div>
+      )}
+
+      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
+      {autoMode && (
+        <div className="dashboard-info-row">
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 온도4</h3>
+            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 습도4</h3>
             <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
             <div className="dashboard-card-desc">자동 모드 기준값</div>
           </div>
