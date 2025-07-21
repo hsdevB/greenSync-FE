@@ -36,6 +36,24 @@ const DashBoardCards = ({ unityContext }) => {
   const { unityProvider, isLoaded, loadingProgression, sendMessage } = unityContext;
   const loadingPercentage = Math.round(loadingProgression * 100); // 로딩 퍼센트
 
+  // 백엔드 서버 연결 상태 확인
+  const checkBackendConnection = async () => {
+    try {
+      console.log('Checking backend connection...');
+      const response = await axios.get('/sensor/health', { timeout: 3000 });
+      console.log('Backend is accessible:', response.data);
+      return true;
+    } catch (error) {
+      console.error('Backend connection failed:', error.message);
+      return false;
+    }
+  };
+
+  // 컴포넌트 마운트 시 백엔드 연결 확인
+  useEffect(() => {
+    checkBackendConnection();
+  }, []);
+
 <div style={{ width: '100%', minHeight: '400px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', position: 'relative', marginTop: '32px' }}>
   <div style={{ flex: 1, maxWidth: '900px', position: 'relative' }}>
     {!isLoaded && (
@@ -71,6 +89,7 @@ const DashBoardCards = ({ unityContext }) => {
   const [carbonDioxide, setCarbonDioxide] = useState('--');
   const [nutrient, setNutrient] = useState('--');
   const [elcDT, setElcDT] = useState('--');
+  const [illuminance, setIlluminance] = useState('--');
 
 
   // unity 초기화할 때 보내줄 제어값
@@ -152,55 +171,41 @@ const DashBoardCards = ({ unityContext }) => {
 
   // 실내온도 데이터 가져오기
   useEffect(() => {
-    console.log('fetchIndoorTemp called');
     const fetchIndoorTemp = async () => { // 화살표 함수 사용 
       try {
         // 프록시를 사용하지 않고 직접 주소로 요청
         const id = 1;
         const res = await axios.get(`/sensor/temperature/${id}`);// 1인 수정 해야함 변수 추가 해야함
-        console.log(res);
         
-        // 데이터가 잘 받아오는지 확인
-        console.log('indoorTemp data:', res.data); // 데이터 확인
         // alert(JSON.stringify(res.data));
         if (res.data && typeof res.data === 'number') {
           setIndoorTemp(res.data);
-        } else if (res.data && res.data.temperature) {
-          setIndoorTemp(res.data.temperature);
+        } else if (res.data && res.data.data.temperature) {
+          setIndoorTemp(res.data.data.temperature);
         } else {
           setIndoorTemp('--');
         }
       } catch (e) {
         setIndoorTemp('--');
-        console.error(e);
       }
     };
     fetchIndoorTemp();
   }, []);
-
 //실내습도 데이터 가져오기
 useEffect(() => {
-  console.log('fetchIndoorHumi called');
   const fetchIndoorHumi = async () => {
     try {
       const id = 1;
       const res = await axios.get(`/sensor/humidity/${id}`);
-      console.log(res);
-      console.log('indoorHumi data:', res.data);
-      alert(JSON.stringify(res.data));
-      // API 응답이 배열이라면, 가장 마지막(최신) 값을 사용해야 함
-      if (Array.isArray(res.data) && res.data.length > 0) {
-        setIndoorHumi(res.data[0].humidity); // 또는 최신값 기준으로 정렬해서 사용
-      } else if (res.data && typeof res.data === 'number') {
+      if (res.data && typeof res.data === 'number') {
         setIndoorHumi(res.data);
-      } else if (res.data && res.data.humidity) {
-        setIndoorHumi(res.data.humidity);
+      } else if (res.data && res.data.data.humidity) {
+        setIndoorHumi(res.data.data.humidity);
       } else {
         setIndoorHumi('--');
       }
     } catch (e) {
       setIndoorHumi('--');
-      console.error(e);
     }
   };
   fetchIndoorHumi();
@@ -212,21 +217,30 @@ useEffect(() => {
     try {
       const id = 1;
       const res = await axios.get(`/sensor/nutrient/${id}`);
-      console.log(res);
-      console.log('fetchNutrient data:', res.data);
-      alert(JSON.stringify(res.data));
-      let ph = '--';
-      let ec = '--';
-      if (Array.isArray(res.data) && res.data.length > 0) {
-        if (res.data[0].phLevel !== undefined) ph = res.data[0].phLevel;
-        if (res.data[0].elcDT !== undefined) ec = res.data[0].elcDT;
-      } else if (res.data) {
-        if (res.data.phLevel !== undefined) ph = res.data.phLevel;
-        if (res.data.elcDT !== undefined) ec = res.data.elcDT;
+
+      if (res.data && typeof res.data === 'number') {
+        setPhValue(res.data);
+      } else if (res.data && res.data.data.phLevel) {
+        setPhValue(res.data.data.phLevel);
+      } else {
+        setPhValue('--');
       }
-      setPhValue(ph);
-      setElcDT(ec);
-    } catch {
+
+      if (res.data && typeof res.data === 'number') {
+        setElcDT(res.data);
+      } else if (res.data && res.data.data.elcDT) {
+        setElcDT(res.data.data.elcDT);
+      } else {
+        setElcDT('--');
+      }
+    } catch (e) {
+      console.error('Nutrient fetch error:', e);
+      console.error('Error details:', {
+        message: e.message,
+        status: e.response?.status,
+        statusText: e.response?.statusText,
+        data: e.response?.data
+      });
       setPhValue('--');
       setElcDT('--');
     }
@@ -236,21 +250,14 @@ useEffect(() => {
 
 //이산화탄소 데이터 가져오기
 useEffect(() => {
-  console.log('fetchCarbonDioxide called');
   const fetchCarbonDioxide = async () => {
     try {
       const id = 1;
-      const res = await axios.get(`/sensor/CarbonDioxide/${id}`);
-      console.log(res);
-      console.log('CarbonDioxide data:', res.data);
-      alert(JSON.stringify(res.data));
-
-      if (Array.isArray(res.data) && res.data.length > 0) {
-        setCarbonDioxide(res.data[0].co2); // co2로 수정
-      } else if (res.data && typeof res.data === 'number') {
+      const res = await axios.get(`/sensor/carbonDioxide/${id}`);
+      if (res.data && typeof res.data === 'number') {
         setCarbonDioxide(res.data);
-      } else if (res.data && res.data.co2) { // co2로 수정
-        setCarbonDioxide(res.data.co2);
+      } else if (res.data && res.data.data.co2) {
+        setCarbonDioxide(res.data.data.co2);
       } else {
         setCarbonDioxide('--');
       }
@@ -262,34 +269,26 @@ useEffect(() => {
   fetchCarbonDioxide();
 }, []);
 
-//양액 데이터 가져오기
+//광량 데이터 가져오기
 useEffect(() => {
-  console.log('fetchNutrient called');
-  const fetchNutrient = async () => {
+  const fetchIlluminance = async () => {
     try {
       const id = 1;
-      const res = await axios.get(`/sensor/nutrient/${id}`);
-      console.log(res);
-      console.log('nutrient data:', res.data);
-      alert(JSON.stringify(res.data));
-      // API 응답이 배열이라면, 가장 마지막(최신) 값을 사용
-      if (Array.isArray(res.data) && res.data.length > 0) {
-        setNutrient(res.data[0].nutrientValue); // 실제 key로 수정
-      } else if (res.data && typeof res.data === 'number') {
-        setNutrient(res.data);
-      } else if (res.data && res.data.nutrientValue) {
-        setNutrient(res.data.nutrientValue);
+      const res = await axios.get(`/sensor/illuminance/${id}`);
+      if (res.data && typeof res.data === 'number') {
+        setIlluminance(res.data);
+      } else if (res.data && res.data.data.illuminance) {
+        setIlluminance(res.data.data.illuminance);
       } else {
-        setNutrient('--');
+        setIlluminance('--');
       }
     } catch (e) {
-      setNutrient('--');
+      setIlluminance('--');
       console.error(e);
     }
   };
-  fetchNutrient();
+  fetchIlluminance();
 }, []);
-
 
   return (
     <div className="dashboard-cards-container">
@@ -446,13 +445,13 @@ useEffect(() => {
         {/* 일사량 (기상청 API) */}
         <div className="dashboard-card">
           <h3 className="dashboard-card-title">일사량(기상청)</h3>
-          <div className="dashboard-card-value yellow">{iotData ? iotData.dliValue : '--'} mol/m²/d</div>
+          <div className="dashboard-card-value yellow">추가예정</div>
           <div className="dashboard-card-desc">기상청 단기예보 기준</div>
         </div>
         {/* 누적광량 (막대차트) */}
         <div className="dashboard-card">
           <h3 className="dashboard-card-title">누적광량 (DLI)</h3>
-          <div className="dashboard-card-value yellow">{iotData ? iotData.dliValue : '--'} mol/m²/d</div>
+          <div className="dashboard-card-value yellow">{illuminance} lux</div>
           <ResponsiveContainer width="100%" height={60}>
             <BarChart data={iotData?.dliChartData ?? []}>
               <Bar dataKey="value" fill="#facc15" />
