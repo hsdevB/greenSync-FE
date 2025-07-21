@@ -10,6 +10,7 @@ import OpenWeather from "./OpenWheater.jsx";
 import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
+import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 class UnityMessage {
   constructor(name, data) {
     this.name = name;
@@ -83,8 +84,11 @@ const DashBoardCards = ({ unityContext }) => {
   }, [sendMessage, isLoaded]);
 
   const {
-    water, fan, ledLevel, temp, humid, restoreFromLocal
+    water, fan, ledLevel, temp, humid, restoreFromLocal, autoMode,
   } = useControlStore();
+
+  // 자동모드 커스텀 훅 사용
+  const { simulatedData } = useAutoMode(sendToUnity);
 
   useEffect(() => {
   // 상태 복원 (로컬스토리지에 저장한 상태 있다면)
@@ -293,6 +297,23 @@ const DashBoardCards = ({ unityContext }) => {
           </div>
         </div>
       </div>
+
+      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
+      {autoMode && (
+        <div className="dashboard-info-row">
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 온도</h3>
+            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 습도</h3>
+            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+        </div>
+      )}
+
       {/* 실내온도, 실내습도, 산도, 전기전도도 카드를 한 줄로 배치 */}
       <div className="dashboard-cards-row">
         {/* 실내온도 */}
