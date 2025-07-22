@@ -273,11 +273,6 @@ useEffect(() => {
 
   return (
     <div className="dashboard-cards-container">
-      {/* 상단 sticky header */}
-      <div className="dashboard-sticky-header">
-        <div className="dashboard-title">대시보드</div>
-        <div className="dashboard-card-value.time">{currentTime}</div>
-      </div>
       {/* 새로고침 버튼 */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px', marginBottom: '24px' }}>
         <button
@@ -561,72 +556,7 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* 최적 제어값 및 예측 수확수 섹션 */}
-      <div className="dashboard-cards-row">
-        {/* 토마토 최적 제어값 */}
-        <div className="dashboard-card">
-          <div className="dashboard-card-section">
-            <h3 className="dashboard-card-title">토마토 최적 제어값 및 예측 수확수</h3>
-          </div>
-          <div style={{ padding: '16px 0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ color: '#666', fontSize: '14px' }}>급수량:</span>
-              <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '16px' }}>2.5 L</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ color: '#666', fontSize: '14px' }}>난방 온도:</span>
-              <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '16px' }}>22 ℃</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <span style={{ color: '#666', fontSize: '14px' }}>배기 온도:</span>
-              <span style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '16px' }}>18 ℃</span>
-            </div>
-            <div style={{ 
-              borderTop: '1px solid #e5e7eb', 
-              paddingTop: '12px', 
-              textAlign: 'center',
-              background: '#fef3c7',
-              borderRadius: '8px',
-              padding: '12px'
-            }}>
-              <div style={{ color: '#92400e', fontSize: '14px', marginBottom: '4px' }}>예측 수확수</div>
-              <div style={{ color: '#92400e', fontSize: '24px', fontWeight: 'bold' }}>156 kg</div>
-            </div>
-          </div>
-        </div>
-
-        {/* 파프리카 최적 제어값 */}
-        <div className="dashboard-card">
-          <div className="dashboard-card-section">
-            <h3 className="dashboard-card-title">파프리카 최적 제어값 및 예측 수확수</h3>
-          </div>
-          <div style={{ padding: '16px 0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ color: '#666', fontSize: '14px' }}>급수량:</span>
-              <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '16px' }}>3.2 L</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ color: '#666', fontSize: '14px' }}>난방 온도:</span>
-              <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '16px' }}>24 ℃</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <span style={{ color: '#666', fontSize: '14px' }}>배기 온도:</span>
-              <span style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '16px' }}>20 ℃</span>
-            </div>
-            <div style={{ 
-              borderTop: '1px solid #e5e7eb', 
-              paddingTop: '12px', 
-              textAlign: 'center',
-              background: '#fef3c7',
-              borderRadius: '8px',
-              padding: '12px'
-            }}>
-              <div style={{ color: '#92400e', fontSize: '14px', marginBottom: '4px' }}>예측 수확수</div>
-              <div style={{ color: '#92400e', fontSize: '24px', fontWeight: 'bold' }}>89 kg</div>
-            </div>
-          </div>
-        </div>
-      </div>
+     
     </div>
   );
 };

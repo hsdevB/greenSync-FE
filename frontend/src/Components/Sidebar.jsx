@@ -1,5 +1,5 @@
 // src/Components/Sidebar.jsx
-import { User, BarChart3, Settings, Bell, Users } from "lucide-react";
+import { User, BarChart3, Settings, Bell, Users, Brain } from "lucide-react";
 import "./Sidebar.css";
 
 const Sidebar = ({ selected, onSelect, onLogout }) => (
@@ -36,6 +36,14 @@ const Sidebar = ({ selected, onSelect, onLogout }) => (
             onClick={() => onSelect && onSelect('alarm')}
           >
             <Bell className="sidebar-menu-icon" /> 알림
+          </button>
+        </li>
+        <li>
+          <button
+            className={`sidebar-menu-btn${selected === 'ai-analysis' ? ' selected' : ''}`}
+            onClick={() => onSelect && onSelect('ai-analysis')}
+          >
+            <Brain className="sidebar-menu-icon" /> AI 분석
           </button>
         </li>
       </ul>
