@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Unity } from "react-unity-webgl";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
@@ -34,14 +33,12 @@ function getCurrentTimeString() {
 }
 
 const DashBoardCards = ({ unityContext }) => {
-  const { unityProvider, isLoaded, loadingProgression, sendMessage } = unityContext;
-  const loadingPercentage = Math.round(loadingProgression * 100); // 로딩 퍼센트
+  const { sendMessage } = unityContext;
 
   // 상태 관리 초기화
   const [currentTime, setCurrentTime] = useState(getCurrentTimeString()); // 현재 시간
   const [refreshDisabled, setRefreshDisabled] = useState(false); // 새로고침 비활성화 상태
   const [refreshTimer, setRefreshTimer] = useState(0); // 새로고침 타이머
-  const [unityError, setUnityError] = useState(null); // Unity 에러 상태
   const iotData = useIotData(); // 온실 내 IoT 데이터
   const [indoorTemp, setIndoorTemp] = useState('--'); 
   const [indoorHumi, setIndoorHumi] = useState('--');
@@ -53,7 +50,7 @@ const DashBoardCards = ({ unityContext }) => {
 
  // unity 초기화할 때 보내줄 제어값
  const sendToUnity = useCallback((eventName, payload) => {
-  if (!isLoaded) {
+  if (!unityContext.isLoaded) {
     console.log("Unity not loaded yet, skipping message:", eventName);
     return;
   }
@@ -65,7 +62,7 @@ const DashBoardCards = ({ unityContext }) => {
   } catch (error) {
     console.error("Error sending message to Unity:", error);
   }
-}, [sendMessage, isLoaded]);
+}, [sendMessage, unityContext.isLoaded]);
 
 const {
   water, fan, ledLevel, temp, humid, restoreFromLocal, autoMode,
@@ -80,26 +77,24 @@ restoreFromLocal();
 }, []);
 
 useEffect(() => {
-  if (isLoaded) {
-    // Unity 로드 완료 후 약간의 지연을 두고 메시지 전송
-    setTimeout(() => {
-      try {
-        sendToUnity("startWater", { status: water });
-        sendToUnity("fanStatus", { status: fan });
-        sendToUnity("ledLevel", { level: ledLevel ? 3 : 0 });
-        sendToUnity("tempControl", { value: temp });
-        sendToUnity("humidControl", { value: humid });
-        
-        // 주간/야간 설정
-        const currentHour = new Date().getHours();
-        const isDay = currentHour >= 6 && currentHour < 18;
-        sendToUnity("toggleDayNight", { isDay: isDay });
-      } catch (error) {
-        console.error("Error initializing Unity:", error);
-      }
-    }, 500); // 500ms 지연
+  // Unity 메시지 전송 (Unity가 로드되었는지 확인)
+  if (unityContext.isLoaded) {
+    try {
+      sendToUnity("startWater", { status: water });
+      sendToUnity("fanStatus", { status: fan });
+      sendToUnity("ledLevel", { level: ledLevel ? 3 : 0 });
+      sendToUnity("tempControl", { value: temp });
+      sendToUnity("humidControl", { value: humid });
+      
+      // 주간/야간 설정
+      const currentHour = new Date().getHours();
+      const isDay = currentHour >= 6 && currentHour < 18;
+      sendToUnity("toggleDayNight", { isDay: isDay });
+    } catch (error) {
+      console.error("Error initializing Unity:", error);
+    }
   }
-}, [isLoaded, sendToUnity, water, fan, ledLevel, temp, humid]);
+}, [unityContext.isLoaded, sendToUnity, water, fan, ledLevel, temp, humid]);
 
   useEffect(() => {
     // 새로고침 상태 복원
@@ -150,40 +145,7 @@ useEffect(() => {
     }
   }, [refreshTimer, refreshDisabled]);
 
-  // Unity 로딩 타임아웃 처리
-  useEffect(() => {
-    if (!isLoaded && loadingProgression > 0) {
-      const timeout = setTimeout(() => {
-        if (loadingProgression < 1) {
-          console.warn('Unity 로딩 타임아웃 - 90%에서 멈춤');
-          setUnityError('Unity 로딩이 시간 초과되었습니다. 페이지를 새로고침해주세요.');
-        }
-      }, 60000); // 60초로 증가
 
-      return () => clearTimeout(timeout);
-    }
-  }, [isLoaded, loadingProgression]);
-
-  // Unity 로딩 진행률 모니터링
-  useEffect(() => {
-    console.log('Unity 상태:', { isLoaded, loadingProgression, loadingPercentage });
-    
-    if (loadingProgression > 0) {
-      console.log(`Unity 로딩 진행률: ${Math.round(loadingProgression * 100)}%`);
-      
-      // 90%에서 멈추는 것이 정상임을 알려주는 메시지
-      if (loadingProgression >= 0.9 && loadingProgression < 1) {
-        console.log('Unity 로딩이 90%에서 잠시 멈춥니다. 이는 정상적인 과정입니다.');
-      }
-    }
-  }, [isLoaded, loadingProgression, loadingPercentage]);
-
-  // Unity 에러 상태 초기화
-  useEffect(() => {
-    if (isLoaded) {
-      setUnityError(null);
-    }
-  }, [isLoaded]);
 
   // 대시보드 데이터 (임시)
   const dashboardData = DashBoardData;
@@ -316,87 +278,13 @@ useEffect(() => {
         <div className="dashboard-title">대시보드</div>
         <div className="dashboard-card-value.time">{currentTime}</div>
       </div>
-      {/* WebGL 3D 모델 + 새로고침 버튼 */}
-      <div style={{ width: '100%', minHeight: '400px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', position: 'relative', marginTop: '32px' }}>
-        <div style={{ flex: 1, maxWidth: '900px', position: 'relative' }}>
-          {/* Unity 로딩 오버레이 */}
-          {!isLoaded && (
-            <div className="unity-loading-overlay">
-              <div className="unity-loading-text">
-                Unity 로딩 중... {loadingPercentage}%
-                {loadingPercentage >= 90 && loadingPercentage < 100 && (
-                  <div style={{ 
-                    fontSize: '12px', 
-                    color: '#666', 
-                    marginTop: '8px',
-                    fontStyle: 'italic'
-                  }}>
-                    잠시만 기다려주세요...
-                  </div>
-                )}
-              </div>
-              <div className="unity-loading-bar-bg">
-                <div
-                  className="unity-loading-bar-fill"
-                  style={{ width: `${loadingPercentage}%` }}
-                ></div>
-              </div>
-              {unityError && (
-                <div style={{ 
-                  color: '#ef4444', 
-                  marginTop: '16px', 
-                  fontSize: '14px',
-                  textAlign: 'center'
-                }}>
-                  {unityError}
-                </div>
-              )}
-              {/* 디버깅 정보 */}
-              <div style={{ 
-                fontSize: '10px', 
-                color: '#999', 
-                marginTop: '8px',
-                textAlign: 'center'
-              }}>
-                Unity 상태: {isLoaded ? '로드됨' : '로딩 중'} | 진행률: {loadingPercentage}%
-              </div>
-            </div>
-          )}
-          <Unity
-            style={{
-              width: '100%',
-              height: '400px',
-              background: '#222',
-              borderRadius: '16px',
-              opacity: isLoaded ? 1 : 0.3,
-              transition: 'opacity 0.3s'
-            }}
-            unityProvider={unityProvider}
-            devicePixelRatio={window.devicePixelRatio}
-            config={{
-              companyName: "GreenSync",
-              productName: "SmartFarm",
-              productVersion: "1.0.0"
-            }}
-            onError={(error) => {
-              console.error('Unity 에러:', error);
-              setUnityError(`Unity 로딩 중 오류가 발생했습니다: ${error}`);
-            }}
-            onProgress={(progress) => {
-              console.log('Unity 로딩 진행률:', progress);
-            }}
-            onInitialized={() => {
-              console.log('Unity 초기화 완료!');
-            }}
-          />
-        </div>
-        {/* 새로고침 버튼 */}
+      {/* 새로고침 버튼 */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px', marginBottom: '24px' }}>
         <button
           className="dashboard-refresh-btn"
           onClick={handleRefresh}
           disabled={refreshDisabled}
           style={{
-            marginLeft: '24px',
             height: '48px',
             minWidth: '48px',
             borderRadius: '12px',
@@ -407,16 +295,14 @@ useEffect(() => {
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            fontSize: '1.5rem',
-            position: 'relative',
-            top: 0
+            fontSize: '1.5rem'
           }}
           title="대시보드 새로고침"
         >
           <RotateCcw size={28} />
         </button>
         {refreshDisabled && (
-          <span style={{ marginLeft: 8, color: "#888", fontSize: "0.95em" }}>
+          <span style={{ marginLeft: 8, color: "#888", fontSize: "0.95em", alignSelf: 'center' }}>
             {Math.floor(refreshTimer / 60)}:{(refreshTimer % 60).toString().padStart(2, "0")} 후 재시도 가능
           </span>
         )}
