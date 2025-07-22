@@ -10,7 +10,7 @@ import OpenWeather from "./OpenWheater.jsx";
 import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
-import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
+// import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 class UnityMessage {
   constructor(name, data) {
     this.name = name;
@@ -91,11 +91,14 @@ const DashBoardCards = ({ unityContext }) => {
   }, [sendMessage, isLoaded]);
 
   const {
-    water, fan, ledLevel, temp, humid, restoreFromLocal, autoMode,
+    water, fan, ledLevel,
+    temp1, temp2, temp3, temp4,
+    humid1, humid2, humid3, humid4,
+    restoreFromLocal, autoMode,
   } = useControlStore();
 
   // 자동모드 커스텀 훅 사용
-  const { simulatedData } = useAutoMode(sendToUnity);
+  // const { simulatedData } = useAutoMode(sendToUnity);
 
   useEffect(() => {
   // 상태 복원 (로컬스토리지에 저장한 상태 있다면)
@@ -110,8 +113,15 @@ const DashBoardCards = ({ unityContext }) => {
           sendToUnity("startWater", { status: water });
           sendToUnity("fanStatus", { status: fan });
           sendToUnity("ledLevel", { level: ledLevel ? 3 : 0 });
-          sendToUnity("tempControl", { value: temp });
-          sendToUnity("humidControl", { value: humid });
+          
+          sendToUnity("tempControl1", { value: temp1 });
+          sendToUnity("tempControl2", { value: temp2 });
+          sendToUnity("tempControl3", { value: temp3 });
+          sendToUnity("tempControl4", { value: temp4 });
+          sendToUnity("humidControl1", { value: humid1 });
+          sendToUnity("humidControl2", { value: humid2 });
+          sendToUnity("humidControl3", { value: humid3 });
+          sendToUnity("humidControl4", { value: humid4 });
           
           // 주간/야간 설정
           const currentHour = new Date().getHours();
@@ -122,7 +132,7 @@ const DashBoardCards = ({ unityContext }) => {
         }
       }, 500); // 500ms 지연
     }
-  }, [isLoaded, sendToUnity, water, fan, ledLevel, temp, humid]);
+  }, [isLoaded, sendToUnity, water, fan, ledLevel, temp1, temp2, temp3, temp4, humid1, humid2, humid3, humid4]);
 
   useEffect(() => {
     // 새로고침 상태 복원
@@ -202,6 +212,7 @@ const DashBoardCards = ({ unityContext }) => {
       }
     };
     fetchIndoorTemp();
+    sendToUnity(`tempControl${0}`, { value: indoorTemp });
   }, []);
 
 //실내습도 데이터 가져오기
@@ -230,6 +241,7 @@ useEffect(() => {
     }
   };
   fetchIndoorHumi();
+  sendToUnity(`humidControl${0}`, { value: indoorHumi });
 }, []);
 
 // 산도(phLevel)와 전기전도도(elcDT) 한 번에 가져오기
@@ -426,60 +438,12 @@ useEffect(() => {
         <div className="dashboard-info-row">
           <div className="dashboard-card">
             <h3 className="dashboard-card-title">자동 제어 기준 온도1</h3>
-            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
+            <div className="dashboard-card-value orange">{temp1} ℃</div>
             <div className="dashboard-card-desc">자동 모드 기준값</div>
           </div>
           <div className="dashboard-card">
             <h3 className="dashboard-card-title">자동 제어 기준 습도1</h3>
-            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
-          </div>
-        </div>
-      )}
-
-      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
-      {autoMode && (
-        <div className="dashboard-info-row">
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 온도2</h3>
-            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
-          </div>
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 습도2</h3>
-            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
-          </div>
-        </div>
-      )}
-
-      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
-      {autoMode && (
-        <div className="dashboard-info-row">
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 온도3</h3>
-            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
-          </div>
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 습도3</h3>
-            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
-          </div>
-        </div>
-      )}
-
-      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
-      {autoMode && (
-        <div className="dashboard-info-row">
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 온도4</h3>
-            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
-          </div>
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 습도4</h3>
-            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
+            <div className="dashboard-card-value blue">{humid1} %</div>
             <div className="dashboard-card-desc">자동 모드 기준값</div>
           </div>
         </div>

@@ -5,23 +5,35 @@ import useControlStore from '../store/useControlStore.jsx';
 export const useAutoMode = (sendToUnity) => {
   const {
     fan, ledLevel,
-    setWater, setFan, setLed, setTemp, setHumid,
+    setWater, setFan, setLed,
+    setTemp1, setTemp2, setTemp3, setTemp4,
+    setHumid1, setHumid2, setHumid3, setHumid4,
     persistToLocal,
     autoMode
   } = useControlStore();
 
   // 시뮬레이션 데이터 (실제로는 IoT 센서 데이터를 사용)
   const [simulatedData, setSimulatedData] = useState({
-    temp: 25,
-    humid: 50,
+    sensor1: { temp: 25, humid: 50 },
+    sensor2: { temp: 25, humid: 50 },
+    sensor3: { temp: 25, humid: 50 },
+    sensor4: { temp: 25, humid: 50 },
   });
 
   // 5초마다 시뮬레이션 데이터 업데이트
   useEffect(() => {
     const interval = setInterval(() => {
-      const simulatedTemp = Math.floor(Math.random() * (35 - 15 + 1)) + 15; // 15~35도
-      const simulatedHumid = Math.floor(Math.random() * (80 - 30 + 1)) + 30; // 30~80%
-      setSimulatedData({ temp: simulatedTemp, humid: simulatedHumid });
+    const generateSensorData = () => ({
+      temp: Math.floor(Math.random() * (35 - 15 + 1)) + 15,
+      humid: Math.floor(Math.random() * (80 - 30 + 1)) + 30
+    });
+
+    setSimulatedData({
+      sensor1: generateSensorData(),
+      sensor2: generateSensorData(),
+      sensor3: generateSensorData(),
+      sensor4: generateSensorData()
+    });
     }, 1000 * 5); // 5초마다
 
     return () => clearInterval(interval);
@@ -31,29 +43,56 @@ export const useAutoMode = (sendToUnity) => {
   useEffect(() => {
     if (!autoMode || !sendToUnity) return;
 
-    const { temp: inTp, humid: inHd } = simulatedData;
+    // 각 센서별 평균값 계산 또는 개별 제어
+    const sensors = [simulatedData.sensor1, simulatedData.sensor2, simulatedData.sensor3, simulatedData.sensor4];
 
-    // 1. 온도 자동 제어
-    if (inTp < 20) {
-      sendToUnity("tempControl", { value: 24 });
-      setTemp(24);
-      console.log('자동 모드: 온도 24도로 설정 (현재:', inTp, '도)');
-    } else if (inTp > 30) {
-      sendToUnity("tempControl", { value: 26 });
-      setTemp(26);
-      console.log('자동 모드: 온도 26도로 설정 (현재:', inTp, '도)');
-    }
+    // 1. 온도 자동 제어 (센서별 개별 제어)
+    sensors.forEach((sensor, index) => {
+      const sensorNum = index + 1;
+      
+      if (sensor.temp < 20) {
+        sendToUnity(`tempControl${sensorNum}`, { value: 24 });
+        if (sensorNum === 1) setTemp1(24);
+        else if (sensorNum === 2) setTemp2(24);
+        else if (sensorNum === 3) setTemp3(24);
+        else if (sensorNum === 4) setTemp4(24);
+        console.log(`자동 모드: 센서${sensorNum} 온도 24도로 설정 (현재: ${sensor.temp}도)`);
+      } else if (sensor.temp > 30) {
+        sendToUnity(`tempControl${sensorNum}`, { value: 26 });
+        if (sensorNum === 1) setTemp1(26);
+        else if (sensorNum === 2) setTemp2(26);
+        else if (sensorNum === 3) setTemp3(26);
+        else if (sensorNum === 4) setTemp4(26);
+        console.log(`자동 모드: 센서${sensorNum} 온도 26도로 설정 (현재: ${sensor.temp}도)`);
+      }
+      else {
+        sendToUnity(`tempControl${sensorNum}`, { value: sensor.temp });
+      }
+    });
 
-    // 2. 습도 자동 제어
-    if (inHd < 40) {
-      sendToUnity("humidControl", { value: 50 });
-      setHumid(50);
-      console.log('자동 모드: 습도 50%로 설정 (현재:', inHd, '%)');
-    } else if (inHd > 70) {
-      sendToUnity("humidControl", { value: 60 });
-      setHumid(60);
-      console.log('자동 모드: 습도 60%로 설정 (현재:', inHd, '%)');
-    }
+    // 2. 습도 자동 제어 (센서별 개별 제어)
+    sensors.forEach((sensor, index) => {
+      const sensorNum = index + 1;
+      
+      if (sensor.humid < 40) {
+        sendToUnity(`humidControl${sensorNum}`, { value: 50 });
+        if (sensorNum === 1) setHumid1(50);
+        else if (sensorNum === 2) setHumid2(50);
+        else if (sensorNum === 3) setHumid3(50);
+        else if (sensorNum === 4) setHumid4(50);
+        console.log(`자동 모드: 센서${sensorNum} 습도 50%로 설정 (현재: ${sensor.humid}%)`);
+      } else if (sensor.humid > 70) {
+        sendToUnity(`humidControl${sensorNum}`, { value: 60 });
+        if (sensorNum === 1) setHumid1(60);
+        else if (sensorNum === 2) setHumid2(60);
+        else if (sensorNum === 3) setHumid3(60);
+        else if (sensorNum === 4) setHumid4(60);
+        console.log(`자동 모드: 센서${sensorNum} 습도 60%로 설정 (현재: ${sensor.humid}%)`);
+      }
+      else {
+        sendToUnity(`humidControl${sensorNum}`, { value: sensor.humid });
+      }
+    });
 
     // 3. LED 자동 제어 (시간 기준)
     const now = new Date();
