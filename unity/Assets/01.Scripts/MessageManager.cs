@@ -17,8 +17,8 @@ public class MessageManager : MonoBehaviour
     public GameObject fanObject; // 팬 회전 대상
     public Light[] ledLights;       // 일사량 조절용 라이트
     public ParticleSystem[] waterParticle;  // 급수 흐름 표현용 파티클
-    public GameObject temperatureUI; // 온도 텍스트 UI
-    public GameObject humidityUI;    // 습도 텍스트 UI
+    public GameObject[] temperatureUI; // 온도 텍스트 UI
+    public GameObject[] humidityUI;    // 습도 텍스트 UI
     public Material daySkybox;
     public Material nightSkybox;
 
@@ -28,6 +28,10 @@ public class MessageManager : MonoBehaviour
     public float flowDuration = 10f;
     public float flowSpeed = 1f;
     private Vector2 startOffset;
+
+    // 센서별 온도/습도 값 저장 (인덱스 0: main, 1-4: 센서1-4)
+    private float[] temperatures = { 0f, 25f, 25f, 25f, 25f };
+    private float[] humidities = { 0f, 50f, 50f, 50f, 50f };
 
     [DllImport("__Internal")]
     private static extern void SendMessageToReact(string msg);
@@ -124,101 +128,38 @@ public class MessageManager : MonoBehaviour
     {
         switch (eventName)
         {
-            case "tempControl":
-                if (jobj != null && jobj["value"] != null) // "temperature" -> "value"로 변경
-                {
-                    string temp = jobj["value"].ToString();
-                    Debug.Log($"Temperature updated to: {temp}°C");
-
-                    if (temperatureUI != null)
-                    {
-                        Debug.Log("Temperature UI found, attempting to update text");
-                        // TextMeshProGUI 컴포넌트 (UI Canvas용)
-                        TextMeshProUGUI textMeshProUI = temperatureUI.GetComponent<TextMeshProUGUI>();
-                        if (textMeshProUI != null)
-                        {
-                            textMeshProUI.text = $"{temp}°C";
-                            Debug.Log($"TextMesh updated: {textMeshProUI.text}");
-                        }
-                        else
-                        {
-                            // TextMeshPro 컴포넌트 (3D World Space용)
-                            TextMeshPro textMeshPro = temperatureUI.GetComponent<TextMeshPro>();
-                            if (textMeshPro != null)
-                            {
-                                textMeshPro.text = $"온도: {temp}°C";
-                                Debug.Log($"UI Text updated: {textMeshPro.text}");
-                            }
-                            else
-                            {
-                                // 기본 UI Text 컴포넌트 (Legacy)
-                                UnityEngine.UI.Text legacyText = temperatureUI.GetComponent<UnityEngine.UI.Text>();
-                                if (legacyText != null)
-                                {
-                                    legacyText.text = $"온도: {temp}°C";
-                                    Debug.Log($"Legacy UI Text updated: {legacyText.text}");
-                                }
-                                else
-                                {
-                                    Debug.LogError("No TextMeshProUGUI, TextMeshPro, or UI Text component found on temperatureUI");
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogError("temperatureUI is null");
-                    }
-                }
+            case "temp":
+                UpdateSensorTemperature(0, jobj); 
+                break;
+            case "tempControl1":
+                UpdateSensorTemperature(1, jobj);
+                break;
+            case "tempControl2":
+                UpdateSensorTemperature(2, jobj);
+                break;
+            case "tempControl3":
+                UpdateSensorTemperature(3, jobj);
+                break;
+            case "tempControl4":
+                UpdateSensorTemperature(4, jobj);
                 break;
 
-            case "humidControl":
-                if (jobj != null && jobj["value"] != null) // "humidity" -> "value"로 변경
-                {
-                    string humid = jobj["value"].ToString();
-                    Debug.Log($"Humidity updated to: {humid}%");
-
-                    if (humidityUI != null)
-                    {
-                        Debug.Log("Humidity UI found, attempting to update text");
-                        // TextMeshProUGUI 컴포넌트 (UI Canvas용)
-                        TextMeshProUGUI textMeshProUI = humidityUI.GetComponent<TextMeshProUGUI>();
-                        if (textMeshProUI != null)
-                        {
-                            textMeshProUI.text = $"{humid}%";
-                            Debug.Log($"TextMesh updated: {textMeshProUI.text}");
-                        }
-                        else
-                        {
-                            // TextMeshPro 컴포넌트 (3D World Space용)
-                            TextMeshPro textMeshPro = humidityUI.GetComponent<TextMeshPro>();
-                            if (textMeshPro != null)
-                            {
-                                textMeshPro.text = $"습도: {humid}%";
-                                Debug.Log($"UI Text updated: {textMeshPro.text}");
-                            }
-                            else
-                            {
-                                // 기본 UI Text 컴포넌트 (Legacy)
-                                UnityEngine.UI.Text legacyText = humidityUI.GetComponent<UnityEngine.UI.Text>();
-                                if (legacyText != null)
-                                {
-                                    legacyText.text = $"습도: {humid}%";
-                                    Debug.Log($"Legacy UI Text updated: {legacyText.text}");
-                                }
-                                else
-                                {
-                                    Debug.LogError("No TextMeshProUGUI, TextMeshPro, or UI Text component found on humidityUI");
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogError("humidityUI is null");
-                    }
-                }
+            case "humid":
+                UpdateSensorHumidity(0, jobj);
                 break;
+            case "humidControl1":
+                UpdateSensorHumidity(1, jobj);
+                break;
+            case "humidControl2":
+                UpdateSensorHumidity(2, jobj);
+                break;
+            case "humidControl3":
+                UpdateSensorHumidity(3, jobj);
+                break;
+            case "humidControl4":
+                UpdateSensorHumidity(4, jobj);
+                break;
+
 
             case "startWater":
                 if (jobj != null && jobj["status"] != null)
@@ -321,6 +262,100 @@ public class MessageManager : MonoBehaviour
                 Debug.Log($"Unknown message received: {eventName}");
                 break;
         }
+    }
+
+    private void UpdateSensorTemperature(int sensorNum, JObject jobj)
+    {
+        if (jobj != null && jobj["value"] != null)
+        {
+            float temp = jobj["value"].ToObject<float>();
+            temperatures[sensorNum] = temp; // 배열 인덱스 0-4에 저장
+            Debug.Log($"Sensor {sensorNum} temperature updated to: {temp}°C");
+
+            // UI 업데이트 (배열 인덱스도 1-4 사용)
+            if (temperatureUI != null && sensorNum < temperatureUI.Length && temperatureUI[sensorNum] != null)
+            {
+                UpdateTextComponent(temperatureUI[sensorNum], $"{temp}°C", $"센서{sensorNum} 온도: {temp}°C");
+            }
+            else
+            {
+                Debug.LogError($"temperatureUI[{sensorNum}] is null or index out of bounds");
+            }
+        }
+    }
+
+    private void UpdateSensorHumidity(int sensorNum, JObject jobj)
+    {
+        if (jobj != null && jobj["value"] != null)
+        {
+            float humid = jobj["value"].ToObject<float>();
+            humidities[sensorNum] = humid; // 배열 인덱스 0-4에 저장
+            Debug.Log($"Sensor {sensorNum} humidity updated to: {humid}%");
+
+            // UI 업데이트 (배열 인덱스도 1-4 사용)
+            if (humidityUI != null && sensorNum < humidityUI.Length && humidityUI[sensorNum] != null)
+            {
+                UpdateTextComponent(humidityUI[sensorNum], $"{humid}%", $"센서{sensorNum} 습도: {humid}%");
+            }
+            else
+            {
+                Debug.LogError($"humidityUI[{sensorNum}] is null or index out of bounds");
+            }
+        }
+    }
+
+    private void UpdateAllTemperatureUI()
+    {
+        for (int i = 1; i < temperatures.Length; i++)
+        {
+            if (temperatureUI != null && i < temperatureUI.Length && temperatureUI[i] != null)
+            {
+                UpdateTextComponent(temperatureUI[i], $"{temperatures[i]}°C", $"센서{i} 온도: {temperatures[i]}°C");
+            }
+        }
+    }
+
+    private void UpdateAllHumidityUI()
+    {
+        for (int i = 1; i < humidities.Length; i++)
+        {
+            if (humidityUI != null && i < humidityUI.Length && humidityUI[i] != null)
+            {
+                UpdateTextComponent(humidityUI[i], $"{humidities[i]}%", $"센서{i} 습도: {humidities[i]}%");
+            }
+        }
+    }
+
+    private void UpdateTextComponent(GameObject uiObject, string simpleText, string detailedText)
+    {
+        // TextMeshProUGUI 컴포넌트 (UI Canvas용)
+        TextMeshProUGUI textMeshProUI = uiObject.GetComponent<TextMeshProUGUI>();
+        if (textMeshProUI != null)
+        {
+            textMeshProUI.text = simpleText;
+            Debug.Log($"TextMeshProUGUI updated: {textMeshProUI.text}");
+            return;
+        }
+
+        // TextMeshPro 컴포넌트 (3D World Space용)
+        TextMeshPro textMeshPro = uiObject.GetComponent<TextMeshPro>();
+        if (textMeshPro != null)
+        {
+            textMeshPro.text = detailedText;
+            Debug.Log($"TextMeshPro updated: {textMeshPro.text}");
+            return;
+        }
+
+        // 기본 UI Text 컴포넌트 (Legacy)
+        UnityEngine.UI.Text legacyText = uiObject.GetComponent<UnityEngine.UI.Text>();
+        if (legacyText != null)
+        {
+            legacyText.text = detailedText;
+            Debug.Log($"Legacy UI Text updated: {legacyText.text}");
+            return;
+        }
+
+        Debug.LogError($"No TextMeshProUGUI, TextMeshPro, or UI Text component found on {uiObject.name}");
     }
 
     void Update()
