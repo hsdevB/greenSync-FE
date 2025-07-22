@@ -10,10 +10,11 @@ import OpenWeather from "./OpenWheater.jsx";
 import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
+import { useAutoMode } from '../hooks/useAutoMode.jsx';
 class UnityMessage {
   constructor(name, data) {
     this.name = name;
-    this.data = data;
+    this.data = JSON.stringify(data);
   }
 }
 
@@ -36,86 +37,69 @@ const DashBoardCards = ({ unityContext }) => {
   const { unityProvider, isLoaded, loadingProgression, sendMessage } = unityContext;
   const loadingPercentage = Math.round(loadingProgression * 100); // 로딩 퍼센트
 
-  // 백엔드 서버 연결 상태 확인
-  const checkBackendConnection = async () => {
-    try {
-      console.log('Checking backend connection...');
-      const response = await axios.get('/sensor/health', { timeout: 3000 });
-      console.log('Backend is accessible:', response.data);
-      return true;
-    } catch (error) {
-      console.error('Backend connection failed:', error.message);
-      return false;
-    }
-  };
-
-  // 컴포넌트 마운트 시 백엔드 연결 확인
-  useEffect(() => {
-    checkBackendConnection();
-  }, []);
-
-<div style={{ width: '100%', minHeight: '400px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', position: 'relative', marginTop: '32px' }}>
-  <div style={{ flex: 1, maxWidth: '900px', position: 'relative' }}>
-    {!isLoaded && (
-      <div className="unity-loading-overlay">
-        <div className="unity-loading-text">
-          Unity 로딩 중... {loadingPercentage}%
-        </div>
-      </div>
-    )}
-    <Unity
-      style={{
-        width: '100%',
-        height: '400px',
-        background: '#222',
-        borderRadius: '16px',
-        opacity: isLoaded ? 1 : 0.3,
-        transition: 'opacity 0.3s'
-      }}
-      unityProvider={unityProvider}
-      devicePixelRatio={window.devicePixelRatio}
-    />
-  </div>
-</div>
-
   // 상태 관리 초기화
   const [currentTime, setCurrentTime] = useState(getCurrentTimeString()); // 현재 시간
   const [refreshDisabled, setRefreshDisabled] = useState(false); // 새로고침 비활성화 상태
   const [refreshTimer, setRefreshTimer] = useState(0); // 새로고침 타이머
+  const [unityError, setUnityError] = useState(null); // Unity 에러 상태
   const iotData = useIotData(); // 온실 내 IoT 데이터
   const [indoorTemp, setIndoorTemp] = useState('--'); 
   const [indoorHumi, setIndoorHumi] = useState('--');
   const [phValue, setPhValue] = useState('--');
   const [carbonDioxide, setCarbonDioxide] = useState('--');
-  const [nutrient, setNutrient] = useState('--');
   const [elcDT, setElcDT] = useState('--');
   const [illuminance, setIlluminance] = useState('--');
 
 
-  // unity 초기화할 때 보내줄 제어값
-  const sendToUnity = useCallback((eventName, payload) => {
+ // unity 초기화할 때 보내줄 제어값
+ const sendToUnity = useCallback((eventName, payload) => {
+  if (!isLoaded) {
+    console.log("Unity not loaded yet, skipping message:", eventName);
+    return;
+  }
+  
+  try {
     const message = new UnityMessage(eventName, payload);
+    console.log("Sending to Unity:", JSON.stringify(message));
     sendMessage("MessageManager", "ReceiveMessage", JSON.stringify(message));
-  }, [sendMessage]);
+  } catch (error) {
+    console.error("Error sending message to Unity:", error);
+  }
+}, [sendMessage, isLoaded]);
 
-  const {
-    water, fan, led, temp, humid, restoreFromLocal
-  } = useControlStore();
+const {
+  water, fan, ledLevel, temp, humid, restoreFromLocal, autoMode,
+} = useControlStore();
 
-  useEffect(() => {
-  // 상태 복원 (로컬스토리지에 저장한 상태 있다면)
-  restoreFromLocal();
-  }, []);
+// 자동모드 커스텀 훅 사용
+const { simulatedData } = useAutoMode(sendToUnity);
 
-  useEffect(() => {
-    if (isLoaded) {
-      sendToUnity("startWater", { status: water });
-      sendToUnity("fanStatus", { status: fan });
-      sendToUnity("ledLevel", { level: led ? 3 : 0 });
-      sendToUnity("tempControl", { value: temp });
-      sendToUnity("humidControl", { value: humid });
-    }
-  }, [isLoaded]);
+useEffect(() => {
+// 상태 복원 (로컬스토리지에 저장한 상태 있다면)
+restoreFromLocal();
+}, []);
+
+useEffect(() => {
+  if (isLoaded) {
+    // Unity 로드 완료 후 약간의 지연을 두고 메시지 전송
+    setTimeout(() => {
+      try {
+        sendToUnity("startWater", { status: water });
+        sendToUnity("fanStatus", { status: fan });
+        sendToUnity("ledLevel", { level: ledLevel ? 3 : 0 });
+        sendToUnity("tempControl", { value: temp });
+        sendToUnity("humidControl", { value: humid });
+        
+        // 주간/야간 설정
+        const currentHour = new Date().getHours();
+        const isDay = currentHour >= 6 && currentHour < 18;
+        sendToUnity("toggleDayNight", { isDay: isDay });
+      } catch (error) {
+        console.error("Error initializing Unity:", error);
+      }
+    }, 500); // 500ms 지연
+  }
+}, [isLoaded, sendToUnity, water, fan, ledLevel, temp, humid]);
 
   useEffect(() => {
     // 새로고침 상태 복원
@@ -166,18 +150,51 @@ const DashBoardCards = ({ unityContext }) => {
     }
   }, [refreshTimer, refreshDisabled]);
 
+  // Unity 로딩 타임아웃 처리
+  useEffect(() => {
+    if (!isLoaded && loadingProgression > 0) {
+      const timeout = setTimeout(() => {
+        if (loadingProgression < 1) {
+          console.warn('Unity 로딩 타임아웃 - 90%에서 멈춤');
+          setUnityError('Unity 로딩이 시간 초과되었습니다. 페이지를 새로고침해주세요.');
+        }
+      }, 60000); // 60초로 증가
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoaded, loadingProgression]);
+
+  // Unity 로딩 진행률 모니터링
+  useEffect(() => {
+    console.log('Unity 상태:', { isLoaded, loadingProgression, loadingPercentage });
+    
+    if (loadingProgression > 0) {
+      console.log(`Unity 로딩 진행률: ${Math.round(loadingProgression * 100)}%`);
+      
+      // 90%에서 멈추는 것이 정상임을 알려주는 메시지
+      if (loadingProgression >= 0.9 && loadingProgression < 1) {
+        console.log('Unity 로딩이 90%에서 잠시 멈춥니다. 이는 정상적인 과정입니다.');
+      }
+    }
+  }, [isLoaded, loadingProgression, loadingPercentage]);
+
+  // Unity 에러 상태 초기화
+  useEffect(() => {
+    if (isLoaded) {
+      setUnityError(null);
+    }
+  }, [isLoaded]);
+
   // 대시보드 데이터 (임시)
   const dashboardData = DashBoardData;
 
   // 실내온도 데이터 가져오기
   useEffect(() => {
-    const fetchIndoorTemp = async () => { // 화살표 함수 사용 
+    const fetchIndoorTemp = async () => {
       try {
-        // 프록시를 사용하지 않고 직접 주소로 요청
         const id = 1;
-        const res = await axios.get(`/sensor/temperature/${id}`);// 1인 수정 해야함 변수 추가 해야함
+        const res = await axios.get(`/sensor/temperature/${id}`);
         console.log("res: ", JSON.stringify(res));
-        // alert(JSON.stringify(res.data));
         if (res.data && typeof res.data === 'number') {
           setIndoorTemp(res.data);
         } else if (res.data && res.data.data.temperature) {
@@ -185,7 +202,8 @@ const DashBoardCards = ({ unityContext }) => {
         } else {
           setIndoorTemp('--');
         }
-      } catch (e) {
+      } catch (error) {
+        console.error('Temperature fetch error:', error);
         setIndoorTemp('--');
       }
     };
@@ -204,7 +222,8 @@ useEffect(() => {
       } else {
         setIndoorHumi('--');
       }
-    } catch (e) {
+    } catch (error) {
+      console.error('Humidity fetch error:', error);
       setIndoorHumi('--');
     }
   };
@@ -305,12 +324,41 @@ useEffect(() => {
             <div className="unity-loading-overlay">
               <div className="unity-loading-text">
                 Unity 로딩 중... {loadingPercentage}%
+                {loadingPercentage >= 90 && loadingPercentage < 100 && (
+                  <div style={{ 
+                    fontSize: '12px', 
+                    color: '#666', 
+                    marginTop: '8px',
+                    fontStyle: 'italic'
+                  }}>
+                    잠시만 기다려주세요...
+                  </div>
+                )}
               </div>
               <div className="unity-loading-bar-bg">
                 <div
                   className="unity-loading-bar-fill"
                   style={{ width: `${loadingPercentage}%` }}
                 ></div>
+              </div>
+              {unityError && (
+                <div style={{ 
+                  color: '#ef4444', 
+                  marginTop: '16px', 
+                  fontSize: '14px',
+                  textAlign: 'center'
+                }}>
+                  {unityError}
+                </div>
+              )}
+              {/* 디버깅 정보 */}
+              <div style={{ 
+                fontSize: '10px', 
+                color: '#999', 
+                marginTop: '8px',
+                textAlign: 'center'
+              }}>
+                Unity 상태: {isLoaded ? '로드됨' : '로딩 중'} | 진행률: {loadingPercentage}%
               </div>
             </div>
           )}
@@ -325,6 +373,21 @@ useEffect(() => {
             }}
             unityProvider={unityProvider}
             devicePixelRatio={window.devicePixelRatio}
+            config={{
+              companyName: "GreenSync",
+              productName: "SmartFarm",
+              productVersion: "1.0.0"
+            }}
+            onError={(error) => {
+              console.error('Unity 에러:', error);
+              setUnityError(`Unity 로딩 중 오류가 발생했습니다: ${error}`);
+            }}
+            onProgress={(progress) => {
+              console.log('Unity 로딩 진행률:', progress);
+            }}
+            onInitialized={() => {
+              console.log('Unity 초기화 완료!');
+            }}
           />
         </div>
         {/* 새로고침 버튼 */}
@@ -385,6 +448,72 @@ useEffect(() => {
           </div>
         </div>
       </div>
+
+      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
+      {autoMode && (
+        <div className="dashboard-info-row">
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 온도1</h3>
+            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 습도1</h3>
+            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+        </div>
+      )}
+  
+      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
+      {autoMode && (
+        <div className="dashboard-info-row">
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 온도2</h3>
+            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 습도2</h3>
+            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+        </div>
+      )}
+
+      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
+      {autoMode && (
+        <div className="dashboard-info-row">
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 온도3</h3>
+            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 습도3</h3>
+            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+        </div>
+      )}
+
+      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
+      {autoMode && (
+        <div className="dashboard-info-row">
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 온도4</h3>
+            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+          <div className="dashboard-card">
+            <h3 className="dashboard-card-title">자동 제어 기준 습도4</h3>
+            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
+            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          </div>
+        </div>
+      )}
+
+
       {/* 실내온도, 실내습도, 산도, 전기전도도 카드를 한 줄로 배치 */}
       <div className="dashboard-cards-row">
        
@@ -542,6 +671,73 @@ useEffect(() => {
           </ResponsiveContainer>
           <div className="dashboard-graph-desc">
             평균 온도 <span style={{ color: "#ef4444" }}>23.8°C</span> / 평균 습도 <span style={{ color: "#3b82f6" }}>60.3%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 최적 제어값 및 예측 수확수 섹션 */}
+      <div className="dashboard-cards-row">
+        {/* 토마토 최적 제어값 */}
+        <div className="dashboard-card">
+          <div className="dashboard-card-section">
+            <h3 className="dashboard-card-title">토마토 최적 제어값 및 예측 수확수</h3>
+          </div>
+          <div style={{ padding: '16px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ color: '#666', fontSize: '14px' }}>급수량:</span>
+              <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '16px' }}>2.5 L</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ color: '#666', fontSize: '14px' }}>난방 온도:</span>
+              <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '16px' }}>22 ℃</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ color: '#666', fontSize: '14px' }}>배기 온도:</span>
+              <span style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '16px' }}>18 ℃</span>
+            </div>
+            <div style={{ 
+              borderTop: '1px solid #e5e7eb', 
+              paddingTop: '12px', 
+              textAlign: 'center',
+              background: '#fef3c7',
+              borderRadius: '8px',
+              padding: '12px'
+            }}>
+              <div style={{ color: '#92400e', fontSize: '14px', marginBottom: '4px' }}>예측 수확수</div>
+              <div style={{ color: '#92400e', fontSize: '24px', fontWeight: 'bold' }}>156 kg</div>
+            </div>
+          </div>
+        </div>
+
+        {/* 파프리카 최적 제어값 */}
+        <div className="dashboard-card">
+          <div className="dashboard-card-section">
+            <h3 className="dashboard-card-title">파프리카 최적 제어값 및 예측 수확수</h3>
+          </div>
+          <div style={{ padding: '16px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ color: '#666', fontSize: '14px' }}>급수량:</span>
+              <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '16px' }}>3.2 L</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ color: '#666', fontSize: '14px' }}>난방 온도:</span>
+              <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '16px' }}>24 ℃</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ color: '#666', fontSize: '14px' }}>배기 온도:</span>
+              <span style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '16px' }}>20 ℃</span>
+            </div>
+            <div style={{ 
+              borderTop: '1px solid #e5e7eb', 
+              paddingTop: '12px', 
+              textAlign: 'center',
+              background: '#fef3c7',
+              borderRadius: '8px',
+              padding: '12px'
+            }}>
+              <div style={{ color: '#92400e', fontSize: '14px', marginBottom: '4px' }}>예측 수확수</div>
+              <div style={{ color: '#92400e', fontSize: '24px', fontWeight: 'bold' }}>89 kg</div>
+            </div>
           </div>
         </div>
       </div>

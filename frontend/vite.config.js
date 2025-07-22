@@ -17,5 +17,15 @@ export default defineConfig({
         }
       },
     },
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Opener-Policy': 'same-origin'
+    }
   },
+  assetsInclude: ['**/*.unityweb', '**/*.wasm'],
+  build: {
+    rollupOptions: {
+      external: ['Build.framework.js.unityweb', 'Build.data.unityweb']
+    }
+  }
 });

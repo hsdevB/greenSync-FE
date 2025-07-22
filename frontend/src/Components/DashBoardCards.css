@@ -418,3 +418,47 @@
 .dashboard-daynight-text.night {
   color: #64748b;   /* 회색/밤색 */
 }
+
+/* 스마트 온실 제어 시스템 애니메이션 */
+@keyframes pulse {
+  0% { 
+    box-shadow: 0 0 0 0 rgba(0, 184, 148, 0.7); 
+  }
+  70% { 
+    box-shadow: 0 0 0 10px rgba(0, 184, 148, 0); 
+  }
+  100% { 
+    box-shadow: 0 0 0 0 rgba(0, 184, 148, 0); 
+  }
+}
+
+@keyframes shimmer {
+  0%, 100% { 
+    transform: rotate(0deg); 
+  }
+  50% { 
+    transform: rotate(180deg); 
+  }
+}
+
+/* 카드 호버 효과 */
+.crop-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.crop-card-hover:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+}
+
+/* 컨트롤 아이템 호버 효과 */
+.control-item-hover {
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.control-item-hover:hover {
+  background: #e9ecef !important;
+  border-color: #ddd !important;
+  transform: scale(1.05);
+}

@@ -6,6 +6,7 @@ import Dashboard from './Components/DashBoard';
 import MainPage from './Page/MainPage';
 import LoginPage from './Page/LoginPage';
 import SignupPage from './Page/SignupPage';
+import CropControlUI from './Components/CropControlUI';
 import './App.css';
 
 function DashboardLayout({ unityContext }) {
@@ -36,6 +37,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/dashboard" element={<DashboardLayout unityContext={unityContext} />} />
+        <Route path="/crop-control" element={<CropControlUI />} />
       </Routes>
     </BrowserRouter>
   );
