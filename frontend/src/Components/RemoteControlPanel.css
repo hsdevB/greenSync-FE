@@ -7,6 +7,12 @@
   gap: 40px; /* 좌우 간격, 필요시 조절 */
   color: #bfdbfe;
   margin: 0 auto;
+  overflow-x: auto;
+  box-sizing: border-box; /* 추가 */
+}
+
+.remote-panel-root * {
+  box-sizing: border-box; /* 모든 자식에도 적용 */
 }
 
 .left-panel {
