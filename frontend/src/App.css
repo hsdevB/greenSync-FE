@@ -63,6 +63,7 @@ body, * {
   box-sizing: border-box;
   background: #f8f9fa;
   height: 100%;
+  overflow-y: auto;
 }
 
 .dashboard-grid {
