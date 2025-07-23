@@ -3,7 +3,119 @@ import "./RemoteControlPanel.css";
 import { useIotData } from '../api/useIotData.js';
 import useControlStore from '../store/useControlStore.jsx';
 import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
+import mqtt from 'mqtt'; // 실제 환경에서는 mqtt.js 라이브러리 사용
 
+// MQTT 클라이언트
+class MQTTClient {
+  constructor() {
+    this.client = null;
+    this.isConnected = false;
+    this.isConnecting = false;
+  }
+
+  // MQTT 브로커 연결
+  connect(brokerUrl = 'ws://192.168.0.26::9001') {
+    if (this.isConnecting || this.isConnected) {
+      console.log('이미 연결 중이거나 연결됨');
+      return;
+    }
+
+    try {
+      this.isConnecting = true;
+      console.log(`MQTT 브로커 연결 시도: ${brokerUrl}`);
+      
+      this.client = mqtt.connect(brokerUrl);
+      
+      // 연결 성공 이벤트
+      this.client.on('connect', () => {
+        console.log('MQTT 브로커 연결 성공');
+        this.isConnected = true;
+        this.isConnecting = false;
+      });
+
+      // 연결 실패 이벤트
+      this.client.on('error', (error) => {
+        console.error('MQTT 연결 오류:', error);
+        this.isConnected = false;
+        this.isConnecting = false;
+      });
+
+      // 연결 끊김 이벤트
+      this.client.on('close', () => {
+        console.log('MQTT 연결 끊김');
+        this.isConnected = false;
+        this.isConnecting = false;
+      });
+
+      // 재연결 이벤트
+      this.client.on('reconnect', () => {
+        console.log('MQTT 재연결 시도');
+        this.isConnecting = true;
+      });
+
+    } catch (error) {
+      console.error('MQTT 연결 실패:', error);
+      this.isConnected = false;
+      this.isConnecting = false;
+    }
+  }
+
+  // MQTT 메시지 발행
+  publish(topic, message) {
+    // client와 연결 상태 모두 확인
+    if (!this.client || !this.isConnected) {
+      console.warn('MQTT 브로커에 연결되지 않음 또는 클라이언트 없음');
+      return;
+    }
+
+    try {
+      const payload = typeof message === 'string' ? message : JSON.stringify(message);
+      console.log(`MQTT 발행 - Topic: ${topic}, Payload: ${payload}`);
+      
+      this.client.publish(topic, payload, (error) => {
+        if (error) {
+          console.error('MQTT 메시지 발행 실패:', error);
+        } else {
+          console.log('MQTT 메시지 발행 성공');
+        }
+      });
+      
+    } catch (error) {
+      console.error('MQTT 메시지 발행 실패:', error);
+    }
+  }
+
+  // LED 깜박임 제어 (각 센서별 개별 제어)
+  async blinkLed(ledIndex, currentFanState) {
+    // 특정 LED만 켜기 (온도센서=0, 습도센서=1, 급수=2, LED밝기=3)
+    const ledObject = [false, false, false, false];
+    ledObject[ledIndex] = true;
+    
+    this.publish('device/control/ABCD1234', {
+      "fan": currentFanState,
+      "leds": ledObject
+    });
+    
+    // 딜레이
+    if (ledIndex != 2)
+      await new Promise(resolve => setTimeout(resolve, 500)); // 500ms
+    else
+      await new Promise(resolve => setTimeout(resolve, 5000)); // 급수 끝나는 시간(5초)
+    
+    // LED 끄기
+    this.publish('device/control/ABCD1234', {
+      "leds": [false, false, false, false]
+    });
+  }
+
+  disconnect() {
+    if (this.client && this.isConnected) {
+      this.client.end();
+      this.isConnected = false;
+      console.log('MQTT 연결 종료');
+    }
+  }
+}
 class UnityMessage {
   constructor(name, data) {
     this.name = name;
@@ -22,6 +134,21 @@ export default function RemoteControlPanel({unityContext}) {
   const iotData = useIotData();
   const { sendMessage } = unityContext;
 
+  // MQTT 클라이언트 인스턴스
+  const mqttClientRef = useRef(null);
+
+  // MQTT 클라이언트 초기화
+  useEffect(() => {
+    mqttClientRef.current = new MQTTClient();
+    mqttClientRef.current.connect(); // 실제 브로커 주소로 변경 필요
+    
+    return () => {
+      if (mqttClientRef.current) {
+        mqttClientRef.current.disconnect();
+      }
+    };
+  }, []);
+
   const sendToUnity = useCallback((eventName, payload) => {
     const message = new UnityMessage(eventName, payload);
     console.log("Sending to Unity:", JSON.stringify(message));
@@ -30,8 +157,12 @@ export default function RemoteControlPanel({unityContext}) {
 
   // 전역 store 업데이트 및 저장
   const {
-    water, fan, ledLevel, temp, humid,
-    setWater, setFan, setLed, setTemp, setHumid,
+    water, fan, ledLevel,
+    temp1,
+    humid1,
+    setWater, setFan, setLed, 
+    setTemp1,
+    setHumid1,
     persistToLocal,
     autoMode, manualMode,
     toggleAutoMode, toggleManualMode,
@@ -80,7 +211,7 @@ export default function RemoteControlPanel({unityContext}) {
       }, 1000);
     }
     return () => clearInterval(timerRef.current);
-  }, [refreshDisabled]);
+  }, [refreshTimer, refreshDisabled]);
 
   useEffect(() => {
     if (refreshTimer === 0 && refreshDisabled) {
@@ -92,29 +223,74 @@ export default function RemoteControlPanel({unityContext}) {
 
   // 수동 모드 ---------------------------------------------------
   // 온도 제어 ▲▼
-  const handleTempChange = (delta) => {
-    const newValue = Math.max(10, Math.min(40, temp + delta));
-    // 센서로는 온도 조절 할 때마다 led 꺼졌다 켜졌다 전달해야 함.
-    sendToUnity("tempControl", { value: newValue });
-    setTemp(newValue);
+  const handleTempChange = async (sensorNum, delta) => {
+    const currentTemp = temp1;
+    const newValue = Math.max(10, Math.min(40, currentTemp + delta));
+    
+    sendToUnity(`tempControl${sensorNum}`, { value: newValue });
+    // MQTT로 LED 깜박임 신호 전송
+    if (mqttClientRef.current) {
+      await mqttClientRef.current.blinkLed(0, fan);
+    }
+    // 온도/습도 센서 데이터 전송
+    const sensorData = {
+      "temperature": newValue,
+      "humidity": humid1,
+      "phLevel": 6.5,
+      "eleDT": 1.2,
+      "co2": 400,
+    };
+    if (mqttClientRef.current) {
+      mqttClientRef.current.publish('sensor/data/send', sensorData);
+    }
+    if (sensorNum === 1) setTemp1(newValue);
+    // else if (sensorNum === 2) setTemp2(newValue);
+    // else if (sensorNum === 3) setTemp3(newValue);
+    // else if (sensorNum === 4) setTemp4(newValue);
     persistToLocal();
   };
 
   // 습도 제어 ▲▼
-  const handleHumidChange = (delta) => {
-    const newValue = Math.max(30, Math.min(90, humid + delta));
-    // 센서로는 습도도 조절 할 때마다 led 꺼졌다 켜졌다 전달해야 함.
-    sendToUnity("humidControl", { value: newValue });
-    setHumid(newValue);
+  const handleHumidChange = async (sensorNum, delta) => {
+    const currentHumid = humid1;
+    const newValue = Math.max(30, Math.min(90, currentHumid + delta));
+    
+    sendToUnity(`humidControl${sensorNum}`, { value: newValue });
+    // MQTT로 LED 깜박임 신호 전송
+    if (mqttClientRef.current) {
+      await mqttClientRef.current.blinkLed(1, fan);
+    }
+    // 온도/습도 센서 데이터 전송
+    const sensorData = {
+      "temperature": temp1,
+      "humidity": newValue,
+      "phLevel": 6.5,
+      "eleDT": 1.2,
+      "co2": 400,
+    };
+    if (mqttClientRef.current) {
+      mqttClientRef.current.publish('sensor/data/send', sensorData);
+    }
+    if (sensorNum === 1) setHumid1(newValue);
+    // else if (sensorNum === 2) setHumid2(newValue);
+    // else if (sensorNum === 3) setHumid3(newValue);
+    // else if (sensorNum === 4) setHumid4(newValue);
+    
     persistToLocal();
   };
   
 
   // 관개 시스템
-  const handleWaterClick = () => {
+  const handleWaterClick = async () => {
     // 센서로 on/off 전달 (sendToSensor('water', !prev))
     if(water) return; // 이미 급수 중이면 무시
+
     sendToUnity("startWater", { status: true });
+    // MQTT로 LED 깜박임 신호 전송
+    if (mqttClientRef.current) {
+      await mqttClientRef.current.blinkLed(2, fan);
+    }
+
     setWater(true);
     persistToLocal();
 
@@ -127,19 +303,34 @@ export default function RemoteControlPanel({unityContext}) {
 
   // 환기 시스템 토글
   const handleFanToggle = () => {
-    // 센서로 on/off 전달 (sendToSensor('fan', !prev))
     const newState = !fan;
     sendToUnity("fanStatus", { status: newState });
+
+    // MQTT로 팬 제어 신호 전송
+    if (mqttClientRef.current) {
+      mqttClientRef.current.publish('device/control/ABCD1234', {
+        "fan": newState,
+        "leds": [false, false, false, false]
+      });
+      console.log("fan작동");
+    }
+
     setFan(newState);
     persistToLocal();
   };
 
   // LED 조명
-  const handleLedToggle = (e) => {
+  const handleLedToggle = async (e) => {
     // 센서로는 밝기기 조절 할 때마다 led 꺼졌다 켜졌다 전달해야 함.
     const level = parseInt(e.target.value);
     console.log("LED 밝기 설정:", level);
     sendToUnity("ledLevel", { level });
+
+    // MQTT로 LED 깜박임 신호 전송 (밝기 조절할 때마다)
+    if (mqttClientRef.current && level > 0) {
+      await mqttClientRef.current.blinkLed(3, fan);
+    }
+
     setLed(level);
     persistToLocal();
   };
@@ -203,13 +394,31 @@ export default function RemoteControlPanel({unityContext}) {
         {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
         {autoMode && (
           <div className="realtime-data-section">
-            <div className="section-title">자동 제어 기준 데이터</div>
+            <div className="section-title">자동 제어 기준 데이터 (데이터확인용)</div>
             <div className="data-grid">
-              <DataCard label="기준온도" value={simulatedData.temp} unit="℃" />
-              <DataCard label="기준습도" value={simulatedData.humid} unit="%" />
+              <DataCard label="센서1 온도" value={simulatedData.sensor1?.temp || '--'} unit="℃" />
+              <DataCard label="센서1 습도" value={simulatedData.sensor1?.humid || '--'} unit="%" />
+              {/* <DataCard label="센서2 온도" value={simulatedData.sensor2?.temp || '--'} unit="℃" /> */}
+              {/* <DataCard label="센서2 습도" value={simulatedData.sensor2?.humid || '--'} unit="%" /> */}
+              {/* <DataCard label="센서3 온도" value={simulatedData.sensor3?.temp || '--'} unit="℃" /> */}
+              {/* <DataCard label="센서3 습도" value={simulatedData.sensor3?.humid || '--'} unit="%" /> */}
+              {/* <DataCard label="센서4 온도" value={simulatedData.sensor4?.temp || '--'} unit="℃" /> */}
+              {/* <DataCard label="센서4 습도" value={simulatedData.sensor4?.humid || '--'} unit="%" /> */}
             </div>
           </div>
         )}
+
+        {/* MQTT 연결 상태 표시 */}
+        <div className="realtime-data-section">
+          <div className="section-title">MQTT 연결 상태(확인용)</div>
+          <div className="data-grid">
+            <DataCard 
+              label="MQTT" 
+              value={mqttClientRef.current?.isConnected ? "연결됨" : "연결 안됨"} 
+              unit={mqttClientRef.current?.isConnected ? "🟢" : "🔴"} 
+            />
+          </div>
+        </div>
       </div>
 
       {/* 오른쪽 패널 */}
@@ -280,6 +489,34 @@ export default function RemoteControlPanel({unityContext}) {
               </div>
             </div>
           </div>
+          
+          {/* 온·습도 제어1 */}
+          <div className="control-card">
+            <div className="control-card-header">
+              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️💧</span>
+              <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어1</span>
+            </div>
+            <div className="control-card-body">
+              <div className="temp-control-row">
+                <button className="temp-btn" onClick={() => handleTempChange(1, -1)} disabled={controlDisabled}>-</button>
+                <span className="temp-value">{temp1}℃</span>
+                <button className="temp-btn" onClick={() => handleTempChange(1, 1)} disabled={controlDisabled}>+</button>
+              </div>
+              <div className="control-card-desc">
+                {autoMode ? "자동 난방 제어" : "수동 난방 시스템"}
+              </div>
+
+              <div className="temp-control-row" style={{ marginTop: "12px" }}>
+                <button className="temp-btn" onClick={() => handleHumidChange(1, -1)} disabled={controlDisabled}>-</button>
+                <span className="temp-value">{humid1}%</span>
+                <button className="temp-btn" onClick={() => handleHumidChange(1, 1)} disabled={controlDisabled}>+</button>
+              </div>
+              <div className="control-card-desc">
+                {autoMode ? "자동 가습 제어" : "수동 가습 시스템"}
+              </div>
+            </div>
+          </div>
+
           {/* LED 조명 */}
           <div className="control-card">
             <div className="control-card-header">
@@ -298,111 +535,6 @@ export default function RemoteControlPanel({unityContext}) {
                 />
               <div className="control-card-desc">
                 {autoMode ? `자동 제어 중 (${ledLevel ?? 0})` : `LED 밝기 제어(${ledLevel ?? 0})`}
-              </div>
-            </div>
-          </div>
-          {/* 온도 제어 */}
-          <div className="control-card">
-            <div className="control-card-header">
-              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️💧</span>
-              <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어1</span>
-            </div>
-            <div className="control-card-body">
-              <div className="temp-control-row">
-                <button className="temp-btn" onClick={() => handleTempChange(-1)} disabled={controlDisabled}>-</button>
-                <span className="temp-value">{temp}℃</span>
-                <button className="temp-btn" onClick={() => handleTempChange(1)} disabled={controlDisabled}>+</button>
-              </div>
-              <div className="control-card-desc">
-                {autoMode ? "자동 난방 제어" : "수동 난방 시스템"}
-              </div>
-
-              {/* 습도 제어 */}
-              <div className="temp-control-row" style={{ marginTop: "12px" }}>
-                <button className="temp-btn" onClick={() => handleHumidChange(-1)} disabled={controlDisabled}>-</button>
-                <span className="temp-value">{humid}%</span>
-                <button className="temp-btn" onClick={() => handleHumidChange(1)} disabled={controlDisabled}>+</button>
-              </div>
-              <div className="control-card-desc">
-                {autoMode ? "자동 가습 제어" : "수동 가습 시스템"}
-              </div>
-            </div>
-          </div>
-          <div className="control-card">
-            <div className="control-card-header">
-              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️💧</span>
-              <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어2</span>
-            </div>
-            <div className="control-card-body">
-              <div className="temp-control-row">
-                <button className="temp-btn" onClick={() => handleTempChange(-1)} disabled={controlDisabled}>-</button>
-                <span className="temp-value">{temp}℃</span>
-                <button className="temp-btn" onClick={() => handleTempChange(1)} disabled={controlDisabled}>+</button>
-              </div>
-              <div className="control-card-desc">
-                {autoMode ? "자동 난방 제어" : "수동 난방 시스템"}
-              </div>
-
-              {/* 습도 제어 */}
-              <div className="temp-control-row" style={{ marginTop: "12px" }}>
-                <button className="temp-btn" onClick={() => handleHumidChange(-1)} disabled={controlDisabled}>-</button>
-                <span className="temp-value">{humid}%</span>
-                <button className="temp-btn" onClick={() => handleHumidChange(1)} disabled={controlDisabled}>+</button>
-              </div>
-              <div className="control-card-desc">
-                {autoMode ? "자동 가습 제어" : "수동 가습 시스템"}
-              </div>
-            </div>
-          </div>
-          <div className="control-card">
-            <div className="control-card-header">
-              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️💧</span>
-              <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어3</span>
-            </div>
-            <div className="control-card-body">
-              <div className="temp-control-row">
-                <button className="temp-btn" onClick={() => handleTempChange(-1)} disabled={controlDisabled}>-</button>
-                <span className="temp-value">{temp}℃</span>
-                <button className="temp-btn" onClick={() => handleTempChange(1)} disabled={controlDisabled}>+</button>
-              </div>
-              <div className="control-card-desc">
-                {autoMode ? "자동 난방 제어" : "수동 난방 시스템"}
-              </div>
-
-              {/* 습도 제어 */}
-              <div className="temp-control-row" style={{ marginTop: "12px" }}>
-                <button className="temp-btn" onClick={() => handleHumidChange(-1)} disabled={controlDisabled}>-</button>
-                <span className="temp-value">{humid}%</span>
-                <button className="temp-btn" onClick={() => handleHumidChange(1)} disabled={controlDisabled}>+</button>
-              </div>
-              <div className="control-card-desc">
-                {autoMode ? "자동 가습 제어" : "수동 가습 시스템"}
-              </div>
-            </div>
-          </div>
-          <div className="control-card">
-            <div className="control-card-header">
-              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️💧</span>
-              <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어4</span>
-            </div>
-            <div className="control-card-body">
-              <div className="temp-control-row">
-                <button className="temp-btn" onClick={() => handleTempChange(-1)} disabled={controlDisabled}>-</button>
-                <span className="temp-value">{temp}℃</span>
-                <button className="temp-btn" onClick={() => handleTempChange(1)} disabled={controlDisabled}>+</button>
-              </div>
-              <div className="control-card-desc">
-                {autoMode ? "자동 난방 제어" : "수동 난방 시스템"}
-              </div>
-
-              {/* 습도 제어 */}
-              <div className="temp-control-row" style={{ marginTop: "12px" }}>
-                <button className="temp-btn" onClick={() => handleHumidChange(-1)} disabled={controlDisabled}>-</button>
-                <span className="temp-value">{humid}%</span>
-                <button className="temp-btn" onClick={() => handleHumidChange(1)} disabled={controlDisabled}>+</button>
-              </div>
-              <div className="control-card-desc">
-                {autoMode ? "자동 가습 제어" : "수동 가습 시스템"}
               </div>
             </div>
           </div>
