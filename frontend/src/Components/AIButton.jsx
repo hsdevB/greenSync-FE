@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Chatbot from './Chatbot';
 import './AIButton.css';
 
 function AIButton({ farmId }) {
@@ -242,7 +243,6 @@ function AIButton({ farmId }) {
                           <div className="control-unit">개</div>
                         </div>
                       </div>
-                      
                       {/* 수확수 평가 */}
                       <div className="yield-evaluation">
                         <div className="yield-evaluation-label">수확 예상 등급</div>
@@ -288,6 +288,8 @@ function AIButton({ farmId }) {
           </div>
         </div>
       )}
+      {/* 오른쪽 하단 챗봇 */}
+      <Chatbot />
     </div>
   );
 }

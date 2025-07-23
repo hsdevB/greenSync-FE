@@ -58,7 +58,7 @@ const SignupPage = () => {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        width: 400,
+        width: 450,
         background: "white",
         padding: 32,
         borderRadius: 12,
@@ -66,39 +66,59 @@ const SignupPage = () => {
         marginBottom: 16
       }}>
         {/* 관리자/직원 토글 */}
-        <div style={{ display: "flex", width: "100%", marginBottom: 16, justifyContent: "center" }}>
-          <button
-            type="button"
+        <div style={{ display: "flex", width: "100%", marginBottom: 16, justifyContent: "center", gap: "40px" }}>
+          <span
             onClick={() => setRole("admin")}
             style={{
-              flex: 1,
-              padding: "10px 0",
-              background: role === "admin" ? "#388e3c" : "#f1f1f1",
-              color: role === "admin" ? "#fff" : "#388e3c",
-              border: "none",
-              borderRadius: "6px 0 0 6px",
-              fontWeight: "bold",
-              cursor: "pointer"
+              fontSize: "16px",
+              fontWeight: role === "admin" ? "bold" : "normal",
+              color: role === "admin" ? "#388e3c" : "#666",
+              cursor: "pointer",
+              padding: "8px 16px",
+              transition: "all 0.2s ease",
+              borderBottom: role === "admin" ? "2px solid #388e3c" : "2px solid transparent"
+            }}
+            onMouseEnter={(e) => {
+              if (role !== "admin") {
+                e.target.style.color = "#388e3c";
+                e.target.style.fontWeight = "500";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (role !== "admin") {
+                e.target.style.color = "#666";
+                e.target.style.fontWeight = "normal";
+              }
             }}
           >
             관리자
-          </button>
-          <button
-            type="button"
+          </span>
+          <span
             onClick={() => setRole("employee")}
             style={{
-              flex: 1,
-              padding: "10px 0",
-              background: role === "employee" ? "#388e3c" : "#f1f1f1",
-              color: role === "employee" ? "#fff" : "#388e3c",
-              border: "none",
-              borderRadius: "0 6px 6px 0",
-              fontWeight: "bold",
-              cursor: "pointer"
+              fontSize: "16px",
+              fontWeight: role === "employee" ? "bold" : "normal",
+              color: role === "employee" ? "#388e3c" : "#666",
+              cursor: "pointer",
+              padding: "8px 16px",
+              transition: "all 0.2s ease",
+              borderBottom: role === "employee" ? "2px solid #388e3c" : "2px solid transparent"
+            }}
+            onMouseEnter={(e) => {
+              if (role !== "employee") {
+                e.target.style.color = "#388e3c";
+                e.target.style.fontWeight = "500";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (role !== "employee") {
+                e.target.style.color = "#666";
+                e.target.style.fontWeight = "normal";
+              }
             }}
           >
             직원
-          </button>
+          </span>
         </div>
         {/* 아이디 */}
         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
@@ -308,7 +328,7 @@ const SignupPage = () => {
         </div>
       </form>
       <div style={{ fontSize: 15, color: "#666" }}>
-        이미 계정이 있으신가요? <a href="#" style={{ color: "#388e3c", textDecoration: "underline" }}>로그인</a>
+        이미 계정이 있으신가요? <a href="/login" style={{ color: "#388e3c", textDecoration: "underline" }}>로그인</a>
       </div>
     </div>
   );
