@@ -364,15 +364,18 @@ useEffect(() => {
       </div>
     </div>,
     // CO2(이산화탄소)
-    <div className="dashboard-card dashboard-card-center" key="carbonDioxide">
-      <h3 className="dashboard-card-title">이산화탄소</h3>
-      <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flex:1, height:'100%'}}>
-        <div className="dashboard-card-value green" style={{fontSize:'2rem', margin:'16px 0 4px 0', textAlign:'center'}}>{carbonDioxide}</div>
-        <div className="dashboard-card-unit" style={{textAlign:'center'}}>ppm</div>
+    <div className="dashboard-card" key="carbonDioxide" style={{ minHeight: '220px' }}>
+      <div className="dashboard-card-section">
+        <Activity className="dashboard-card-icon green" />
+        <h3 className="dashboard-card-title">이산화탄소</h3>
       </div>
+      <div className="dashboard-card-status">센서</div>
+      <div className="dashboard-card-value green">{carbonDioxide}</div>
+      <div className="dashboard-card-unit">ppm</div>
+      <div className="dashboard-card-desc">실시간 측정값</div>
     </div>,
-    // 광량 (이전에는 습도 관리 아래였으나, 이제 위로 이동)
-    <div className="dashboard-card" key="light">
+    // 광량
+    <div className="dashboard-card" key="light" style={{ minHeight: '220px' }}>
       <div className="dashboard-card-section">
         <Sun className="dashboard-card-icon yellow" />
         <h3 className="dashboard-card-title">광량</h3>
