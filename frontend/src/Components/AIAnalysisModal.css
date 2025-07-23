@@ -1,0 +1,365 @@
+/* AI 분석 모달 스타일 */
+.ai-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.ai-modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.ai-modal-header {
+  padding: 24px 24px 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ai-modal-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ai-modal-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin: 0;
+}
+
+.ai-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.ai-modal-close:hover {
+  background-color: #f3f4f6;
+}
+
+.ai-modal-subtitle {
+  color: #6b7280;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* 작물 선택 스타일 */
+.ai-crop-selection {
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.ai-crop-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.ai-crop-options {
+  display: flex;
+  gap: 16px;
+}
+
+.ai-crop-option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.ai-crop-option:hover {
+  background-color: #f3f4f6;
+}
+
+.ai-crop-option input[type="radio"] {
+  margin-right: 8px;
+  width: 16px;
+  height: 16px;
+  accent-color: #10b981;
+}
+
+.ai-crop-option span {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  transition: color 0.2s;
+}
+
+.ai-crop-option span.selected {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.ai-modal-body {
+  padding: 24px;
+}
+
+/* 모달 로딩 상태 스타일 */
+.ai-modal-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.ai-modal-loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #10b981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 24px;
+}
+
+.ai-modal-loading-text {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.ai-modal-loading-subtext {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.ai-results-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+/* 제어값 카드 스타일 */
+.ai-control-card {
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border: 1px solid;
+}
+
+.ai-control-card.water {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+.ai-control-card.heat {
+  border-color: #ef4444;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+}
+
+.ai-control-card.vent {
+  border-color: #10b981;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.ai-control-card.yield {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.ai-control-card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-control-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ai-control-icon {
+  font-size: 1.5rem;
+}
+
+.ai-control-icon.yield {
+  font-size: 1.75rem;
+}
+
+.ai-control-name {
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.ai-control-name.yield {
+  color: #92400e;
+}
+
+.ai-control-description {
+  color: #6b7280;
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.ai-control-value-container {
+  text-align: right;
+}
+
+.ai-control-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.ai-control-value.yield {
+  font-size: 1.75rem;
+}
+
+.ai-control-value.water {
+  color: #1d4ed8;
+}
+
+.ai-control-value.heat {
+  color: #dc2626;
+}
+
+.ai-control-value.vent {
+  color: #059669;
+}
+
+.ai-control-value.green {
+  color: #059669;
+}
+
+.ai-control-value.yellow {
+  color: #d97706;
+}
+
+.ai-control-value.red {
+  color: #dc2626;
+}
+
+.ai-control-unit {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.ai-yield-evaluation {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-yield-evaluation-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.ai-grade-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ai-grade-excellent {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.ai-grade-normal {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.ai-grade-warning {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.ai-info-section {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  border-left: 4px solid #10b981;
+}
+
+.ai-info-text {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.ai-info-text p {
+  margin: 0 0 0.5rem 0;
+}
+
+.ai-info-text p + p {
+  margin-top: 0.75rem;
+  color: #6b7280;
+}
+
+.ai-button-area {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  justify-content: flex-end;
+}
+
+.ai-button-area button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.ai-close-button {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.ai-close-button:hover {
+  background-color: #e5e7eb;
+}
+
+.ai-apply-button {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.ai-apply-button:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+} 

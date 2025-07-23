@@ -31,6 +31,8 @@ function AIButton({ farmId }) {
   console.log('Farm ID:', farmId);
 
   const handleAnalyze = async () => {
+    console.log('AI 분석 시작 - 모달 열기');
+    setShowModal(true);
     setLoading(true);
     setResult(null);
     
@@ -38,21 +40,26 @@ function AIButton({ farmId }) {
       // 실제 코드: const res = await axios.post('http://localhost:3001/predict', { farm_id: farmId, crop: crop });
       const res = await simulateAPICall(); // 시뮬레이션용
       
-      if (res.data.status === 'success' || res.data.YIELD_CNT) {
-        setResult(res.data.predicted ? res.data.predicted : res.data);
-        setShowModal(true);
+      console.log('API Response:', res.data); // 디버깅용
+      
+      if (res.data.status === 'success' && res.data.predicted) {
+        console.log('결과 설정:', res.data.predicted);
+        setResult(res.data.predicted);
       } else {
-        alert('AI 분석 실패: ' + res.data.message);
+        console.log('분석 실패 - 데이터 형식 오류');
+        alert('AI 분석 실패: 데이터 형식이 올바르지 않습니다.');
       }
     } catch (err) {
-      console.error(err);
+      console.error('AI 분석 오류:', err);
       alert('서버 오류 발생');
     } finally {
+      console.log('로딩 완료');
       setLoading(false);
     }
   };
 
   const closeModal = () => {
+    console.log('모달 닫기');
     setShowModal(false);
   };
 
@@ -143,7 +150,11 @@ function AIButton({ farmId }) {
 
       {/* 모달 */}
       {showModal && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            closeModal();
+          }
+        }}>
           <div className="modal-content">
             {/* 모달 헤더 */}
             <div className="modal-header">
@@ -165,8 +176,15 @@ function AIButton({ farmId }) {
 
             {/* 모달 콘텐츠 */}
             <div className="modal-body">
-              {result && (
+              {loading ? (
+                <div className="modal-loading">
+                  <div className="modal-loading-spinner"></div>
+                  <p className="modal-loading-text">AI가 스마트팜 데이터를 분석하고 있습니다...</p>
+                  <p className="modal-loading-subtext">잠시만 기다려주세요</p>
+                </div>
+              ) : result ? (
                 <div>
+                  <p style={{color: 'green', marginBottom: '16px'}}>✅ 분석 완료!</p>
                   {/* 제어값 카드들 */}
                   <div className="results-grid">
                     {/* 급수량 */}
@@ -263,6 +281,11 @@ function AIButton({ farmId }) {
                     </div>
                   </div>
                 </div>
+              ) : (
+                <div style={{textAlign: 'center', padding: '20px'}}>
+                  <p style={{color: 'red'}}>❌ 분석 결과를 불러올 수 없습니다.</p>
+                  <p>상태: {loading ? '로딩 중' : '결과 없음'}</p>
+                </div>
               )}
 
               {/* 버튼 영역 */}
@@ -273,16 +296,18 @@ function AIButton({ farmId }) {
                 >
                   닫기
                 </button>
-                <button
-                  onClick={() => {
-                    // 실제로는 시스템에 제어값을 적용하는 로직
-                    alert('제어값이 스마트팜 시스템에 적용되었습니다!');
-                    closeModal();
-                  }}
-                  className="apply-button"
-                >
-                  🚀 적용하기
-                </button>
+                {!loading && result && (
+                  <button
+                    onClick={() => {
+                      // 실제로는 시스템에 제어값을 적용하는 로직
+                      alert('제어값이 스마트팜 시스템에 적용되었습니다!');
+                      closeModal();
+                    }}
+                    className="apply-button"
+                  >
+                    🚀 적용하기
+                  </button>
+                )}
               </div>
             </div>
           </div>

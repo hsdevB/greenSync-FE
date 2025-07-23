@@ -7,7 +7,7 @@ import MainPage from './Page/MainPage';
 import LoginPage from './Page/LoginPage';
 import SignupPage from './Page/SignupPage';
 import CropControlUI from './Components/CropControlUI';
-import AIButton from './Components/AIButton';
+import AIAnalysisModal from './Components/AIAnalysisModal';
 import { Unity } from 'react-unity-webgl';
 import './App.css';
 
@@ -28,14 +28,22 @@ function getCurrentTimeString() {
 
 function DashboardLayout({ unityContext }) {
   const [selectedMenu, setSelectedMenu] = React.useState('dashboard');
+  const [showAIModal, setShowAIModal] = React.useState(false);
   const handleLogout = () => { /* 로그아웃 처리 */ };
+  
+  const handleMenuSelect = (menu) => {
+    setSelectedMenu(menu);
+    if (menu === 'ai-analysis') {
+      setShowAIModal(true);
+    }
+  };
   
   return (
     <div className="main-layout">
       {/* 사이드바 */}
       <Sidebar
         selected={selectedMenu}
-        onSelect={setSelectedMenu}
+        onSelect={handleMenuSelect}
         onLogout={handleLogout}
       />
       
@@ -104,6 +112,13 @@ function DashboardLayout({ unityContext }) {
           </main>
         </div>
       </div>
+
+      {/* AI 분석 모달 */}
+      <AIAnalysisModal 
+        isOpen={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        farmId="farm001"
+      />
     </div>
   );
 }
