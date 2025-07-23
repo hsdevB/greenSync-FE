@@ -57,12 +57,12 @@ body, * {
 }
 
 .dashboard-area {
-  flex: 1;
   width: 100%;
   min-width: 0;
-  margin: 0;
   padding: 0;
   box-sizing: border-box;
+  background: #f8f9fa;
+  height: 100%;
 }
 
 .dashboard-grid {
@@ -87,11 +87,167 @@ body, * {
   display: flex;
   flex-direction: row;
   height: 100vh;
+  position: relative;
 }
 
 .sidebar {
   width: 256px;
   flex-shrink: 0;
+  z-index: 10;
+  background: #fff;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+}
+
+/* 상단 고정된 대시보드 헤더 */
+.dashboard-header-fixed {
+  position: fixed;
+  top: 0;
+  left: 256px;
+  right: 0;
+  height: 80px;
+  z-index: 15;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+}
+
+.dashboard-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.dashboard-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.dashboard-time {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* 좌우 분할 레이아웃 */
+.split-layout {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 80px);
+  margin-top: 80px;
+  margin-left: 256px;
+}
+
+/* 왼쪽: Unity 3D 화면 섹션 */
+.unity-section {
+  width: 40%;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  background: #f8f9fa;
+}
+
+/* 오른쪽: UI 콘텐츠 섹션 */
+.ui-section {
+  width: 60%;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  background: #fff;
+  overflow-y: auto;
+}
+
+/* Unity 3D 화면 컨테이너 */
+.unity-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  box-sizing: border-box;
+  background: #f8f9fa;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+  .split-layout {
+    flex-direction: column;
+  }
+  
+  .unity-section {
+    width: 100%;
+    height: 40%;
+  }
+  
+  .ui-section {
+    width: 100%;
+    height: 60%;
+  }
+}
+
+@media (max-width: 768px) {
+  .split-layout {
+    flex-direction: column;
+    margin-left: 0;
+  }
+  
+  .unity-section {
+    width: 100%;
+    height: 40%;
+    padding: 10px;
+  }
+  
+  .ui-section {
+    width: 100%;
+    height: 60%;
+    padding: 10px;
+  }
+}
+
+.unity-content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+/* Unity 로딩 오버레이 */
+.unity-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  border-radius: 12px;
+  z-index: 10;
+}
+
+.unity-loading-overlay .unity-loading-text {
+  font-size: 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.unity-loading-overlay .unity-loading-bar-bg {
+  width: 80%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.unity-loading-overlay .unity-loading-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #3b82f6);
+  transition: width 0.3s ease;
 }
 
 .dashboard-cards-container {

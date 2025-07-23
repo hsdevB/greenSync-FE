@@ -8,30 +8,43 @@ import MainPage from './Page/MainPage';
 import LoginPage from './Page/LoginPage';
 import SignupPage from './Page/SignupPage';
 import CropControlUI from './Components/CropControlUI';
+import AIAnalysisModal from './Components/AIAnalysisModal';
+import { Unity } from 'react-unity-webgl';
 import './App.css';
 
-// 현재 시간을 문자열로 반환하는 함수
 function getCurrentTimeString() {
   const now = new Date();
-  return now.toLocaleString('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  });
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const date = now.getDate();
+  const day = now.getDay();
+  const days = ["일", "월", "화", "수", "목", "금", "토"];
+  let hour = now.getHours();
+  const min = now.getMinutes().toString().padStart(2, "0");
+  const ampm = hour < 12 ? "오전" : "오후";
+  if (hour > 12) hour -= 12;
+  if (hour === 0) hour = 12;
+  return `${year}년 ${month}월 ${date}일 ${days[day]}요일 ${ampm} ${hour}:${min}`;
 }
 
 function DashboardLayout({ unityContext }) {
-  // 기존 대시보드 레이아웃을 별도 컴포넌트로 분리
   const [selectedMenu, setSelectedMenu] = React.useState('dashboard');
+  const [showAIModal, setShowAIModal] = React.useState(false);
   const handleLogout = () => { /* 로그아웃 처리 */ };
+  
+  const handleMenuSelect = (menu) => {
+    setSelectedMenu(menu);
+    if (menu === 'ai-analysis') {
+      setShowAIModal(true);
+    }
+  };
+  
   return (
     <div className="main-layout">
+      {/* 사이드바 */}
       <Sidebar
         selected={selectedMenu}
-        onSelect={setSelectedMenu}
+        onSelect={handleMenuSelect}
         onLogout={handleLogout}
       />
       
@@ -100,6 +113,13 @@ function DashboardLayout({ unityContext }) {
           </main>
         </div>
       </div>
+
+      {/* AI 분석 모달 */}
+      <AIAnalysisModal 
+        isOpen={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        farmId="farm001"
+      />
     </div>
   );
 }

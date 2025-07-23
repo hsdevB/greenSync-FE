@@ -1,0 +1,568 @@
+/* Grid 레이아웃 - DashBoardCardsTest 전용 */
+.dashboard-test-grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 50:50 비율 */
+  height: 100vh;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Unity 섹션 - 왼쪽 고정 */
+.unity-section-test {
+  background: #f8f9fa;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.unity-content-test {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  background: #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.unity-placeholder {
+  text-align: center;
+  color: #fff;
+  padding: 40px;
+}
+
+.unity-placeholder-text {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.unity-placeholder-desc {
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+/* UI 섹션 - 오른쪽 스크롤 */
+.ui-section-test {
+  background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.ui-header-test {
+  background: #fff;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.ui-content-test {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+  background: #f3f4f6;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1400px) {
+  .dashboard-test-grid-layout {
+    grid-template-columns: 45% 55%; /* Unity 영역을 조금 작게 */
+  }
+}
+
+@media (max-width: 1200px) {
+  .dashboard-test-grid-layout {
+    grid-template-columns: 40% 60%; /* 더 작은 화면에서는 Unity 영역을 더 작게 */
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-test-grid-layout {
+    grid-template-columns: 1fr; /* 모바일에서는 세로 배치 */
+    grid-template-rows: 300px 1fr;
+  }
+  
+  .unity-section-test {
+    height: 300px;
+  }
+}
+
+.dashboard-cards-row-top {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  padding: 24px 24px 0 24px;
+  background: #f3f4f6;
+}
+
+.dashboard-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  padding: 24px;
+  background: #f3f4f6;
+}
+
+.dashboard-cards-container {
+  width: 100%;
+  max-width: 1500px;   /* 최대 너비 지정 */
+  margin: 0 auto;      /* 좌우 중앙 정렬 */
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 0;
+  /* background: #f3f4f6; */
+}
+
+
+.dashboard-cards-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  /* gap: 24px; */
+  padding-top: 24px; /* 첫 줄 위에 여백 추가 */
+  margin: 24px;
+}
+
+/*온습도 관리 카드*/
+.dashboard-bottom-cards-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: 32px;
+  row-gap: 32px;         /* 세로 간격 추가 */
+  margin-top: 32px;      /* 위쪽 여백 추가 */
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+@media (min-width: 768px) {
+  .dashboard-bottom-cards-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.dashboard-main-charts-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin: 24px;
+  /* gap: 24px; */
+}
+
+.dashboard-graph-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  padding-left: 24px;   /* 왼쪽 여백 */
+  padding-right: 24px;  /* 오른쪽 여백 */
+  padding-bottom: 24px;  /* 아래쪽 여백 */
+}
+
+.dashboard-card, .dashboard-graph-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 24px;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.dashboard-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 24px 20px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 140px;
+  justify-content: flex-start;
+  position: relative;
+}
+
+.dashboard-card-icon {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 8px;
+}
+
+.dashboard-card-icon.red { color: #ef4444; }
+.dashboard-card-icon.blue { color: #3b82f6; }
+.dashboard-card-icon.yellow { color: #fbbf24; }
+
+.dashboard-card-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.dashboard-card-value.time {
+  font-size: 0.5rem;
+}
+
+.dashboard-card-value.orange { color: #fbbf24; }
+.dashboard-card-value.green { color: #10b981; }
+.dashboard-card-value.blue { color: #3b82f6; }
+.dashboard-card-value.red { color: #ef4444; }
+
+.dashboard-card-unit {
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+.dashboard-card-label {
+  font-size: 0.95rem;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+.dashboard-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-left: 6px;
+  color: #374151;
+  display: inline-block;
+}
+
+.dashboard-card-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.dashboard-card-status {
+  font-size: 1rem;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.dashboard-predict-label,
+.dashboard-predict-bad,
+.dashboard-predict-good {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
+
+.dashboard-predict-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.dashboard-predict-bad {
+  color: #f59e0b;
+  font-size: 0.95rem;
+}
+
+.dashboard-predict-good {
+  color: #10b981;
+  font-size: 0.95rem;
+}
+
+.dashboard-predict-btn {
+  width: 100%;
+  background: #10b981;
+  color: #fff;
+  padding: 10px 0;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-top: 10px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-weight: 500;
+}
+
+.dashboard-predict-btn:hover {
+  background: #059669;
+}
+
+.dashboard-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.dashboard-bar-fill {
+  width: 70%;
+  height: 100%;
+  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 6px;
+}
+
+.dashboard-gauge-wrap {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0 6px 0;
+  position: relative;
+}
+
+.dashboard-gauge {
+  width: 60px;
+  height: 60px;
+  transform: rotate(-90deg);
+}
+
+.dashboard-gauge-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dashboard-gauge-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.dashboard-gauge-value.yellow { color: #fbbf24; }
+.dashboard-gauge-value.green { color: #10b981; }
+.dashboard-gauge-label {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.dashboard-gauge-desc {
+  font-size: 0.95rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.dashboard-gauge-range {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.dashboard-ph-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #10b981;
+  margin-right: 8px;
+}
+
+.dashboard-graph-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #374151;
+}
+
+.dashboard-graph-desc {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-top: 8px;
+}
+
+.dashboard-gauge.large {
+  width: 80px;
+  height: 80px;
+}
+.dashboard-gauge-center.large {
+  font-size: 1.4rem;
+}
+.dashboard-ph-dot.large {
+  width: 20px;
+  height: 20px;
+}
+
+.dashboard-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f6f7f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 24px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dashboard-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #222;
+}
+
+.dashboard-realtime {
+  font-size: 1rem;
+  color: #888;
+}
+
+.dashboard-info-row {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;   /* 가운데 정렬 */
+  align-items: stretch;
+  margin: 32px 0 24px 0;
+}
+
+.dashboard-info-row .dashboard-card {
+  min-width: 180px;
+  max-width: 260px;
+  flex: 1 1 200px;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  border-radius: 16px;
+  background: #fff;
+  padding: 24px 12px 18px 12px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-info-row {
+    gap: 16px;
+  }
+  .dashboard-info-row .dashboard-card {
+    min-width: 140px;
+    padding: 16px 6px 12px 6px;
+  }
+}
+
+.refresh-btn {
+  background: #2196f3;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.refresh-btn:disabled {
+  background: #b3e0fc;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.unity-loading-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 16px;
+}
+.unity-loading-text {
+  font-size: 1.2rem;
+  color: #2196f3;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.unity-loading-bar-bg {
+  width: 80%;
+  height: 12px;
+  background: #e0e7ef;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.unity-loading-bar-fill {
+  height: 100%;
+  background: #2196f3;
+  transition: width 0.3s;
+}
+
+.dashboard-card-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-height: 60px;
+  margin: 16px 0;
+}
+
+.dashboard-daynight-text {
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-daynight-text.day {
+  color: #facc15;   /* 노란색 */
+}
+
+.dashboard-daynight-text.night {
+  color: #64748b;   /* 회색/밤색 */
+}
+
+/* 스마트 온실 제어 시스템 애니메이션 */
+@keyframes pulse {
+  0% { 
+    box-shadow: 0 0 0 0 rgba(0, 184, 148, 0.7); 
+  }
+  70% { 
+    box-shadow: 0 0 0 10px rgba(0, 184, 148, 0); 
+  }
+  100% { 
+    box-shadow: 0 0 0 0 rgba(0, 184, 148, 0); 
+  }
+}
+
+@keyframes shimmer {
+  0%, 100% { 
+    transform: rotate(0deg); 
+  }
+  50% { 
+    transform: rotate(180deg); 
+  }
+}
+
+/* 카드 호버 효과 */
+.crop-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.crop-card-hover:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+}
+
+/* 컨트롤 아이템 호버 효과 */
+.control-item-hover {
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.control-item-hover:hover {
+  background: #e9ecef !important;
+  border-color: #ddd !important;
+  transform: scale(1.05);
+}
