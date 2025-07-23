@@ -9,6 +9,7 @@ import LoginPage from './Page/LoginPage';
 import SignupPage from './Page/SignupPage';
 import CropControlUI from './Components/CropControlUI';
 import AIAnalysisModal from './Components/AIAnalysisModal';
+import UserProfilePage from './Page/UserProfilePage';
 import './App.css';
 
 function getCurrentTimeString() {
@@ -132,6 +133,7 @@ function App() {
         <Route path="/" element={<MainPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/user-profile" element={<UserProfilePage />} />
         <Route path="/dashboard" element={<DashboardLayout unityContext={unityContext} />} />
         <Route path="/crop-control" element={<CropControlUI />} />
       </Routes>
