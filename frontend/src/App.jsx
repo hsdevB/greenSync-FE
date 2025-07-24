@@ -10,6 +10,8 @@ import SignupPage from './Page/SignupPage';
 import CropControlUI from './Components/CropControlUI';
 import AIAnalysisModal from './Components/AIAnalysisModal';
 import UserProfilePage from './Page/UserProfilePage';
+import { IotDataProvider } from './api/IotDataProvider.jsx';
+import { UserProvider } from './store/useUserStore.jsx';
 import './App.css';
 
 function getCurrentTimeString() {
@@ -73,7 +75,7 @@ function DashboardLayout({ unityContext }) {
               width: '100%',
               height: '100%',
               background: '#222',
-              borderRadius: '12px',
+              borderRadius: '0px',
               opacity: unityContext.isLoaded ? 1 : 0.3,
               transition: 'opacity 0.3s'
             }}
@@ -134,16 +136,20 @@ function App() {
   const unityContext = useSharedUnityContext();
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<MainPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/user-profile" element={<UserProfilePage />} />
-        <Route path="/dashboard" element={<DashboardLayout unityContext={unityContext} />} />
-        <Route path="/crop-control" element={<CropControlUI />} />
-      </Routes>
-    </BrowserRouter>
+    <UserProvider>
+      <IotDataProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<MainPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/user-profile" element={<UserProfilePage />} />
+            <Route path="/dashboard" element={<DashboardLayout unityContext={unityContext} />} />
+            <Route path="/crop-control" element={<CropControlUI />} />
+          </Routes>
+        </BrowserRouter>
+      </IotDataProvider>
+    </UserProvider>
   );
 }
 

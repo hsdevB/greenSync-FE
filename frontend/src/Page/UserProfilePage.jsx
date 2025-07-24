@@ -1,19 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { User, Mail, Phone, MapPin, Shield, Edit, Save, X, Eye, EyeOff } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Mail, Phone, MapPin, Shield, Edit, Eye, EyeOff } from "lucide-react";
+import { useUserStore } from "../store/useUserStore.jsx";
 
 const UserProfilePage = () => {
-  // 사용자 정보 상태
-  const [userInfo, setUserInfo] = useState({
-    userId: "user123",
-    name: "홍길동",
-    email: "hong@greensync.com",
-    phone: "010-1234-5678",
-    role: "employee",
-    farmCode: "FARM001",
-    farmName: "그린하우스 농장",
-    joinDate: "2024-01-15",
-    lastLogin: "2024-01-20 14:30"
-  });
+  const { userInfo, updateUserInfo, updateProfileImage } = useUserStore();
 
   // 편집 모드 상태
   const [isEditing, setIsEditing] = useState(false);
@@ -35,6 +25,12 @@ const UserProfilePage = () => {
 
   // 편집용 임시 데이터
   const [editData, setEditData] = useState({ ...userInfo });
+  
+  // 프로필 이미지 관련 상태
+  const [profileImage, setProfileImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isImageEditing, setIsImageEditing] = useState(false);
+  const fileInputRef = useRef(null);
 
   // 사용자 정보 로드 (실제로는 API 호출)
   useEffect(() => {
@@ -57,7 +53,7 @@ const UserProfilePage = () => {
   // 편집 저장
   const handleEditSave = () => {
     // TODO: API 호출하여 사용자 정보 업데이트
-    setUserInfo({ ...editData });
+    updateUserInfo(editData);
     setIsEditing(false);
     alert("사용자 정보가 업데이트되었습니다.");
   };
@@ -88,6 +84,60 @@ const UserProfilePage = () => {
       ...prev,
       [field]: !prev[field]
     }));
+  };
+
+  // 프로필 이미지 업로드 처리
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // 파일 크기 검증 (5MB 이하)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("파일 크기는 5MB 이하여야 합니다.");
+        return;
+      }
+
+      // 파일 타입 검증
+      if (!file.type.startsWith('image/')) {
+        alert("이미지 파일만 업로드 가능합니다.");
+        return;
+      }
+
+      setProfileImage(file);
+      
+      // 미리보기 생성
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+      
+      setIsImageEditing(true);
+    }
+  };
+
+  // 이미지 업로드 버튼 클릭
+  const handleImageUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // 이미지 저장
+  const handleImageSave = () => {
+    if (profileImage) {
+      // TODO: API 호출하여 이미지 업로드
+      updateProfileImage(imagePreview);
+      setIsImageEditing(false);
+      alert("프로필 이미지가 업데이트되었습니다.");
+    }
+  };
+
+  // 이미지 취소
+  const handleImageCancel = () => {
+    setProfileImage(null);
+    setImagePreview(null);
+    setIsImageEditing(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -159,30 +209,149 @@ const UserProfilePage = () => {
         </a>
         {/* 프로필 헤더 */}
         <div style={{
-          background: "linear-gradient(135deg, #388e3c 0%, #4caf50 100%)",
+          background: "linear-gradient(135deg, #777777 0%, #888888 100%)",
           color: "white",
           padding: "32px",
-          textAlign: "center"
+          display: "flex",
+          alignItems: "center",
+          gap: "24px"
         }}>
           <div style={{
-            width: 80,
-            height: 80,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.2)",
+            position: "relative",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 16px",
-            fontSize: "32px"
+            justifyContent: "center"
           }}>
-            <User size={40} />
+            {/* 프로필 이미지 컨테이너 */}
+            <div style={{
+              width: 80,
+              height: 80,
+              borderRadius: "50%",
+              background: "rgba(255,255,255,0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "32px",
+              flexShrink: 0,
+              overflow: "hidden"
+            }}>
+              {/* 프로필 이미지 또는 기본 아이콘 */}
+              {userInfo.profileImage || imagePreview ? (
+                <img
+                  src={imagePreview || userInfo.profileImage}
+                  alt="프로필"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover"
+                  }}
+                />
+              ) : (
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              )}
+            </div>
+            
+            {/* 이미지 업로드 버튼 - 4시 방향 바깥쪽 */}
+            <button
+              onClick={handleImageUploadClick}
+              style={{
+                position: "absolute",
+                bottom: -8,
+                right: -8,
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: "#666666",
+                border: "2px solid white",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "white",
+                fontSize: "10px",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+                zIndex: 10
+              }}
+              title="프로필 이미지 변경"
+            >
+              <img 
+                src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICA8Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSI4Ii8+CiAgPHBhdGggZD0iTTIxIDIxLTE2LjU5LTE2LjU5Ii8+CiAgPHBhdGggZD0iTTExIDhhMyAzIDAgMSAwIDAgNiAzIDMgMCAxIDAgMC02eiIvPgo8L3N2Zz4K" 
+                alt="돋보기"
+                style={{
+                  width: "14px",
+                  height: "14px",
+                  filter: "invert(1)"
+                }}
+              />
+            </button>
           </div>
-          <h2 style={{ margin: "0 0 8px 0", fontSize: "24px" }}>
-            {userInfo.name}
-          </h2>
-          <p style={{ margin: 0, opacity: 0.9 }}>
-            {userInfo.role === "admin" ? "관리자" : "직원"} • {userInfo.farmName}
-          </p>
+          
+          {/* 이미지 편집 버튼들 */}
+          {isImageEditing && (
+            <div style={{
+              display: "flex",
+              gap: "6px",
+              marginLeft: "12px"
+            }}>
+              <button
+                onClick={handleImageSave}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "3px",
+                  padding: "3px 6px",
+                  background: "#777777",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "3px",
+                  cursor: "pointer",
+                  fontSize: "11px",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
+                }}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17,21 17,13 7,13 7,21"/>
+                  <polyline points="7,3 7,8 15,8"/>
+                </svg>
+                저장
+              </button>
+              <button
+                onClick={handleImageCancel}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "3px",
+                  padding: "3px 6px",
+                  background: "#f44336",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "3px",
+                  cursor: "pointer",
+                  fontSize: "11px",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
+                }}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                취소
+              </button>
+            </div>
+          )}
+          
+          <div style={{ flex: 1 }}>
+            <h2 style={{ margin: "0 0 8px 0", fontSize: "24px" }}>
+              {userInfo.name}
+            </h2>
+            <p style={{ margin: 0, opacity: 0.9 }}>
+              {userInfo.role === "admin" ? "관리자" : "직원"} • {userInfo.farmName}
+            </p>
+          </div>
         </div>
 
         {/* 사용자 정보 섹션 */}
@@ -229,7 +398,11 @@ const UserProfilePage = () => {
                     fontSize: "14px"
                   }}
                 >
-                  <Save size={16} />
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17,21 17,13 7,13 7,21"/>
+                    <polyline points="7,3 7,8 15,8"/>
+                  </svg>
                   저장
                 </button>
                 <button
@@ -247,7 +420,10 @@ const UserProfilePage = () => {
                     fontSize: "14px"
                   }}
                 >
-                  <X size={16} />
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
                   취소
                 </button>
               </div>
@@ -275,7 +451,10 @@ const UserProfilePage = () => {
               
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <User size={20} color="#666" />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: "12px", color: "#666", marginBottom: "4px", display: "block" }}>
                       사용자 ID
@@ -298,7 +477,10 @@ const UserProfilePage = () => {
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <User size={20} color="#666" />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: "12px", color: "#666", marginBottom: "4px", display: "block" }}>
                       이름
@@ -405,29 +587,6 @@ const UserProfilePage = () => {
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <MapPin size={20} color="#666" />
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: "12px", color: "#666", marginBottom: "4px", display: "block" }}>
-                      농장명
-                    </label>
-                    <input
-                      type="text"
-                      value={isEditing ? editData.farmName : userInfo.farmName}
-                      onChange={(e) => setEditData({...editData, farmName: e.target.value})}
-                      disabled={!isEditing}
-                      style={{
-                        width: "70%",
-                        padding: "8px 12px",
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        fontSize: "14px",
-                        background: isEditing ? "white" : "#f5f5f5"
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                   <Shield size={20} color="#666" />
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: "12px", color: "#666", marginBottom: "4px", display: "block" }}>
@@ -448,7 +607,10 @@ const UserProfilePage = () => {
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <User size={20} color="#666" />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: "12px", color: "#666", marginBottom: "4px", display: "block" }}>
                       가입일
@@ -463,26 +625,6 @@ const UserProfilePage = () => {
                       color: "#666"
                     }}>
                       {userInfo.joinDate}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <User size={20} color="#666" />
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: "12px", color: "#666", marginBottom: "4px", display: "block" }}>
-                      마지막 로그인
-                    </label>
-                    <div style={{
-                      width: "70%",
-                      padding: "8px 12px",
-                      border: "1px solid #ddd",
-                      borderRadius: "4px",
-                      fontSize: "14px",
-                      background: "#f5f5f5",
-                      color: "#666"
-                    }}>
-                      {userInfo.lastLogin}
                     </div>
                   </div>
                 </div>
@@ -544,7 +686,11 @@ const UserProfilePage = () => {
                       fontSize: "14px"
                     }}
                   >
-                    <Save size={16} />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                      <polyline points="17,21 17,13 7,13 7,21"/>
+                      <polyline points="7,3 7,8 15,8"/>
+                    </svg>
                     변경
                   </button>
                   <button
@@ -569,7 +715,10 @@ const UserProfilePage = () => {
                       fontSize: "14px"
                     }}
                   >
-                    <X size={16} />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
                     취소
                   </button>
                 </div>
@@ -703,6 +852,15 @@ const UserProfilePage = () => {
           </div>
         </div>
       </div>
+      
+      {/* 숨겨진 파일 입력 */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleImageUpload}
+        accept="image/*"
+        style={{ display: "none" }}
+      />
     </div>
   );
 };

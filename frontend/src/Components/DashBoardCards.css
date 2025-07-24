@@ -38,9 +38,9 @@
 /*온습도 관리 카드*/
 .dashboard-bottom-cards-row {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  /* grid-template-columns: repeat(2, 1fr);
   column-gap: 32px;
-  row-gap: 32px;         /* 세로 간격 추가 */
+  row-gap: 32px;         세로 간격 추가 */
   margin-top: 32px;      /* 위쪽 여백 추가 */
   padding-left: 24px;
   padding-right: 24px;
@@ -48,7 +48,7 @@
 
 @media (min-width: 768px) {
   .dashboard-bottom-cards-row {
-    grid-template-columns: repeat(2, 1fr);
+    /* grid-template-columns: repeat(2, 1fr); */
   }
 }
 
@@ -317,7 +317,7 @@
   gap: 24px;
   justify-content: center;   /* 가운데 정렬 */
   align-items: stretch;
-  margin: 32px 0 24px 0;
+  margin: 5px 0 5px 0;
 }
 
 .dashboard-info-row .dashboard-card {
@@ -488,7 +488,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  /* background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); */
 }
 
 .dashboard-card[data-type="solar"] .dashboard-card-icon,
@@ -518,7 +518,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+  /* background: linear-gradient(90deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%); */
 }
 
 .dashboard-card[data-type="temperature"] .dashboard-card-icon {
@@ -547,7 +547,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+  /* background: linear-gradient(90deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%); */
 }
 
 .dashboard-card[data-type="humidity"] .dashboard-card-icon {
@@ -576,7 +576,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #10b981 0%, #059669 50%, #047857 100%);
+  /* background: linear-gradient(90deg, #10b981 0%, #059669 50%, #047857 100%); */
 }
 
 .dashboard-card[data-type="ph"] .dashboard-card-icon {
@@ -605,7 +605,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  /* background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); */
 }
 
 .dashboard-card[data-type="ec"] .dashboard-card-icon {
@@ -634,7 +634,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+  /* background: linear-gradient(90deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%); */
 }
 
 .dashboard-card[data-type="dew"] .dashboard-card-icon {
@@ -663,7 +663,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  /* background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); */
 }
 
 .dashboard-card[data-type="wind"] .dashboard-card-icon {
@@ -692,7 +692,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+  /* background: linear-gradient(90deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%); */
 }
 
 .dashboard-card[data-type="rain"] .dashboard-card-icon {
@@ -721,11 +721,61 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #10b981 0%, #059669 50%, #047857 100%);
+  /* background: linear-gradient(90deg, #10b981 0%, #059669 50%, #047857 100%); */
 }
 
 .dashboard-card[data-type="co2"] .dashboard-card-icon {
   animation: pulse-glow-green 2s ease-in-out infinite alternate;
+}
+
+/* 날씨 카드 스타일 */
+.dashboard-card[data-type="weather"] {
+  background: linear-gradient(135deg, #fff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.dashboard-card[data-type="weather"]:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+  border-color: #3b82f6;
+}
+.dashboard-card[data-type="weather"] .dashboard-card-icon {
+  color: #3b82f6;
+  animation: pulse-glow-blue 2s ease-in-out infinite alternate;
+}
+
+/* 주간/야간 카드 스타일 */
+.dashboard-card[data-type="daynight"] {
+  background: linear-gradient(135deg, #fff 0%, #fef9c3 100%);
+  border: 1px solid #fde68a;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.dashboard-card[data-type="daynight"]:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 25px rgba(251, 191, 36, 0.15);
+  border-color: #fbbf24;
+}
+.dashboard-card[data-type="daynight"] .dashboard-card-icon.yellow {
+  color: #fbbf24;
+  animation: pulse-glow 2s ease-in-out infinite alternate;
+}
+.dashboard-card[data-type="daynight"] .dashboard-card-icon.gray {
+  color: #64748b;
+  animation: pulse-glow 2s ease-in-out infinite alternate;
+}
+
+/* 상단 카드 hover 효과 통일 */
+.dashboard-card.crop-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dashboard-card.crop-card-hover:hover {
+  transform: translateY(-5px) scale(1.04);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+  z-index: 2;
 }
 
 @keyframes pulse-glow-red {

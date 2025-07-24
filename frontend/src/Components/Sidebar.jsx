@@ -2,17 +2,33 @@
 import { User, BarChart3, Settings, Bell, Users, Brain, UserCheck } from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useUserStore } from "../store/useUserStore.jsx";
 import "./Sidebar.css";
 
 const Sidebar = ({ selected, onSelect, onLogout }) => {
+  const { userInfo } = useUserStore();
+  
   return (
     <aside className="sidebar">
       {/* 프로필 */}
       <div className="sidebar-profile">
         <div className="sidebar-avatar">
-          <User className="sidebar-avatar-icon" />
+          {userInfo.profileImage ? (
+            <img 
+              src={userInfo.profileImage} 
+              alt="프로필" 
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: "50%",
+                objectFit: "cover"
+              }}
+            />
+          ) : (
+            <User className="sidebar-avatar-icon" />
+          )}
         </div>
-        <div className="sidebar-username">○○○님</div>
+        <div className="sidebar-username">{userInfo.name}님</div>
         {/* 내 정보 버튼 추가 */}
         <button
           className="sidebar-profile-btn"

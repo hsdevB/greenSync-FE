@@ -4,6 +4,7 @@ import { useIotData } from '../api/useIotData.js';
 import useControlStore from '../store/useControlStore.jsx';
 import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 import mqtt from 'mqtt'; // 실제 환경에서는 mqtt.js 라이브러리 사용
+import AIAnalysisModal from "./AIAnalysisModal";
 
 // MQTT 클라이언트
 class MQTTClient {
@@ -345,6 +346,8 @@ export default function RemoteControlPanel({unityContext}) {
 
   const controlDisabled = autoMode;
 
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+
   return (
     <div className="remote-panel-root">
       {/* 왼쪽 패널 */}
@@ -426,6 +429,22 @@ export default function RemoteControlPanel({unityContext}) {
         {/* 기기 제어 */}
         <div className="device-control-section">
           <div className="section-title">공조 설비 기기 - 원격제어</div>
+          {/* AI 스마트팜 분석 버튼 추가 */}
+          <button
+            onClick={() => setAiModalOpen(true)}
+            style={{
+              margin: "12px 0",
+              padding: "10px 24px",
+              background: "#388e3c",
+              color: "#fff",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "16px",
+              cursor: "pointer"
+            }}
+          >
+            AI 스마트팜 분석
+          </button>
           <div className="control-row">
             <span>자동모드</span>
             <button 
@@ -540,6 +559,8 @@ export default function RemoteControlPanel({unityContext}) {
           </div>
         </div>
       </div>
+      {/* AI 분석 모달 */}
+      <AIAnalysisModal isOpen={aiModalOpen} onClose={() => setAiModalOpen(false)} />
     </div>
   );
 }
