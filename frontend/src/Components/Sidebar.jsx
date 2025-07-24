@@ -62,6 +62,7 @@ const Sidebar = ({ selected, onSelect, onLogout }) => {
           <li>
             <button
               className={`sidebar-menu-btn${selected === 'ai-analysis' ? ' selected' : ''}`}
+              data-menu="ai-analysis"
               onClick={() => onSelect && onSelect('ai-analysis')}
             >
               <Brain className="sidebar-menu-icon" /> AI 분석

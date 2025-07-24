@@ -38,6 +38,12 @@ function DashboardLayout({ unityContext }) {
       setShowAIModal(true);
     }
   };
+
+  const handleAIModalClose = () => {
+    setShowAIModal(false);
+    // AI 분석 모달이 닫혀도 selectedMenu는 'ai-analysis'로 유지
+    setSelectedMenu('ai-analysis');
+  };
   
   return (
     <div className="main-layout">
@@ -117,7 +123,7 @@ function DashboardLayout({ unityContext }) {
       {/* AI 분석 모달 */}
       <AIAnalysisModal 
         isOpen={showAIModal}
-        onClose={() => setShowAIModal(false)}
+        onClose={handleAIModalClose}
         farmId="farm001"
       />
     </div>
