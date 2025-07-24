@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Unity } from "react-unity-webgl";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
@@ -10,52 +10,7 @@ import OpenWeather from "./OpenWheater.jsx";
 import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
-import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
-import mqtt from 'mqtt';
-
-class MQTTClient {
-  constructor() {
-    this.client = null;
-    this.isConnected = false;
-  }
-
-  connect(brokerUrl = 'ws://192.168.0.26:9001') {
-    try {
-      // 실제 환경
-      this.client = mqtt.connect(brokerUrl);
-      // console.log(`MQTT 브로커 연결 시도: ${brokerUrl}`);
-      // this.isConnected = true;
-      // 실제 환경에서는 mqtt.connect(brokerUrl) 사용
-      this.client.on('connect', () => {
-        console.log('MQTT 브로커 연결 성공');
-        this.isConnected = true;
-      });
-    } catch (error) {
-      console.error('MQTT 연결 실패:', error);
-    }
-  }
-
-  publish(topic, message) {
-    if (!this.isConnected) {
-      console.warn('MQTT 브로커에 연결되지 않음');
-      return;
-    }
-
-    try {
-      const payload = typeof message === 'string' ? message : JSON.stringify(message);
-      console.log(`MQTT 발행 - Topic: ${topic}, Payload: ${payload}`);
-    } catch (error) {
-      console.error('MQTT 메시지 발행 실패:', error);
-    }
-  }
-
-  disconnect() {
-    if (this.client && this.isConnected) {
-      this.isConnected = false;
-      console.log('MQTT 연결 종료');
-    }
-  }
-}
+// import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 class UnityMessage {
   constructor(name, data) {
     this.name = name;
@@ -81,21 +36,6 @@ function getCurrentTimeString() {
 const DashBoardCards = ({ unityContext }) => {
   const { unityProvider, isLoaded, loadingProgression, sendMessage } = unityContext;
   const loadingPercentage = Math.round(loadingProgression * 100); // 로딩 퍼센트
-
-  // MQTT 클라이언트 추가
-  const mqttClientRef = useRef(null);
-
-  // MQTT 클라이언트 초기화
-  useEffect(() => {
-    mqttClientRef.current = new MQTTClient();
-    mqttClientRef.current.connect();
-    
-    return () => {
-      if (mqttClientRef.current) {
-        mqttClientRef.current.disconnect();
-      }
-    };
-  }, []);
 
 <div style={{ width: '100%', minHeight: '400px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', position: 'relative', marginTop: '32px' }}>
   <div style={{ flex: 1, maxWidth: '900px', position: 'relative' }}>
@@ -158,14 +98,7 @@ const DashBoardCards = ({ unityContext }) => {
   } = useControlStore();
 
   // 자동모드 커스텀 훅 사용
-  const { simulatedData } = useAutoMode(sendToUnity);
-
-  // MQTT를 통한 센서 데이터 전송 함수
-  const sendSensorDataToMQTT = useCallback((sensorData) => {
-    if (mqttClientRef.current && autoMode) {
-      mqttClientRef.current.publish('sensor/data/send', sensorData);
-    }
-  }, [autoMode]);
+  // const { simulatedData } = useAutoMode(sendToUnity);
 
   useEffect(() => {
   // 상태 복원 (로컬스토리지에 저장한 상태 있다면)
@@ -200,20 +133,6 @@ const DashBoardCards = ({ unityContext }) => {
       }, 500); // 500ms 지연
     }
   }, [isLoaded, sendToUnity, water, fan, ledLevel, temp1, humid1]);
-
-  // 자동모드일 때 센서 데이터를 MQTT로 전송
-  useEffect(() => {
-    if (autoMode && simulatedData) {
-      const sensorData = {
-        "temperature": simulatedData.sensor1?.temp || temp1,
-        "humidity": simulatedData.sensor1?.humid || humid1,
-        "phLevel": phValue !== '--' ? phValue : 6.5,
-        "eleDT": elcDT !== '--' ? elcDT : 1.2,
-        "co2": carbonDioxide !== '--' ? carbonDioxide : 400,
-      };
-      sendSensorDataToMQTT(sensorData);
-    }
-  }, [autoMode, simulatedData, temp1, humid1, phValue, elcDT, carbonDioxide, sendSensorDataToMQTT]);
 
   useEffect(() => {
     // 새로고침 상태 복원

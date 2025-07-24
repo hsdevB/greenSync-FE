@@ -6,6 +6,7 @@ import Dashboard from './Components/DashBoard';
 import MainPage from './Page/MainPage';
 import LoginPage from './Page/LoginPage';
 import SignupPage from './Page/SignupPage';
+import { MQTTProvider } from './hooks/MQTTProvider';
 import './App.css';
 
 function DashboardLayout({ unityContext }) {
@@ -13,16 +14,19 @@ function DashboardLayout({ unityContext }) {
   const [selectedMenu, setSelectedMenu] = React.useState('dashboard');
   const handleLogout = () => { /* 로그아웃 처리 */ };
   return (
-    <div className="main-layout">
-      <Sidebar
-        selected={selectedMenu}
-        onSelect={setSelectedMenu}
-        onLogout={handleLogout}
-      />
-      <main className="dashboard-area">
-          <Dashboard selectedMenu={selectedMenu} unityContext={unityContext} />
-      </main>
-    </div>
+    // Dashboard에서만 MQTTContext 사용
+    <MQTTProvider> 
+      <div className="main-layout">
+        <Sidebar
+          selected={selectedMenu}
+          onSelect={setSelectedMenu}
+          onLogout={handleLogout}
+        />
+        <main className="dashboard-area">
+            <Dashboard selectedMenu={selectedMenu} unityContext={unityContext} />
+        </main>
+      </div>
+    </MQTTProvider>
   );
 }
 
