@@ -3,119 +3,7 @@ import "./RemoteControlPanel.css";
 import { useIotData } from '../api/useIotData.js';
 import useControlStore from '../store/useControlStore.jsx';
 import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
-import mqtt from 'mqtt'; // 실제 환경에서는 mqtt.js 라이브러리 사용
-
-// MQTT 클라이언트
-class MQTTClient {
-  constructor() {
-    this.client = null;
-    this.isConnected = false;
-    this.isConnecting = false;
-  }
-
-  // MQTT 브로커 연결
-  connect(brokerUrl = 'ws://192.168.0.26::9001') {
-    if (this.isConnecting || this.isConnected) {
-      console.log('이미 연결 중이거나 연결됨');
-      return;
-    }
-
-    try {
-      this.isConnecting = true;
-      console.log(`MQTT 브로커 연결 시도: ${brokerUrl}`);
-      
-      this.client = mqtt.connect(brokerUrl);
-      
-      // 연결 성공 이벤트
-      this.client.on('connect', () => {
-        console.log('MQTT 브로커 연결 성공');
-        this.isConnected = true;
-        this.isConnecting = false;
-      });
-
-      // 연결 실패 이벤트
-      this.client.on('error', (error) => {
-        console.error('MQTT 연결 오류:', error);
-        this.isConnected = false;
-        this.isConnecting = false;
-      });
-
-      // 연결 끊김 이벤트
-      this.client.on('close', () => {
-        console.log('MQTT 연결 끊김');
-        this.isConnected = false;
-        this.isConnecting = false;
-      });
-
-      // 재연결 이벤트
-      this.client.on('reconnect', () => {
-        console.log('MQTT 재연결 시도');
-        this.isConnecting = true;
-      });
-
-    } catch (error) {
-      console.error('MQTT 연결 실패:', error);
-      this.isConnected = false;
-      this.isConnecting = false;
-    }
-  }
-
-  // MQTT 메시지 발행
-  publish(topic, message) {
-    // client와 연결 상태 모두 확인
-    if (!this.client || !this.isConnected) {
-      console.warn('MQTT 브로커에 연결되지 않음 또는 클라이언트 없음');
-      return;
-    }
-
-    try {
-      const payload = typeof message === 'string' ? message : JSON.stringify(message);
-      console.log(`MQTT 발행 - Topic: ${topic}, Payload: ${payload}`);
-      
-      this.client.publish(topic, payload, (error) => {
-        if (error) {
-          console.error('MQTT 메시지 발행 실패:', error);
-        } else {
-          console.log('MQTT 메시지 발행 성공');
-        }
-      });
-      
-    } catch (error) {
-      console.error('MQTT 메시지 발행 실패:', error);
-    }
-  }
-
-  // LED 깜박임 제어 (각 센서별 개별 제어)
-  async blinkLed(ledIndex, currentFanState) {
-    // 특정 LED만 켜기 (온도센서=0, 습도센서=1, 급수=2, LED밝기=3)
-    const ledObject = [false, false, false, false];
-    ledObject[ledIndex] = true;
-    
-    this.publish('device/control/ABCD1234', {
-      "fan": currentFanState,
-      "leds": ledObject
-    });
-    
-    // 딜레이
-    if (ledIndex != 2)
-      await new Promise(resolve => setTimeout(resolve, 500)); // 500ms
-    else
-      await new Promise(resolve => setTimeout(resolve, 5000)); // 급수 끝나는 시간(5초)
-    
-    // LED 끄기
-    this.publish('device/control/ABCD1234', {
-      "leds": [false, false, false, false]
-    });
-  }
-
-  disconnect() {
-    if (this.client && this.isConnected) {
-      this.client.end();
-      this.isConnected = false;
-      console.log('MQTT 연결 종료');
-    }
-  }
-}
+import { MQTTClient } from "../utils/MQTTClient.jsx";
 class UnityMessage {
   constructor(name, data) {
     this.name = name;
@@ -132,7 +20,11 @@ const RefreshIcon = () => (
 
 export default function RemoteControlPanel({unityContext}) {
   const iotData = useIotData();
-  const { sendMessage } = unityContext;
+  const { sendMessage } = unityContext || {};
+
+  const safeSendMessage = sendMessage || (() => {
+    console.warn('Unity sendMessage not available yet');
+  });
 
   // MQTT 클라이언트 인스턴스
   const mqttClientRef = useRef(null);
@@ -152,8 +44,12 @@ export default function RemoteControlPanel({unityContext}) {
   const sendToUnity = useCallback((eventName, payload) => {
     const message = new UnityMessage(eventName, payload);
     console.log("Sending to Unity:", JSON.stringify(message));
-    sendMessage("MessageManager", "ReceiveMessage", JSON.stringify(message));
-  }, [sendMessage]);
+    try {
+      safeSendMessage("MessageManager", "ReceiveMessage", JSON.stringify(message));
+    } catch (error) {
+      console.error("Error sending message to Unity:", error);
+    }
+  }, [safeSendMessage]);
 
   // 전역 store 업데이트 및 저장
   const {
@@ -229,20 +125,10 @@ export default function RemoteControlPanel({unityContext}) {
     
     sendToUnity(`tempControl${sensorNum}`, { value: newValue });
     // MQTT로 LED 깜박임 신호 전송
-    if (mqttClientRef.current) {
-      await mqttClientRef.current.blinkLed(0, fan);
+    if (mqttClientRef.current && mqttClientRef.current.isConnected) {
+      await mqttClientRef.current.blinkLed(3, fan);
     }
-    // 온도/습도 센서 데이터 전송
-    const sensorData = {
-      "temperature": newValue,
-      "humidity": humid1,
-      "phLevel": 6.5,
-      "eleDT": 1.2,
-      "co2": 400,
-    };
-    if (mqttClientRef.current) {
-      mqttClientRef.current.publish('sensor/data/send', sensorData);
-    }
+    
     if (sensorNum === 1) setTemp1(newValue);
     // else if (sensorNum === 2) setTemp2(newValue);
     // else if (sensorNum === 3) setTemp3(newValue);
@@ -257,20 +143,10 @@ export default function RemoteControlPanel({unityContext}) {
     
     sendToUnity(`humidControl${sensorNum}`, { value: newValue });
     // MQTT로 LED 깜박임 신호 전송
-    if (mqttClientRef.current) {
-      await mqttClientRef.current.blinkLed(1, fan);
+    if (mqttClientRef.current && mqttClientRef.current.isConnected) {
+      await mqttClientRef.current.blinkLed(2, fan);
     }
-    // 온도/습도 센서 데이터 전송
-    const sensorData = {
-      "temperature": temp1,
-      "humidity": newValue,
-      "phLevel": 6.5,
-      "eleDT": 1.2,
-      "co2": 400,
-    };
-    if (mqttClientRef.current) {
-      mqttClientRef.current.publish('sensor/data/send', sensorData);
-    }
+    
     if (sensorNum === 1) setHumid1(newValue);
     // else if (sensorNum === 2) setHumid2(newValue);
     // else if (sensorNum === 3) setHumid3(newValue);
@@ -287,8 +163,8 @@ export default function RemoteControlPanel({unityContext}) {
 
     sendToUnity("startWater", { status: true });
     // MQTT로 LED 깜박임 신호 전송
-    if (mqttClientRef.current) {
-      await mqttClientRef.current.blinkLed(2, fan);
+    if (mqttClientRef.current && mqttClientRef.current.isConnected) {
+      await mqttClientRef.current.blinkLed(0, fan);
     }
 
     setWater(true);
@@ -307,10 +183,9 @@ export default function RemoteControlPanel({unityContext}) {
     sendToUnity("fanStatus", { status: newState });
 
     // MQTT로 팬 제어 신호 전송
-    if (mqttClientRef.current) {
+    if (mqttClientRef.current && mqttClientRef.current.isConnected) {
       mqttClientRef.current.publish('device/control/ABCD1234', {
         "fan": newState,
-        "leds": [false, false, false, false]
       });
       console.log("fan작동");
     }
@@ -327,8 +202,8 @@ export default function RemoteControlPanel({unityContext}) {
     sendToUnity("ledLevel", { level });
 
     // MQTT로 LED 깜박임 신호 전송 (밝기 조절할 때마다)
-    if (mqttClientRef.current && level > 0) {
-      await mqttClientRef.current.blinkLed(3, fan);
+    if (mqttClientRef.current && mqttClientRef.current.isConnected && level > 0) {
+      mqttClientRef.current.blinkLed(1, fan);
     }
 
     setLed(level);
