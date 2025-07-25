@@ -9,7 +9,10 @@
   margin: 0 auto;
   overflow-x: auto;
   box-sizing: border-box; /* 추가 */
+<<<<<<< HEAD
   padding: 0 10px;
+=======
+>>>>>>> d9e4379e3d0ee0294ecd06e6d69ac4b38d4eb702
 }
 
 .remote-panel-root * {

@@ -1,7 +1,13 @@
 // src/Components/Sidebar.jsx
+<<<<<<< HEAD
 import { User, BarChart3, Settings, Users, Brain } from "lucide-react";
 import React from "react";
 import { useUserStore } from "../store/useUserStore.jsx";
+=======
+import { User, BarChart3, Settings, Bell, Users, Brain, UserCheck } from "lucide-react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+>>>>>>> d9e4379e3d0ee0294ecd06e6d69ac4b38d4eb702
 import "./Sidebar.css";
 
 const Sidebar = ({ selected, onSelect, onLogout }) => {
@@ -27,7 +33,12 @@ const Sidebar = ({ selected, onSelect, onLogout }) => {
             <User className="sidebar-avatar-icon" />
           )}
         </div>
+<<<<<<< HEAD
         <div className="sidebar-username">{userInfo.name}님</div>
+=======
+        <div className="sidebar-username">○○○님</div>
+        {/* 내 정보 버튼 추가 */}
+>>>>>>> d9e4379e3d0ee0294ecd06e6d69ac4b38d4eb702
         <button
           className="sidebar-profile-btn"
           onClick={() => window.location.href = "/user-profile"}
