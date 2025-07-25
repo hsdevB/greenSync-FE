@@ -1,7 +1,6 @@
 // src/Components/Sidebar.jsx
-import { User, BarChart3, Settings, Bell, Users, Brain, UserCheck } from "lucide-react";
+import { User, BarChart3, Settings, Users, Brain } from "lucide-react";
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import { useUserStore } from "../store/useUserStore.jsx";
 import "./Sidebar.css";
 
@@ -29,7 +28,6 @@ const Sidebar = ({ selected, onSelect, onLogout }) => {
           )}
         </div>
         <div className="sidebar-username">{userInfo.name}님</div>
-        {/* 내 정보 버튼 추가 */}
         <button
           className="sidebar-profile-btn"
           onClick={() => window.location.href = "/user-profile"}
@@ -67,14 +65,7 @@ const Sidebar = ({ selected, onSelect, onLogout }) => {
               <Settings className="sidebar-menu-icon" /> 원격제어
             </button>
           </li>
-          <li>
-            <button
-              className={`sidebar-menu-btn${selected === 'alarm' ? ' selected' : ''}`}
-              onClick={() => onSelect && onSelect('alarm')}
-            >
-              <Bell className="sidebar-menu-icon" /> 알림
-            </button>
-          </li>
+          <li></li>
           <li>
             <button
               className={`sidebar-menu-btn${selected === 'ai-analysis' ? ' selected' : ''}`}

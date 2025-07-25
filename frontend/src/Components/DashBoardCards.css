@@ -26,14 +26,14 @@
   /* background: #f3f4f6; */
 }
 
-.dashboard-single-card-row {
+/* .dashboard-single-card-row {
   display: flex;
   flex-direction: row;
   justify-content: center;   /* 가운데 정렬 */
   align-items: stretch;
   width: 100%;
   margin-bottom: 24px;
-}
+} */
 
 .dashboard-single-card-row > .dashboard-card,
 .dashboard-single-card-row > .dashboard-graph-card {
@@ -49,6 +49,14 @@
   grid-template-columns: repeat(3, 1fr);
   /* gap: 24px; */
   padding-top: 24px; /* 첫 줄 위에 여백 추가 */
+  margin: 24px;
+}
+
+.dashboard-single-cards-row {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr); /* 1줄 1칸 */
+  /* gap: 24px; */
+  padding-top: 24px;
   margin: 24px;
 }
 

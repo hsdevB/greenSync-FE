@@ -81,7 +81,7 @@ const DashBoardCards = () => {
   const [phValue, setPhValue] = useState('--');
   const [carbonDioxide, setCarbonDioxide] = useState('--');
   const [elcDT, setElcDT] = useState('--');
-  const [illuminance, setIlluminance] = useState('--');
+  // const [illuminance, setIlluminance] = useState('--'); // 사용하지 않는 변수 제거
 
   const {
     temp1,
@@ -136,12 +136,12 @@ const DashBoardCards = () => {
   }, []);
 
   // 새로고침 함수 (데이터 fetch 또는 window.location.reload 등으로 대체 가능)
-  const handleRefresh = () => {
-    setRefreshDisabled(true);
-    setRefreshTimer(300); // 5분(300초)
-    localStorage.setItem('dashboard_refreshDisabled', 'true');
-    localStorage.setItem('dashboard_refreshTimer', '300');
-  };
+  // const handleRefresh = () => { // 사용하지 않는 함수 제거
+  //   setRefreshDisabled(true);
+  //   setRefreshTimer(300); // 5분(300초)
+  //   localStorage.setItem('dashboard_refreshDisabled', 'true');
+  //   localStorage.setItem('dashboard_refreshTimer', '300');
+  // };
 
   // 타이머 감소 및 localStorage 동기화
   useEffect(() => {
@@ -289,18 +289,18 @@ const DashBoardCards = () => {
         const res = await axios.get(`/api/sensor/illuminance/${id}`);
         console.log("Illuminance response: ", res.data);
         if (res.data && typeof res.data === 'number') {
-          setIlluminance(res.data);
+          // setIlluminance(res.data); // 사용하지 않는 변수 제거
         } else if (res.data && res.data.data && res.data.data.illuminance) {
-          setIlluminance(res.data.data.illuminance);
+          // setIlluminance(res.data.data.illuminance); // 사용하지 않는 변수 제거
         } else if (res.data && res.data.illuminance) {
-          setIlluminance(res.data.illuminance);
+          // setIlluminance(res.data.illuminance); // 사용하지 않는 변수 제거
         } else {
-          setIlluminance('--');
+          // setIlluminance('--'); // 사용하지 않는 변수 제거
         }
       } catch (e) {
         console.error('Illuminance fetch error:', e);
         console.error('Error response:', e.response?.data);
-        setIlluminance('--');
+        // setIlluminance('--'); // 사용하지 않는 변수 제거
       }
     };
     fetchIlluminance();
@@ -342,9 +342,9 @@ const DashBoardCards = () => {
         </div>
       </div>
       <div style={{ textAlign: "center", marginTop: 16, color: "#888", fontWeight: "bold" }}>
-        실시간 측정값
+        {/* 실시간 측정값 */}
       </div>
-      <div className="dashboard-bar-bg"><div className="dashboard-bar-fill"></div></div>
+      {/* <div className="dashboard-bar-bg"><div className="dashboard-bar-fill"></div></div> */}
     </div>,
     // 산도(pH) 카드
     <div className="dashboard-card" key="phValue" data-type="ph">
@@ -358,13 +358,13 @@ const DashBoardCards = () => {
       <div className="dashboard-card-unit" style={{ color: '#10b981', fontSize: '0.9rem', marginTop: '4px' }}>
         pH
       </div>
-      <div className="dashboard-card-desc">실시간 측정값</div>
-      <div className="dashboard-gradient-bar" style={{ 
+      {/* <div className="dashboard-card-desc">실시간 측정값</div> */}
+      {/* <div className="dashboard-gradient-bar" style={{ 
         height: '4px', 
         borderRadius: '2px', 
         marginTop: '8px',
         width: '100%'
-      }}></div>
+      }}></div> */}
     </div>
   ];
 
@@ -381,13 +381,13 @@ const DashBoardCards = () => {
       <div className="dashboard-card-unit" style={{ color: '#10b981', fontSize: '0.9rem', marginTop: '4px' }}>
         ppm
       </div>
-      <div className="dashboard-card-desc">실시간 측정값</div>
-      <div className="dashboard-gradient-bar" style={{ 
+      {/* <div className="dashboard-card-desc">실시간 측정값</div> */}
+      {/* <div className="dashboard-gradient-bar" style={{ 
         height: '4px', 
         borderRadius: '2px', 
         marginTop: '8px',
         width: '100%'
-      }}></div>
+      }}></div> */}
     </div>,
     // 전기전도도(EC) 카드
     <div className="dashboard-card" key="elcDT" data-type="ec">
@@ -401,32 +401,56 @@ const DashBoardCards = () => {
       <div className="dashboard-card-unit" style={{ color: '#f59e0b', fontSize: '0.9rem', marginTop: '4px' }}>
         mS/cm
       </div>
-      <div className="dashboard-card-desc">실시간 측정값</div>
-      <div className="dashboard-gradient-bar" style={{ 
+      {/* <div className="dashboard-card-desc">실시간 측정값</div> */}
+      {/* <div className="dashboard-gradient-bar" style={{ 
         height: '4px', 
         borderRadius: '2px', 
         marginTop: '8px',
         width: '100%'
-      }}></div>
+      }}></div> */}
     </div>
   ];
 
   const row3 = [
     // 풍향(기상청) 카드
-    <div className="dashboard-card dashboard-card-center" key="windDirection">
-      <h3 className="dashboard-card-title">풍향(기상청)</h3>
-      <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flex:1, height:'100%'}}>
-        <div className="dashboard-card-value orange" style={{fontSize:'2rem', margin:'16px 0 4px 0', textAlign:'center'}}>{iotData ? iotData.windDirection : '--'}°</div>
-        <div className="dashboard-card-unit" style={{textAlign:'center'}}>풍향</div>
+    <div className="dashboard-card" key="windDirection" data-type="wind">
+      <div className="dashboard-card-section">
+        <Cloud className="dashboard-card-icon blue" />
+        <h3 className="dashboard-card-title">풍향(기상청)</h3>
       </div>
+      <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+        {iotData ? iotData.windDirection : '--'}
+      </div>
+      <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
+        °
+      </div>
+      {/* <div className="dashboard-card-desc">기상청 단기예보 기준</div> */}
+      {/* <div className="dashboard-gradient-bar" style={{
+        height: '4px',
+        borderRadius: '2px',
+        marginTop: '8px',
+        width: '100%'
+      }}></div> */}
     </div>,
     // 풍속(기상청) 카드
-    <div className="dashboard-card dashboard-card-center" key="windSpeed">
-      <h3 className="dashboard-card-title">풍속(기상청)</h3>
-      <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flex:1, height:'100%'}}>
-        <div className="dashboard-card-value orange" style={{fontSize:'2rem', margin:'16px 0 4px 0', textAlign:'center'}}>{iotData ? iotData.windSpeed : '--'} m/s</div>
-        <div className="dashboard-card-unit" style={{textAlign:'center'}}>풍속</div>
+    <div className="dashboard-card" key="windSpeed" data-type="wind">
+      <div className="dashboard-card-section">
+        <Cloud className="dashboard-card-icon blue" />
+        <h3 className="dashboard-card-title">풍속(기상청)</h3>
       </div>
+      <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+        {iotData ? iotData.windSpeed : '--'}
+      </div>
+      <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
+        m/s
+      </div>
+      {/* <div className="dashboard-card-desc">기상청 단기예보 기준</div> */}
+      {/* <div className="dashboard-gradient-bar" style={{
+        height: '4px',
+        borderRadius: '2px',
+        marginTop: '8px',
+        width: '100%'
+      }}></div> */}
     </div>
   ];
 
@@ -443,13 +467,13 @@ const DashBoardCards = () => {
       <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
         ℃
       </div>
-      <div className="dashboard-card-desc">기상청 단기예보 기준</div>
-      <div className="dashboard-gradient-bar" style={{
+      {/* <div className="dashboard-card-desc">기상청 단기예보 기준</div> */}
+      {/* <div className="dashboard-gradient-bar" style={{
         height: '4px',
         borderRadius: '2px',
         marginTop: '8px',
         width: '100%'
-      }}></div>
+      }}></div> */}
     </div>,
     // 강수여부(기상청) 카드
     <div className="dashboard-card" key="rainStatus" data-type="rain">
@@ -465,13 +489,13 @@ const DashBoardCards = () => {
       <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
         상태
       </div>
-      <div className="dashboard-card-desc">기상청 단기예보 기준</div>
-      <div className="dashboard-gradient-bar" style={{
+      {/* <div className="dashboard-card-desc">기상청 단기예보 기준</div> */}
+      {/* <div className="dashboard-gradient-bar" style={{
         height: '4px',
         borderRadius: '2px',
         marginTop: '8px',
         width: '100%'
-      }}></div>
+      }}></div> */}
     </div>
   ];
 
@@ -529,13 +553,13 @@ const DashBoardCards = () => {
             <div className="dashboard-card-unit" style={{ color: '#f59e0b', fontSize: '0.9rem', marginTop: '4px' }}>
               {new Date().getHours() >= 6 && new Date().getHours() < 18 ? '☀️' : '🌙'}
             </div>
-            <div className="dashboard-card-desc">현재 시간 기준</div>
-            <div className="dashboard-gradient-bar" style={{ 
+            {/* <div className="dashboard-card-desc">현재 시간 기준</div> */}
+            {/* <div className="dashboard-gradient-bar" style={{ 
               height: '4px', 
               borderRadius: '2px', 
               marginTop: '8px',
               width: '100%'
-            }}></div>
+            }}></div> */}
           </div>
         </div>
       </div>
@@ -555,13 +579,13 @@ const DashBoardCards = () => {
               <div className="dashboard-card-unit" style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '4px' }}>
                 ℃
               </div>
-              <div className="dashboard-card-desc">자동 모드 기준값</div>
-              <div className="dashboard-gradient-bar" style={{ 
+              {/* <div className="dashboard-card-desc">자동 모드 기준값</div> */}
+              {/* <div className="dashboard-gradient-bar" style={{ 
                 height: '4px', 
                 borderRadius: '2px', 
                 marginTop: '8px',
                 width: '100%'
-              }}></div>
+              }}></div> */}
             </div>
           </div>
           <div style={{ flex: 1 }}>
@@ -576,13 +600,13 @@ const DashBoardCards = () => {
               <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
                 %
               </div>
-              <div className="dashboard-card-desc">자동 모드 기준값</div>
-              <div className="dashboard-gradient-bar" style={{ 
+              {/* <div className="dashboard-card-desc">자동 모드 기준값</div> */}
+              {/* <div className="dashboard-gradient-bar" style={{ 
                 height: '4px', 
                 borderRadius: '2px', 
                 marginTop: '8px',
                 width: '100%'
-              }}></div>
+              }}></div> */}
             </div>
           </div>
         </div>
@@ -638,7 +662,7 @@ const DashBoardCards = () => {
         </div>
       ))}
       {/* 일일 온/습도 모니터링 그래프 */}
-      <div className="dashboard-single-card-row" style={{ margin: '0 32px 24px 32px' }}>
+      <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
         <div className="dashboard-graph-card">
           <div className="dashboard-graph-title">일일 온/습도 모니터링</div>
           <ResponsiveContainer width="100%" height={120}>
@@ -659,7 +683,7 @@ const DashBoardCards = () => {
       </div>
       
       {/* 일일 총 급수량 그래프 */}
-      <div className="dashboard-single-card-row" style={{ margin: '0 32px 24px 32px' }}>
+      <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
         <div className="dashboard-graph-card">
           <div className="dashboard-graph-title">일일 총 급수량</div>
           <ResponsiveContainer width="100%" height={120}>

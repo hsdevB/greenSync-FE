@@ -77,6 +77,14 @@
   min-width: 80px;
 }
 
+.data-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 4px auto;
+  width: 100%;
+}
+
 .data-label {
   font-size: 0.95rem;
   color: #FFBB00;
