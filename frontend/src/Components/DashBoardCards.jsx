@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
@@ -9,68 +9,9 @@ import OpenWeather from "./OpenWheater.jsx";
 import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
-import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
-import mqtt from 'mqtt';
+// import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 
-class MQTTClient {
-  constructor() {
-    this.client = null;
-    this.isConnected = false;
-  }
-
-  connect(brokerUrl = 'ws://192.168.0.26:9001') {
-    try {
-      // 실제 환경
-      this.client = mqtt.connect(brokerUrl);
-      // console.log(`MQTT 브로커 연결 시도: ${brokerUrl}`);
-      // this.isConnected = true;
-      // 실제 환경에서는 mqtt.connect(brokerUrl) 사용
-      this.client.on('connect', () => {
-        console.log('MQTT 브로커 연결 성공');
-        this.isConnected = true;
-      });
-    } catch (error) {
-      console.error('MQTT 연결 실패:', error);
-    }
-  }
-
-  publish(topic, message) {
-    if (!this.isConnected) {
-      console.warn('MQTT 브로커에 연결되지 않음');
-      return;
-    }
-
-    try {
-      const payload = typeof message === 'string' ? message : JSON.stringify(message);
-      console.log(`MQTT 발행 - Topic: ${topic}, Payload: ${payload}`);
-    } catch (error) {
-      console.error('MQTT 메시지 발행 실패:', error);
-    }
-  }
-
-  disconnect() {
-    if (this.client && this.isConnected) {
-      this.isConnected = false;
-      console.log('MQTT 연결 종료');
-    }
-  }
-}
-
-const DashBoardCards = () => {
-  // MQTT 클라이언트 추가
-  const mqttClientRef = useRef(null);
-
-  // MQTT 클라이언트 초기화
-  useEffect(() => {
-    mqttClientRef.current = new MQTTClient();
-    mqttClientRef.current.connect();
-    
-    return () => {
-      if (mqttClientRef.current) {
-        mqttClientRef.current.disconnect();
-      }
-    };
-  }, []);
+const DashBoardCards = ({ farmData }) => {
 
   // 상태 관리 초기화
   const [refreshDisabled, setRefreshDisabled] = useState(false); // 새로고침 비활성화 상태
@@ -85,39 +26,20 @@ const DashBoardCards = () => {
   const [solarRadiation, setSolarRadiation] = useState('--');
 
   const {
+    // water, fan, ledLevel,
     temp1,
     humid1,
     restoreFromLocal, autoMode,
   } = useControlStore();
 
-  // 자동모드 커스텀 훅 사용
-  const { simulatedData } = useAutoMode();
+  // // 자동모드 커스텀 훅 사용
+  // const { simulatedData } = useAutoMode();
 
-  // MQTT를 통한 센서 데이터 전송 함수
-  const sendSensorDataToMQTT = useCallback((sensorData) => {
-    if (mqttClientRef.current && autoMode) {
-      mqttClientRef.current.publish('sensor/data/send', sensorData);
-    }
-  }, [autoMode]);
 
   useEffect(() => {
   // 상태 복원 (로컬스토리지에 저장한 상태 있다면)
   restoreFromLocal();
-  }, [restoreFromLocal]);
-
-  // 자동모드일 때 센서 데이터를 MQTT로 전송
-  useEffect(() => {
-    if (autoMode && simulatedData) {
-      const sensorData = {
-        "temperature": simulatedData.sensor1?.temp || temp1,
-        "humidity": simulatedData.sensor1?.humid || humid1,
-        "phLevel": phValue !== '--' ? phValue : 6.5,
-        "eleDT": elcDT !== '--' ? elcDT : 1.2,
-        "co2": carbonDioxide !== '--' ? carbonDioxide : 400,
-      };
-      sendSensorDataToMQTT(sensorData);
-    }
-  }, [autoMode, simulatedData, temp1, humid1, phValue, elcDT, carbonDioxide, sendSensorDataToMQTT]);
+  }, []);
 
   useEffect(() => {
     // 새로고침 상태 복원
@@ -168,12 +90,15 @@ const DashBoardCards = () => {
     }
   }, [refreshTimer, refreshDisabled]);
 
-  // 실내온도 데이터 가져오기
+  // 농장 정보에 따른 센서 데이터 가져오기 함수들
   useEffect(() => {
-    const fetchIndoorTemp = async () => {
+    if (!farmData?.farmId) return;
+
+    const fetchIndoorTemp = async () => { // 화살표 함수 사용 
       try {
-        const id = 1;
-        const res = await axios.get(`/api/sensor/temperature/${id}`);
+        // 프록시를 사용하지 않고 직접 주소로 요청
+        // const id = 1;
+        const res = await axios.get(`/sensor/temperature/${farmData?.farmId}`);// 1인 수정 해야함 변수 추가 해야함
         console.log("Temperature response: ", res.data);
         if (res.data && typeof res.data === 'number') {
           setIndoorTemp(res.data);
@@ -191,40 +116,44 @@ const DashBoardCards = () => {
       }
     };
     fetchIndoorTemp();
-  }, []);
+  }, [farmData?.farmId]);
 
-  //실내습도 데이터 가져오기
-  useEffect(() => {
-    const fetchIndoorHumi = async () => {
-      try {
-        const id = 1;
-        const res = await axios.get(`/api/sensor/humidity/${id}`);
-        console.log("Humidity response: ", res.data);
-        if (res.data && typeof res.data === 'number') {
-          setIndoorHumi(res.data);
-        } else if (res.data && res.data.data && res.data.data.humidity) {
-          setIndoorHumi(res.data.data.humidity);
-        } else if (res.data && res.data.humidity) {
-          setIndoorHumi(res.data.humidity);
-        } else {
-          setIndoorHumi('--');
-        }
-      } catch (error) {
-        console.error('Humidity fetch error:', error);
-        console.error('Error response:', error.response?.data);
+//실내습도 데이터 가져오기
+useEffect(() => {
+  if (!farmData?.farmId) return;
+
+  const fetchIndoorHumi = async () => {
+    try {
+      // const id = 1;
+      const res = await axios.get(`/sensor/humidity/${farmData.farmId}`);
+      console.log("Humidity response: ", res.data);
+      if (res.data && typeof res.data === 'number') {
+        setIndoorHumi(res.data);
+      } else if (res.data && res.data.data && res.data.data.humidity) {
+        setIndoorHumi(res.data.data.humidity);
+      } else if (res.data && res.data.humidity) {
+        setIndoorHumi(res.data.humidity);
+      } else {
         setIndoorHumi('--');
       }
-    };
-    fetchIndoorHumi();
-  }, []);
+    } catch (error) {
+      console.error('Humidity fetch error:', error);
+      console.error('Error response:', error.response?.data);
+      setIndoorHumi('--');
+    }
+  };
+  fetchIndoorHumi();
+}, [farmData.farmId]);
 
-  // 산도(phLevel)와 전기전도도(elcDT) 한 번에 가져오기
-  useEffect(() => {
-    const fetchNutrient = async () => {
-      try {
-        const id = 1;
-        const res = await axios.get(`/api/sensor/nutrient/${id}`);
-        console.log("Nutrient response: ", res.data);
+// 산도(phLevel)와 전기전도도(elcDT) 한 번에 가져오기
+useEffect(() => {
+  if (!farmData?.farmId) return;
+
+  const fetchNutrient = async () => {
+    try {
+      // const id = 1;
+      const res = await axios.get(`/sensor/nutrient/${farmData.farmId}`);
+      console.log("Nutrient response: ", res.data);
 
         // pH 값 설정
         if (res.data && typeof res.data === 'number') {
@@ -255,14 +184,16 @@ const DashBoardCards = () => {
       }
     };
     fetchNutrient();
-  }, []);
+}, [farmData.farmId]);
 
-  //이산화탄소 데이터 가져오기
-  useEffect(() => {
-    const fetchCarbonDioxide = async () => {
+//이산화탄소 데이터 가져오기
+useEffect(() => {
+  if (!farmData?.farmId) return;
+
+  const fetchCarbonDioxide = async () => {
       try {
-        const id = 1;
-        const res = await axios.get(`/api/sensor/carbonDioxide/${id}`);
+        // const id = 1;
+        const res = await axios.get(`/api/sensor/carbonDioxide/${farmData.farmId}`);
         console.log("CO2 response: ", res.data);
         if (res.data && typeof res.data === 'number') {
           setCarbonDioxide(res.data);
@@ -280,56 +211,60 @@ const DashBoardCards = () => {
       }
     };
     fetchCarbonDioxide();
-  }, []);
+}, [farmData.farmId]);
 
-  //광량 데이터 가져오기
-  useEffect(() => {
-    const fetchIlluminance = async () => {
-      try {
-        const id = 1;
-        const res = await axios.get(`/api/sensor/illuminance/${id}`);
-        console.log("Illuminance response: ", res.data);
-        if (res.data && typeof res.data === 'number') {
-          setIlluminance(res.data);
-        } else if (res.data && res.data.data && res.data.data.illuminance) {
-          setIlluminance(res.data.data.illuminance);
-        } else if (res.data && res.data.illuminance) {
-          setIlluminance(res.data.illuminance);
-        } else {
-          setIlluminance('--');
-        }
-      } catch (e) {
-        console.error('Illuminance fetch error:', e);
-        console.error('Error response:', e.response?.data);
+//광량 데이터 가져오기
+useEffect(() => {
+  if (!farmData?.farmId) return;
+
+  const fetchIlluminance = async () => {
+    try {
+      // const id = 1;
+      const res = await axios.get(`/api/sensor/illuminance/${farmData?.farmId}`);
+      console.log("Illuminance response: ", res.data);
+      if (res.data && typeof res.data === 'number') {
+        setIlluminance(res.data);
+      } else if (res.data && res.data.data && res.data.data.illuminance) {
+        setIlluminance(res.data.data.illuminance);
+      } else if (res.data && res.data.illuminance) {
+        setIlluminance(res.data.illuminance);
+      } else {
         setIlluminance('--');
       }
-    };
-    fetchIlluminance();
-  }, []);
+    } catch (e) {
+      console.error('Illuminance fetch error:', e);
+      console.error('Error response:', e.response?.data);
+      setIlluminance('--');
+    }
+  };
+  fetchIlluminance();
+}, [farmData?.farmId]);
 
-  // 일사량 데이터 가져오기
-  useEffect(() => {
-    const fetchSolarRadiation = async () => {
-      try {
-        const id = 1;
-        const res = await axios.get(`/api/sensor/solarRadiation/${id}`);
-        console.log("Solar Radiation response: ", res.data);
-        if (res.data && typeof res.data === 'number') {
-          setSolarRadiation(res.data);
-        } else if (res.data && res.data.data && res.data.data.solarRadiation) {
-          setSolarRadiation(res.data.data.solarRadiation);
-        } else if (res.data && res.data.solarRadiation) {
-          setSolarRadiation(res.data.solarRadiation);
-        } else {
-          setSolarRadiation('--');
-        }
-      } catch (e) {
-        console.error('Solar Radiation fetch error:', e);
-        console.error('Error response:', e.response?.data);
+// 일사량 데이터 가져오기
+useEffect(() => {
+  if (!farmData?.farmId) return;
+
+  const fetchSolarRadiation = async () => {
+    try {
+      // const id = 1;
+      const res = await axios.get(`/api/sensor/solarRadiation/${farmData?.farmId}`);
+      console.log("Solar Radiation response: ", res.data);
+      if (res.data && typeof res.data === 'number') {
+        setSolarRadiation(res.data);
+      } else if (res.data && res.data.data && res.data.data.solarRadiation) {
+        setSolarRadiation(res.data.data.solarRadiation);
+      } else if (res.data && res.data.solarRadiation) {
+        setSolarRadiation(res.data.solarRadiation);
+      } else {
+        setSolarRadiation('--');
       }
-    };
-    fetchSolarRadiation();
-  }, []);
+    } catch (e) {
+      console.error('Solar Radiation fetch error:', e);
+      console.error('Error response:', e.response?.data);
+    }
+  };
+  fetchSolarRadiation();
+}, [farmData?.farmId]);
 
   // 대시보드 데이터 (임시)
   const dashboardData = DashBoardData;
@@ -785,7 +720,7 @@ const DashBoardCards = () => {
             <div className="dashboard-card crop-card-hover" data-type="temperature">
               <div className="dashboard-card-section">
                 <Thermometer className="dashboard-card-icon red" />
-                <h3 className="dashboard-card-title">자동 제어 기준 온도1</h3>
+                <h3 className="dashboard-card-title">자동 제어 기준 온도</h3>
               </div>
               <div className="dashboard-card-value red" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
                 {temp1}
@@ -800,7 +735,7 @@ const DashBoardCards = () => {
             <div className="dashboard-card crop-card-hover" data-type="humidity">
               <div className="dashboard-card-section">
                 <Droplets className="dashboard-card-icon blue" />
-                <h3 className="dashboard-card-title">자동 제어 기준 습도1</h3>
+                <h3 className="dashboard-card-title">자동 제어 기준 습도</h3>
               </div>
               <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
                 {humid1}
@@ -808,13 +743,6 @@ const DashBoardCards = () => {
               <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
                 %
               </div>
-              {/* <div className="dashboard-card-desc">자동 모드 기준값</div> */}
-              {/* <div className="dashboard-gradient-bar" style={{ 
-                height: '4px', 
-                borderRadius: '2px', 
-                marginTop: '8px',
-                width: '100%'
-              }}></div> */}
             </div>
           </div>
         </div>

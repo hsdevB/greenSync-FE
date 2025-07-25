@@ -1,123 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./RemoteControlPanel.css";
-import { useIotData } from '../api/useIotData.js';
+// import { useIotData } from '../api/useIotData.js';
 import useControlStore from '../store/useControlStore.jsx';
 import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
-import mqtt from 'mqtt'; // 실제 환경에서는 mqtt.js 라이브러리 사용
+import { MQTTClient } from "../utils/MQTTClient.jsx";
 import AIAnalysisModal from "./AIAnalysisModal";
 
-
-// MQTT 클라이언트
-class MQTTClient {
-  constructor() {
-    this.client = null;
-    this.isConnected = false;
-    this.isConnecting = false;
-  }
-
-  // MQTT 브로커 연결
-  connect(brokerUrl = 'ws://192.168.0.26::9001') {
-    if (this.isConnecting || this.isConnected) {
-      console.log('이미 연결 중이거나 연결됨');
-      return;
-    }
-
-    try {
-      this.isConnecting = true;
-      console.log(`MQTT 브로커 연결 시도: ${brokerUrl}`);
-      
-      this.client = mqtt.connect(brokerUrl);
-      
-      // 연결 성공 이벤트
-      this.client.on('connect', () => {
-        console.log('MQTT 브로커 연결 성공');
-        this.isConnected = true;
-        this.isConnecting = false;
-      });
-
-      // 연결 실패 이벤트
-      this.client.on('error', (error) => {
-        console.error('MQTT 연결 오류:', error);
-        this.isConnected = false;
-        this.isConnecting = false;
-      });
-
-      // 연결 끊김 이벤트
-      this.client.on('close', () => {
-        console.log('MQTT 연결 끊김');
-        this.isConnected = false;
-        this.isConnecting = false;
-      });
-
-      // 재연결 이벤트
-      this.client.on('reconnect', () => {
-        console.log('MQTT 재연결 시도');
-        this.isConnecting = true;
-      });
-
-    } catch (error) {
-      console.error('MQTT 연결 실패:', error);
-      this.isConnected = false;
-      this.isConnecting = false;
-    }
-  }
-
-  // MQTT 메시지 발행
-  publish(topic, message) {
-    // client와 연결 상태 모두 확인
-    if (!this.client || !this.isConnected) {
-      console.warn('MQTT 브로커에 연결되지 않음 또는 클라이언트 없음');
-      return;
-    }
-
-    try {
-      const payload = typeof message === 'string' ? message : JSON.stringify(message);
-      console.log(`MQTT 발행 - Topic: ${topic}, Payload: ${payload}`);
-      
-      this.client.publish(topic, payload, (error) => {
-        if (error) {
-          console.error('MQTT 메시지 발행 실패:', error);
-        } else {
-          console.log('MQTT 메시지 발행 성공');
-        }
-      });
-      
-    } catch (error) {
-      console.error('MQTT 메시지 발행 실패:', error);
-    }
-  }
-
-  // LED 깜박임 제어 (각 센서별 개별 제어)
-  async blinkLed(ledIndex, currentFanState) {
-    // 특정 LED만 켜기 (온도센서=0, 습도센서=1, 급수=2, LED밝기=3)
-    const ledObject = [false, false, false, false];
-    ledObject[ledIndex] = true;
-    
-    this.publish('device/control/ABCD1234', {
-      "fan": currentFanState,
-      "leds": ledObject
-    });
-    
-    // 딜레이
-    if (ledIndex != 2)
-      await new Promise(resolve => setTimeout(resolve, 500)); // 500ms
-    else
-      await new Promise(resolve => setTimeout(resolve, 5000)); // 급수 끝나는 시간(5초)
-    
-    // LED 끄기
-    this.publish('device/control/ABCD1234', {
-      "leds": [false, false, false, false]
-    });
-  }
-
-  disconnect() {
-    if (this.client && this.isConnected) {
-      this.client.end();
-      this.isConnected = false;
-      console.log('MQTT 연결 종료');
-    }
-  }
-}
 class UnityMessage {
   constructor(name, data) {
     this.name = name;
@@ -320,7 +208,7 @@ const WateringPlantsIcon = ({ isOn }) => (
 
 
 export default function RemoteControlPanel({unityContext}) {
-  const iotData = useIotData();
+  // const iotData = useIotData();
   const { sendMessage } = unityContext || {};
 
   const safeSendMessage = sendMessage || (() => {
@@ -363,7 +251,6 @@ export default function RemoteControlPanel({unityContext}) {
     persistToLocal,
     autoMode, manualMode,
     toggleAutoMode, toggleManualMode,
-    vent, setVent,
   } = useControlStore();
 
   // 자동 모드 커스텀 훅 사용
@@ -430,17 +317,7 @@ export default function RemoteControlPanel({unityContext}) {
     if (mqttClientRef.current) {
       await mqttClientRef.current.blinkLed(0, fan);
     }
-    // 온도/습도 센서 데이터 전송
-    const sensorData = {
-      "temperature": newValue,
-      "humidity": humid1,
-      "phLevel": 6.5,
-      "eleDT": 1.2,
-      "co2": 400,
-    };
-    if (mqttClientRef.current) {
-      mqttClientRef.current.publish('sensor/data/send', sensorData);
-    }
+
     if (sensorNum === 1) setTemp1(newValue);
     // else if (sensorNum === 2) setTemp2(newValue);
     // else if (sensorNum === 3) setTemp3(newValue);
@@ -590,9 +467,10 @@ export default function RemoteControlPanel({unityContext}) {
         {/* 원격제어 상태 section-title 추가 */}
         <div className="section-title">원격제어 상태</div>
         <div className="data-grid">
-          <DataCard label="난방" value={fan ? "ON" : "OFF"} unit={fan ? "🟢" : "🔴"} icon={<HeaterIcon isOn={fan} />} />
-          <DataCard label="배기" value={vent ? "ON" : "OFF"} unit={vent ? "🟢" : "🔴"} icon={<ExhaustFanIcon isOn={vent} />} />
-          <DataCard label="급수량" value={water ? "ON" : "OFF"} unit={water ? "🟢" : "🔴"} icon={<WateringPlantsIcon isOn={water} />} />
+          <DataCard label="난방" value={temp1 ? "ON" : "OFF"} unit={temp1 ? "🟢" : "🔴"} icon={<HeaterIcon isOn={temp1} />} />
+          <DataCard label="습도" value={humid1 ? "ON" : "OFF"} unit={humid1 ? "🟢" : "🔴"} icon={<HeaterIcon isOn={humid1} />} />
+          <DataCard label="배기" value={fan ? "ON" : "OFF"} unit={fan ? "🟢" : "🔴"} icon={<ExhaustFanIcon isOn={fan} />} />
+          <DataCard label="급수" value={water ? "ON" : "OFF"} unit={water ? "🟢" : "🔴"} icon={<WateringPlantsIcon isOn={water} />} />
         </div>
         {/* MQTT 연결 상태 표시 */}
         <div className="realtime-data-section">
