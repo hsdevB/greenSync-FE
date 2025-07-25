@@ -75,11 +75,45 @@
   background: #fff;
   color: #2563eb;
   font-weight: bold;
-  border-left: 4px solid #2563eb;
+  /* border-left: 4px solid #2563eb; */
 }
 
 .sidebar-menu-btn:hover {
   background: #e0e7ef;
+}
+
+/* AI 분석 버튼 특별 스타일 */
+.sidebar-menu-btn[data-menu="ai-analysis"] {
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-menu-btn[data-menu="ai-analysis"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.sidebar-menu-btn[data-menu="ai-analysis"]:hover::before {
+  left: 100%;
+}
+
+.sidebar-menu-btn[data-menu="ai-analysis"].selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.sidebar-menu-btn[data-menu="ai-analysis"].selected:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
 }
 
 .sidebar-menu-icon {

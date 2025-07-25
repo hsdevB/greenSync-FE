@@ -1,11 +1,8 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import useControlStore from '../store/useControlStore.jsx';
-import { MQTTClient } from '../utils/MQTTClient.jsx';
 
 // 자동 모드 로직을 담은 커스텀 훅
-export const useAutoMode = (sendToUnity) => {
-  const mqttClientRef = useRef(null);
-
+export const useAutoMode = (sendToUnity, mqttClient) => {
   const {
     fan, ledLevel,
     setWater, setFan, setLed,
@@ -15,21 +12,6 @@ export const useAutoMode = (sendToUnity) => {
     autoMode
   } = useControlStore();
 
-  // MQTT 클라이언트 초기화 (한 번만)
-  useEffect(() => {
-    if (!mqttClientRef.current) {
-      mqttClientRef.current = new MQTTClient();
-      mqttClientRef.current.connect();
-    }
-    
-    return () => {
-      if (mqttClientRef.current) {
-        mqttClientRef.current.disconnect();
-        mqttClientRef.current = null;
-      }
-    };
-  }, []);
-
   // 시뮬레이션 데이터 (실제로는 IoT 센서 데이터를 사용)
   const [simulatedData, setSimulatedData] = useState({
     sensor1: { temp: 25, humid: 50 },
@@ -38,40 +20,49 @@ export const useAutoMode = (sendToUnity) => {
     // sensor4: { temp: 25, humid: 50 },
   });
 
-  // 이전 설정값들을 useRef로 관리하여 무한 루프 방지
-  const prevTargetTempsRef = useRef([null]);
-  const prevTargetHumidsRef = useRef([null]);
+  // MQTT LED 깜박임 함수
+  const blinkLed = useCallback(async (ledIndex, currentFanState) => {
+    if (!mqttClient || !mqttClient.isConnected) return;
+    
+    const ledObject = [false, false, false, false];
+    ledObject[ledIndex] = true;
+    
+    this.publish('device/control/ABCD1234', {
+      "fan": currentFanState,
+      "leds": ledObject
+    });
+    
+    // 딜레이
+    if (ledIndex != 2)
+      await new Promise(resolve => setTimeout(resolve, 500)); // 500ms
+    else
+      await new Promise(resolve => setTimeout(resolve, 5000)); // 급수 끝나는 시간(5초)
+    
+    // LED 끄기
+    this.publish('device/control/ABCD1234', {
+      "leds": [false, false, false, false]
+    });
+  }, [mqttClient]);
 
-  // 10초마다 시뮬레이션 데이터 업데이트
+
+  // 5초마다 시뮬레이션 데이터 업데이트
   useEffect(() => {
     const interval = setInterval(() => {
-      setSimulatedData(prevData => {
-        const prevTemp = prevData?.sensor1?.temp ?? 25;
-        const prevHumid = prevData?.sensor1?.humid ?? 50;
-  
-        const newTemp = clamp(prevTemp + getRandomStep(), 15, 35);
-        const newHumid = clamp(prevHumid + getRandomStep(), 30, 80);
-  
-        return {
-          sensor1: {
-            temp: newTemp,
-            humid: newHumid
-          }
-        };
-      });
-    }, 1000 * 10); // 10초마다
-  
+    const generateSensorData = () => ({
+      temp: Math.floor(Math.random() * (35 - 15 + 1)) + 15,
+      humid: Math.floor(Math.random() * (80 - 30 + 1)) + 30
+    });
+
+    setSimulatedData({
+      sensor1: generateSensorData(),
+      // sensor2: generateSensorData(),
+      // sensor3: generateSensorData(),
+      // sensor4: generateSensorData()
+    });
+    }, 1000 * 5); // 5초마다
+
     return () => clearInterval(interval);
   }, []);
-  
-  function getRandomStep() {
-    const step = Math.floor(Math.random() * 3) - 1; // -1, 0, 1
-    return step;
-  }
-  
-  function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
-  }
 
   // 자동 환경 제어 로직
   useEffect(() => {
@@ -83,64 +74,64 @@ export const useAutoMode = (sendToUnity) => {
     // 1. 온도 자동 제어 (센서별 개별 제어)
     sensors.forEach(async (sensor, index) => {
       const sensorNum = index + 1;
-      let newTargetTemp = sensor.temp;
+      let tempChanged = false;
       
       if (sensor.temp < 20) {
-        newTargetTemp = 24;
+        tempChanged = true;
+        sendToUnity(`tempControl${sensorNum}`, { value: 24 });
+        if (sensorNum === 1) setTemp1(24);
         // else if (sensorNum === 2) setTemp2(24);
         // else if (sensorNum === 3) setTemp3(24);
         // else if (sensorNum === 4) setTemp4(24);
+        console.log(`자동 모드: 센서${sensorNum} 온도 24도로 설정 (현재: ${sensor.temp}도)`);
       } else if (sensor.temp > 30) {
-        newTargetTemp = 26;
+        tempChanged = true;
+        sendToUnity(`tempControl${sensorNum}`, { value: 26 });
+        if (sensorNum === 1) setTemp1(26);
         // else if (sensorNum === 2) setTemp2(26);
         // else if (sensorNum === 3) setTemp3(26);
         // else if (sensorNum === 4) setTemp4(26);
+        console.log(`자동 모드: 센서${sensorNum} 온도 26도로 설정 (현재: ${sensor.temp}도)`);
       }
-      
-      // 목표 온도가 변경되었을 때만 처리
-      if (newTargetTemp !== null && prevTargetTempsRef.current[index] !== newTargetTemp) {
-        if (sensorNum === 1) setTemp1(newTargetTemp);
-        sendToUnity(`tempControl${sensorNum}`, { value: newTargetTemp });
-        console.log(`자동 모드: 센서${sensorNum} 온도 ${newTargetTemp}도로 설정 (현재: ${sensor.temp}도)`);
+      else {
+        sendToUnity(`tempControl${sensorNum}`, { value: sensor.temp });
+      }
 
-        // MQTT 깜박임 처리
-        if (mqttClientRef.current && mqttClientRef.current.isConnected) {
-          mqttClientRef.current.blinkLed(3, fan);
-        }
-        
-        prevTargetTempsRef.current[index] = newTargetTemp;
+      // 온도 변경 시 MQTT LED 깜박임 및 센서 데이터 전송
+      if (tempChanged && sensorNum === 1) {
+        await blinkLed(0, fan); // 온도센서 LED 깜박임
       }
     });
 
     // 2. 습도 자동 제어 (센서별 개별 제어)
     sensors.forEach(async (sensor, index) => {
       const sensorNum = index + 1;
-      let newTargetHumid = sensor.humid;
+      let humidChanged = false;
       
       if (sensor.humid < 40) {
-        newTargetHumid = 50;
+        humidChanged = true;
+        sendToUnity(`humidControl${sensorNum}`, { value: 50 });
+        if (sensorNum === 1) setHumid1(50);
         // else if (sensorNum === 2) setHumid2(50);
         // else if (sensorNum === 3) setHumid3(50);
         // else if (sensorNum === 4) setHumid4(50);
+        console.log(`자동 모드: 센서${sensorNum} 습도 50%로 설정 (현재: ${sensor.humid}%)`);
       } else if (sensor.humid > 70) {
-        newTargetHumid = 60;
+        humidChanged = true;
+        sendToUnity(`humidControl${sensorNum}`, { value: 60 });
+        if (sensorNum === 1) setHumid1(60);
         // else if (sensorNum === 2) setHumid2(60);
         // else if (sensorNum === 3) setHumid3(60);
         // else if (sensorNum === 4) setHumid4(60);
+        console.log(`자동 모드: 센서${sensorNum} 습도 60%로 설정 (현재: ${sensor.humid}%)`);
       }
-      
-      // 목표 습도가 변경되었을 때만 처리
-      if (newTargetHumid !== null && prevTargetHumidsRef.current[index] !== newTargetHumid) {
-        if (sensorNum === 1) setHumid1(newTargetHumid);
-        sendToUnity(`humidControl${sensorNum}`, { value: newTargetHumid });
-        console.log(`자동 모드: 센서${sensorNum} 습도 ${newTargetHumid}%로 설정 (현재: ${sensor.humid}%)`);
+      else {
+        sendToUnity(`humidControl${sensorNum}`, { value: sensor.humid });
+      }
 
-        // MQTT 깜박임 처리
-        if (mqttClientRef.current && mqttClientRef.current.isConnected) {
-          mqttClientRef.current.blinkLed(2, fan);
-        }
-        
-        prevTargetHumidsRef.current[index] = newTargetHumid;
+      // 습도 변경 시 MQTT LED 깜박임 및 센서 데이터 전송
+      if (humidChanged && sensorNum === 1) {
+        await blinkLed(1, fan); // 습도센서 LED 깜박임
       }
     });
 
@@ -154,13 +145,13 @@ export const useAutoMode = (sendToUnity) => {
       console.log('자동 모드: LED 밝기', ledLevelByTime, '로 설정 (현재 시간:', hour, '시)');
       
       // LED 밝기 변경 시 MQTT LED 깜박임
-      if (ledLevelByTime > 0 && mqttClientRef.current && mqttClientRef.current.isConnected) {
-        mqttClientRef.current.blinkLed(1, fan);
+      if (ledLevelByTime > 0) {
+        blinkLed(3, fan); // LED밝기 LED 깜박임
       }
     }
 
     persistToLocal();
-  }, [autoMode, simulatedData.sensor1.temp, simulatedData.sensor1.humid, sendToUnity, ledLevel, fan]);
+  }, [autoMode, simulatedData, sendToUnity, ledLevel, mqttClient, blinkLed, setHumid1, setLed, setTemp1]);
 
   // 자동 급수 주기 타이머
   useEffect(() => {
@@ -170,9 +161,7 @@ export const useAutoMode = (sendToUnity) => {
       console.log('자동 모드: 급수 시작');
       sendToUnity("startWater", { status: true });
       // MQTT LED 깜박임
-      if (mqttClientRef.current && mqttClientRef.current.isConnected) {
-        mqttClientRef.current.blinkLed(0, fan);
-      }
+      await blinkLed(2, fan); // 급수 LED 깜박임
       setWater(true);
       persistToLocal();
 
@@ -185,7 +174,7 @@ export const useAutoMode = (sendToUnity) => {
     // }, 1000 * 60 * 60); // 1시간마다
 
     return () => clearInterval(wateringInterval);
-  }, [autoMode, sendToUnity, fan]);
+  }, [autoMode, sendToUnity, mqttClient, persistToLocal, setWater, blinkLed]);
 
   // 자동 환기 주기 타이머
   useEffect(() => {
@@ -197,10 +186,9 @@ export const useAutoMode = (sendToUnity) => {
       sendToUnity("fanStatus", { status: newFan });
 
       // MQTT로 팬 제어 신호 전송
-      if (mqttClientRef.current && mqttClientRef.current.isConnected) {
-        mqttClientRef.current.publish('device/control/ABCD1234', {
-          "fan": newFan,
-          "leds": [false, false, false, false]
+      if (mqttClient && mqttClient.isConnected) {
+        mqttClient.publish('device/control', {
+          "fan": newFan
         });
       }
 
@@ -210,7 +198,7 @@ export const useAutoMode = (sendToUnity) => {
     // }, 1000 * 60 * 30); // 30분마다 토글 (테스트용)
 
     return () => clearInterval(fanToggleInterval);
-  }, [autoMode, sendToUnity, fan]);
+  }, [autoMode, sendToUnity, fan, mqttClient, persistToLocal, setFan]);
 
   return {
     simulatedData,
