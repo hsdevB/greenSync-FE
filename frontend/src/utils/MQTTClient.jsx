@@ -55,7 +55,7 @@ export class MQTTClient {
     });
     
     // 딜레이
-    if (ledIndex != 2)
+    if (ledIndex != 0)
       await new Promise(resolve => setTimeout(resolve, 500)); // 500ms
     else
       await new Promise(resolve => setTimeout(resolve, 5000)); // 급수 끝나는 시간(5초)
