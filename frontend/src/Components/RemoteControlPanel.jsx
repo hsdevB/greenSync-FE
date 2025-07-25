@@ -167,6 +167,7 @@ export default function RemoteControlPanel({unityContext}) {
     persistToLocal,
     autoMode, manualMode,
     toggleAutoMode, toggleManualMode,
+    vent, setVent,
   } = useControlStore();
 
   // 자동 모드 커스텀 훅 사용
@@ -382,17 +383,7 @@ export default function RemoteControlPanel({unityContext}) {
           <div className="panel-subtitle">GreenSync</div>
         </div>
 
-        {/* 실시간 데이터 */}
-        <div className="realtime-data-section">
-          <div className="section-title">Real - time DATA</div>
-          <div className="data-grid">
-            <DataCard label="온도" value={iotData ? iotData.inTp : '--'} unit="℃" />
-            <DataCard label="습도" value={iotData ? iotData.inHd : '--'} unit="%" />
-            <DataCard label="CO2" value={iotData ? iotData.inCo2 : '--'} unit="ppm" />
-            <DataCard label="EC" value={iotData ? iotData.ec : '--'} unit="mS/cm" />
-            <DataCard label="PH" value={iotData ? iotData.ph : '--'} />
-          </div>
-        </div>
+
 
         {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
         {autoMode && (
@@ -411,6 +402,13 @@ export default function RemoteControlPanel({unityContext}) {
           </div>
         )}
 
+        {/* 원격제어 상태 section-title 추가 */}
+        <div className="section-title">원격제어 상태</div>
+        <div className="data-grid">
+          <DataCard label="난방" value={fan ? "ON" : "OFF"} unit={fan ? "🟢" : "🔴"} />
+          <DataCard label="배기" value={vent ? "ON" : "OFF"} unit={vent ? "🟢" : "🔴"} />
+          <DataCard label="급수량" value={water ? "ON" : "OFF"} unit={water ? "🟢" : "🔴"} />
+        </div>
         {/* MQTT 연결 상태 표시 */}
         <div className="realtime-data-section">
           <div className="section-title">MQTT 연결 상태(확인용)</div>
@@ -422,10 +420,6 @@ export default function RemoteControlPanel({unityContext}) {
             />
           </div>
         </div>
-      </div>
-
-      {/* 오른쪽 패널 */}
-      <div className="right-panel">
         {/* 기기 제어 */}
         <div className="device-control-section">
           <div className="section-title">공조 설비 기기 - 원격제어</div>
@@ -466,7 +460,10 @@ export default function RemoteControlPanel({unityContext}) {
             </button>
           </div>
         </div>
+      </div> {/* 왼쪽 패널 닫힘 */}
 
+      {/* 오른쪽 패널 */}
+      <div className="right-panel">
         {/* 제어판 카드 UI (2x2 grid) */}
         <div className="panel-title-row">
           <span className="panel-title-icon">📋</span>

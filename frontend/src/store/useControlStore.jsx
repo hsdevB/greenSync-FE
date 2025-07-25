@@ -3,6 +3,7 @@ import { create } from 'zustand'; // redux보다 훨씬 가볍고 쓰기 쉬운 
 const useControlStore = create((set, get) => ({
   water: false,
   fan: false,
+  vent: false, // 배기 상태 추가
   ledLevel: 3,
   temp1: 22,
   // temp2: 22,
@@ -17,6 +18,7 @@ const useControlStore = create((set, get) => ({
 
   setWater: (value) => set({ water: value }),
   setFan: (value) => set({ fan: value }),
+  setVent: (value) => set({ vent: value }), // 배기 setter 추가
   setLed: (value) => set({ ledLevel: value }),
   // 개별 온습도 설정 함수들
   setTemp1: (value) => set({ temp1: value }),
@@ -37,6 +39,7 @@ const useControlStore = create((set, get) => ({
     const dataToSave = {
       water: state.water,
       fan: state.fan,
+      vent: state.vent, // 배기 저장
       ledLevel: state.ledLevel,
       temp1: state.temp1,
       // temp2: state.temp2,
@@ -61,6 +64,7 @@ const useControlStore = create((set, get) => ({
         set({
           water: parsed.water ?? false,
           fan: parsed.fan ?? false,
+          vent: parsed.vent ?? false, // 배기 복원
           ledLevel: parsed.ledLevel ?? 3,
           temp1: parsed.temp1 ?? 22,
           // temp2: parsed.temp2 ?? 22,

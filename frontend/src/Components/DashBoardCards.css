@@ -26,6 +26,23 @@
   /* background: #f3f4f6; */
 }
 
+.dashboard-single-card-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;   /* 가운데 정렬 */
+  align-items: stretch;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.dashboard-single-card-row > .dashboard-card,
+.dashboard-single-card-row > .dashboard-graph-card {
+  flex: 1 1 0;
+  width: 100%;
+  max-width: 100%;
+  /* 필요시 padding, background, border-radius 등 추가 */
+}
+
 
 .dashboard-cards-row {
   display: grid;
