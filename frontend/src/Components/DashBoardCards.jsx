@@ -33,33 +33,9 @@ function getCurrentTimeString() {
   return `${year}년 ${month}월 ${date}일 ${days[day]}요일 ${ampm} ${hour}:${min}`;
 }
 
-const DashBoardCards = ({ unityContext }) => {
+const DashBoardCards = ({ unityContext, farmData }) => {
   const { unityProvider, isLoaded, loadingProgression, sendMessage } = unityContext;
   const loadingPercentage = Math.round(loadingProgression * 100); // 로딩 퍼센트
-
-<div style={{ width: '100%', minHeight: '400px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', position: 'relative', marginTop: '32px' }}>
-  <div style={{ flex: 1, maxWidth: '900px', position: 'relative' }}>
-    {!isLoaded && (
-      <div className="unity-loading-overlay">
-        <div className="unity-loading-text">
-          Unity 로딩 중... {loadingPercentage}%
-        </div>
-      </div>
-    )}
-    <Unity
-      style={{
-        width: '100%',
-        height: '400px',
-        background: '#222',
-        borderRadius: '16px',
-        opacity: isLoaded ? 1 : 0.3,
-        transition: 'opacity 0.3s'
-      }}
-      unityProvider={unityProvider}
-      devicePixelRatio={window.devicePixelRatio}
-    />
-  </div>
-</div>
 
   // 상태 관리 초기화
   const [currentTime, setCurrentTime] = useState(getCurrentTimeString()); // 현재 시간
@@ -186,15 +162,15 @@ const DashBoardCards = ({ unityContext }) => {
   // 대시보드 데이터 (임시)
   const dashboardData = DashBoardData;
 
-  // 실내온도 데이터 가져오기
+  // 농장 정보에 따른 센서 데이터 가져오기 함수들
   useEffect(() => {
-    console.log('fetchIndoorTemp called');
+    if (!farmData?.farmId) return;
+
     const fetchIndoorTemp = async () => { // 화살표 함수 사용 
       try {
         // 프록시를 사용하지 않고 직접 주소로 요청
-        const id = 1;
-        const res = await axios.get(`/sensor/temperature/${id}`);// 1인 수정 해야함 변수 추가 해야함
-        console.log(res);
+        // const id = 1;
+        const res = await axios.get(`/sensor/temperature/${farmData?.farmId}`);// 1인 수정 해야함 변수 추가 해야함
         
         // 데이터가 잘 받아오는지 확인
         console.log('indoorTemp data:', res.data); // 데이터 확인
@@ -213,16 +189,16 @@ const DashBoardCards = ({ unityContext }) => {
     };
     fetchIndoorTemp();
     sendToUnity(`tempControl${0}`, { value: indoorTemp });
-  }, []);
+  }, [farmData?.farmId]);
 
 //실내습도 데이터 가져오기
 useEffect(() => {
-  console.log('fetchIndoorHumi called');
+  if (!farmData?.farmId) return;
+
   const fetchIndoorHumi = async () => {
     try {
-      const id = 1;
-      const res = await axios.get(`/sensor/humidity/${id}`);
-      console.log(res);
+      // const id = 1;
+      const res = await axios.get(`/sensor/humidity/${farmData.farmId}`);
       console.log('indoorHumi data:', res.data);
       alert(JSON.stringify(res.data));
       // API 응답이 배열이라면, 가장 마지막(최신) 값을 사용해야 함
@@ -242,15 +218,16 @@ useEffect(() => {
   };
   fetchIndoorHumi();
   sendToUnity(`humidControl${0}`, { value: indoorHumi });
-}, []);
+}, [farmData.farmId]);
 
 // 산도(phLevel)와 전기전도도(elcDT) 한 번에 가져오기
 useEffect(() => {
+  if (!farmData?.farmId) return;
+
   const fetchNutrient = async () => {
     try {
-      const id = 1;
-      const res = await axios.get(`/sensor/nutrient/${id}`);
-      console.log(res);
+      // const id = 1;
+      const res = await axios.get(`/sensor/nutrient/${farmData.farmId}`);
       console.log('fetchNutrient data:', res.data);
       alert(JSON.stringify(res.data));
       let ph = '--';
@@ -270,16 +247,15 @@ useEffect(() => {
     }
   };
   fetchNutrient();
-}, []);
+}, [farmData.farmId]);
 
 //이산화탄소 데이터 가져오기
 useEffect(() => {
-  console.log('fetchCarbonDioxide called');
+  if (!farmData?.farmId) return;
+
   const fetchCarbonDioxide = async () => {
     try {
-      const id = 1;
-      const res = await axios.get(`/sensor/CarbonDioxide/${id}`);
-      console.log(res);
+      const res = await axios.get(`/sensor/CarbonDioxide/${farmData.farmId}`);
       console.log('CarbonDioxide data:', res.data);
       alert(JSON.stringify(res.data));
 
@@ -298,16 +274,15 @@ useEffect(() => {
     }
   };
   fetchCarbonDioxide();
-}, []);
+}, [farmData.farmId]);
 
 //양액 데이터 가져오기
 useEffect(() => {
-  console.log('fetchNutrient called');
+  if (!farmData?.farmId) return;
+
   const fetchNutrient = async () => {
     try {
-      const id = 1;
-      const res = await axios.get(`/sensor/nutrient/${id}`);
-      console.log(res);
+      const res = await axios.get(`/sensor/nutrient/${farmData.farmId}`);
       console.log('nutrient data:', res.data);
       alert(JSON.stringify(res.data));
       // API 응답이 배열이라면, 가장 마지막(최신) 값을 사용
@@ -326,7 +301,7 @@ useEffect(() => {
     }
   };
   fetchNutrient();
-}, []);
+}, [farmData.farmId]);
 
 
   return (
