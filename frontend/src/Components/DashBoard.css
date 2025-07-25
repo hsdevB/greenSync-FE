@@ -69,7 +69,7 @@
 .dashboard-main {
   flex: 1;
   min-width: 0;
-  padding: 0px 0px 0px 256px;
+  /* padding: 0px 0px 0px 256px; */
   margin-top: -22px;
   background: transparent;
   display: flex;

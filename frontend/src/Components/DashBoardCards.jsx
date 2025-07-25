@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Unity } from "react-unity-webgl";
+import React, { useState, useEffect } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
@@ -11,34 +10,10 @@ import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
 // import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
-class UnityMessage {
-  constructor(name, data) {
-    this.name = name;
-    this.data = JSON.stringify(data);
-  }
-}
 
-function getCurrentTimeString() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
-  const date = now.getDate();
-  const day = now.getDay();
-  const days = ["일", "월", "화", "수", "목", "금", "토"];
-  let hour = now.getHours();
-  const min = now.getMinutes().toString().padStart(2, "0");
-  const ampm = hour < 12 ? "오전" : "오후";
-  if (hour > 12) hour -= 12;
-  if (hour === 0) hour = 12;
-  return `${year}년 ${month}월 ${date}일 ${days[day]}요일 ${ampm} ${hour}:${min}`;
-}
-
-const DashBoardCards = ({ unityContext, farmData }) => {
-  const { unityProvider, isLoaded, loadingProgression, sendMessage } = unityContext;
-  const loadingPercentage = Math.round(loadingProgression * 100); // 로딩 퍼센트
+const DashBoardCards = ({ farmData }) => {
 
   // 상태 관리 초기화
-  const [currentTime, setCurrentTime] = useState(getCurrentTimeString()); // 현재 시간
   const [refreshDisabled, setRefreshDisabled] = useState(false); // 새로고침 비활성화 상태
   const [refreshTimer, setRefreshTimer] = useState(0); // 새로고침 타이머
   const iotData = useIotData(); // 온실 내 IoT 데이터
@@ -46,69 +21,25 @@ const DashBoardCards = ({ unityContext, farmData }) => {
   const [indoorHumi, setIndoorHumi] = useState('--');
   const [phValue, setPhValue] = useState('--');
   const [carbonDioxide, setCarbonDioxide] = useState('--');
-  const [nutrient, setNutrient] = useState('--');
   const [elcDT, setElcDT] = useState('--');
-
-
-  // unity 초기화할 때 보내줄 제어값
-  const sendToUnity = useCallback((eventName, payload) => {
-    if (!isLoaded) {
-      console.log("Unity not loaded yet, skipping message:", eventName);
-      return;
-    }
-    
-    try {
-      const message = new UnityMessage(eventName, payload);
-      console.log("Sending to Unity:", JSON.stringify(message));
-      sendMessage("MessageManager", "ReceiveMessage", JSON.stringify(message));
-    } catch (error) {
-      console.error("Error sending message to Unity:", error);
-    }
-  }, [sendMessage, isLoaded]);
+  const [illuminance, setIlluminance] = useState('--');
+  const [solarRadiation, setSolarRadiation] = useState('--');
 
   const {
-    water, fan, ledLevel,
+    // water, fan, ledLevel,
     temp1,
     humid1,
     restoreFromLocal, autoMode,
   } = useControlStore();
 
-  // 자동모드 커스텀 훅 사용
-  // const { simulatedData } = useAutoMode(sendToUnity);
+  // // 자동모드 커스텀 훅 사용
+  // const { simulatedData } = useAutoMode();
+
 
   useEffect(() => {
   // 상태 복원 (로컬스토리지에 저장한 상태 있다면)
   restoreFromLocal();
   }, []);
-
-  useEffect(() => {
-    if (isLoaded) {
-      // Unity 로드 완료 후 약간의 지연을 두고 메시지 전송
-      setTimeout(() => {
-        try {
-          sendToUnity("startWater", { status: water });
-          sendToUnity("fanStatus", { status: fan });
-          sendToUnity("ledLevel", { level: ledLevel ? 3 : 0 });
-          
-          sendToUnity("tempControl1", { value: temp1 });
-          // sendToUnity("tempControl2", { value: temp2 });
-          // sendToUnity("tempControl3", { value: temp3 });
-          // sendToUnity("tempControl4", { value: temp4 });
-          sendToUnity("humidControl1", { value: humid1 });
-          // sendToUnity("humidControl2", { value: humid2 });
-          // sendToUnity("humidControl3", { value: humid3 });
-          // sendToUnity("humidControl4", { value: humid4 });
-          
-          // 주간/야간 설정
-          const currentHour = new Date().getHours();
-          const isDay = currentHour >= 6 && currentHour < 18;
-          sendToUnity("toggleDayNight", { isDay: isDay });
-        } catch (error) {
-          console.error("Error initializing Unity:", error);
-        }
-      }, 500); // 500ms 지연
-    }
-  }, [isLoaded, sendToUnity, water, fan, ledLevel, temp1, humid1]);
 
   useEffect(() => {
     // 새로고침 상태 복원
@@ -122,18 +53,18 @@ const DashBoardCards = ({ unityContext, farmData }) => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(getCurrentTimeString());
+      // 시간 업데이트는 필요시에만 사용
     }, 1000 * 60);
     return () => clearInterval(timer);
   }, []);
 
   // 새로고침 함수 (데이터 fetch 또는 window.location.reload 등으로 대체 가능)
-  const handleRefresh = () => {
-    setRefreshDisabled(true);
-    setRefreshTimer(300); // 5분(300초)
-    localStorage.setItem('dashboard_refreshDisabled', 'true');
-    localStorage.setItem('dashboard_refreshTimer', '300');
-  };
+  // const handleRefresh = () => { // 사용하지 않는 함수 제거
+  //   setRefreshDisabled(true);
+  //   setRefreshTimer(300); // 5분(300초)
+  //   localStorage.setItem('dashboard_refreshDisabled', 'true');
+  //   localStorage.setItem('dashboard_refreshTimer', '300');
+  // };
 
   // 타이머 감소 및 localStorage 동기화
   useEffect(() => {
@@ -159,9 +90,6 @@ const DashBoardCards = ({ unityContext, farmData }) => {
     }
   }, [refreshTimer, refreshDisabled]);
 
-  // 대시보드 데이터 (임시)
-  const dashboardData = DashBoardData;
-
   // 농장 정보에 따른 센서 데이터 가져오기 함수들
   useEffect(() => {
     if (!farmData?.farmId) return;
@@ -171,24 +99,23 @@ const DashBoardCards = ({ unityContext, farmData }) => {
         // 프록시를 사용하지 않고 직접 주소로 요청
         // const id = 1;
         const res = await axios.get(`/sensor/temperature/${farmData?.farmId}`);// 1인 수정 해야함 변수 추가 해야함
-        
-        // 데이터가 잘 받아오는지 확인
-        console.log('indoorTemp data:', res.data); // 데이터 확인
-        // alert(JSON.stringify(res.data));
+        console.log("Temperature response: ", res.data);
         if (res.data && typeof res.data === 'number') {
           setIndoorTemp(res.data);
+        } else if (res.data && res.data.data && res.data.data.temperature) {
+          setIndoorTemp(res.data.data.temperature);
         } else if (res.data && res.data.temperature) {
           setIndoorTemp(res.data.temperature);
         } else {
           setIndoorTemp('--');
         }
-      } catch (e) {
+      } catch (error) {
+        console.error('Temperature fetch error:', error);
+        console.error('Error response:', error.response?.data);
         setIndoorTemp('--');
-        console.error(e);
       }
     };
     fetchIndoorTemp();
-    sendToUnity(`tempControl${0}`, { value: indoorTemp });
   }, [farmData?.farmId]);
 
 //실내습도 데이터 가져오기
@@ -199,25 +126,23 @@ useEffect(() => {
     try {
       // const id = 1;
       const res = await axios.get(`/sensor/humidity/${farmData.farmId}`);
-      console.log('indoorHumi data:', res.data);
-      alert(JSON.stringify(res.data));
-      // API 응답이 배열이라면, 가장 마지막(최신) 값을 사용해야 함
-      if (Array.isArray(res.data) && res.data.length > 0) {
-        setIndoorHumi(res.data[0].humidity); // 또는 최신값 기준으로 정렬해서 사용
-      } else if (res.data && typeof res.data === 'number') {
+      console.log("Humidity response: ", res.data);
+      if (res.data && typeof res.data === 'number') {
         setIndoorHumi(res.data);
+      } else if (res.data && res.data.data && res.data.data.humidity) {
+        setIndoorHumi(res.data.data.humidity);
       } else if (res.data && res.data.humidity) {
         setIndoorHumi(res.data.humidity);
       } else {
         setIndoorHumi('--');
       }
-    } catch (e) {
+    } catch (error) {
+      console.error('Humidity fetch error:', error);
+      console.error('Error response:', error.response?.data);
       setIndoorHumi('--');
-      console.error(e);
     }
   };
   fetchIndoorHumi();
-  sendToUnity(`humidControl${0}`, { value: indoorHumi });
 }, [farmData.farmId]);
 
 // 산도(phLevel)와 전기전도도(elcDT) 한 번에 가져오기
@@ -228,25 +153,37 @@ useEffect(() => {
     try {
       // const id = 1;
       const res = await axios.get(`/sensor/nutrient/${farmData.farmId}`);
-      console.log('fetchNutrient data:', res.data);
-      alert(JSON.stringify(res.data));
-      let ph = '--';
-      let ec = '--';
-      if (Array.isArray(res.data) && res.data.length > 0) {
-        if (res.data[0].phLevel !== undefined) ph = res.data[0].phLevel;
-        if (res.data[0].elcDT !== undefined) ec = res.data[0].elcDT;
-      } else if (res.data) {
-        if (res.data.phLevel !== undefined) ph = res.data.phLevel;
-        if (res.data.elcDT !== undefined) ec = res.data.elcDT;
+      console.log("Nutrient response: ", res.data);
+
+        // pH 값 설정
+        if (res.data && typeof res.data === 'number') {
+          setPhValue(res.data);
+        } else if (res.data && res.data.data && res.data.data.phLevel) {
+          setPhValue(res.data.data.phLevel);
+        } else if (res.data && res.data.phLevel) {
+          setPhValue(res.data.phLevel);
+        } else {
+          setPhValue('--');
+        }
+
+        // EC 값 설정
+        if (res.data && typeof res.data === 'number') {
+          setElcDT(res.data);
+        } else if (res.data && res.data.data && res.data.data.elcDT) {
+          setElcDT(res.data.data.elcDT);
+        } else if (res.data && res.data.elcDT) {
+          setElcDT(res.data.elcDT);
+        } else {
+          setElcDT('--');
+        }
+      } catch (e) {
+        console.error('Nutrient fetch error:', e);
+        console.error('Error response:', e.response?.data);
+        setPhValue('--');
+        setElcDT('--');
       }
-      setPhValue(ph);
-      setElcDT(ec);
-    } catch {
-      setPhValue('--');
-      setElcDT('--');
-    }
-  };
-  fetchNutrient();
+    };
+    fetchNutrient();
 }, [farmData.farmId]);
 
 //이산화탄소 데이터 가져오기
@@ -254,100 +191,479 @@ useEffect(() => {
   if (!farmData?.farmId) return;
 
   const fetchCarbonDioxide = async () => {
-    try {
-      const res = await axios.get(`/sensor/CarbonDioxide/${farmData.farmId}`);
-      console.log('CarbonDioxide data:', res.data);
-      alert(JSON.stringify(res.data));
-
-      if (Array.isArray(res.data) && res.data.length > 0) {
-        setCarbonDioxide(res.data[0].co2); // co2로 수정
-      } else if (res.data && typeof res.data === 'number') {
-        setCarbonDioxide(res.data);
-      } else if (res.data && res.data.co2) { // co2로 수정
-        setCarbonDioxide(res.data.co2);
-      } else {
+      try {
+        // const id = 1;
+        const res = await axios.get(`/api/sensor/carbonDioxide/${farmData.farmId}`);
+        console.log("CO2 response: ", res.data);
+        if (res.data && typeof res.data === 'number') {
+          setCarbonDioxide(res.data);
+        } else if (res.data && res.data.data && res.data.data.co2) {
+          setCarbonDioxide(res.data.data.co2);
+        } else if (res.data && res.data.co2) {
+          setCarbonDioxide(res.data.co2);
+        } else {
+          setCarbonDioxide('--');
+        }
+      } catch (e) {
+        console.error('CO2 fetch error:', e);
+        console.error('Error response:', e.response?.data);
         setCarbonDioxide('--');
       }
-    } catch (e) {
-      setCarbonDioxide('--');
-      console.error(e);
-    }
-  };
-  fetchCarbonDioxide();
+    };
+    fetchCarbonDioxide();
 }, [farmData.farmId]);
 
-//양액 데이터 가져오기
+//광량 데이터 가져오기
 useEffect(() => {
   if (!farmData?.farmId) return;
 
-  const fetchNutrient = async () => {
+  const fetchIlluminance = async () => {
     try {
-      const res = await axios.get(`/sensor/nutrient/${farmData.farmId}`);
-      console.log('nutrient data:', res.data);
-      alert(JSON.stringify(res.data));
-      // API 응답이 배열이라면, 가장 마지막(최신) 값을 사용
-      if (Array.isArray(res.data) && res.data.length > 0) {
-        setNutrient(res.data[0].nutrientValue); // 실제 key로 수정
-      } else if (res.data && typeof res.data === 'number') {
-        setNutrient(res.data);
-      } else if (res.data && res.data.nutrientValue) {
-        setNutrient(res.data.nutrientValue);
+      // const id = 1;
+      const res = await axios.get(`/api/sensor/illuminance/${farmData?.farmId}`);
+      console.log("Illuminance response: ", res.data);
+      if (res.data && typeof res.data === 'number') {
+        setIlluminance(res.data);
+      } else if (res.data && res.data.data && res.data.data.illuminance) {
+        setIlluminance(res.data.data.illuminance);
+      } else if (res.data && res.data.illuminance) {
+        setIlluminance(res.data.illuminance);
       } else {
-        setNutrient('--');
+        setIlluminance('--');
       }
     } catch (e) {
-      setNutrient('--');
-      console.error(e);
+      console.error('Illuminance fetch error:', e);
+      console.error('Error response:', e.response?.data);
+      setIlluminance('--');
     }
   };
-  fetchNutrient();
-}, [farmData.farmId]);
+  fetchIlluminance();
+}, [farmData?.farmId]);
 
+// 일사량 데이터 가져오기
+useEffect(() => {
+  if (!farmData?.farmId) return;
+
+  const fetchSolarRadiation = async () => {
+    try {
+      // const id = 1;
+      const res = await axios.get(`/api/sensor/solarRadiation/${farmData?.farmId}`);
+      console.log("Solar Radiation response: ", res.data);
+      if (res.data && typeof res.data === 'number') {
+        setSolarRadiation(res.data);
+      } else if (res.data && res.data.data && res.data.data.solarRadiation) {
+        setSolarRadiation(res.data.data.solarRadiation);
+      } else if (res.data && res.data.solarRadiation) {
+        setSolarRadiation(res.data.solarRadiation);
+      } else {
+        setSolarRadiation('--');
+      }
+    } catch (e) {
+      console.error('Solar Radiation fetch error:', e);
+      console.error('Error response:', e.response?.data);
+    }
+  };
+  fetchSolarRadiation();
+}, [farmData?.farmId]);
+
+  // 대시보드 데이터 (임시)
+  const dashboardData = DashBoardData;
+
+  // 각 줄을 배열로 선언
+  const row1 = [
+    // 실내온도/습도 카드
+    <div className="dashboard-card combined-card" key="indoorTempHumi">
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%"
+      }}>
+        {/* 온도 영역 */}
+        <div style={{ flex: 1, textAlign: "center" }}>
+          <div style={{ color: "#e57373", fontSize: "2rem" }}>🌡️</div>
+          <div style={{ fontWeight: "bold", marginBottom: 4 }}>실내온도</div>
+          <div style={{ fontSize: "1.5rem", color: "#e57373" }}>{indoorTemp ?? "--"}</div>
+          <div style={{ color: "#e57373", fontWeight: "bold" }}>℃</div>
+        </div>
+        {/* 구분선 */}
+        <div style={{
+          width: 1,
+          height: 60,
+          background: "#eee",
+          margin: "0 16px"
+        }}></div>
+        {/* 습도 영역 */}
+        <div style={{ flex: 1, textAlign: "center" }}>
+          <div style={{ color: "#2196f3", fontSize: "2rem" }}>💧</div>
+          <div style={{ fontWeight: "bold", marginBottom: 4 }}>실내습도</div>
+          <div style={{ fontSize: "1.5rem", color: "#2196f3" }}>{indoorHumi ?? "--"}</div>
+          <div style={{ color: "#2196f3", fontWeight: "bold" }}>%</div>
+        </div>
+      </div>
+      <div style={{ textAlign: "center", marginTop: 16, color: "#888", fontWeight: "bold" }}>
+        {/* 실시간 측정값 */}
+      </div>
+      {/* <div className="dashboard-bar-bg"><div className="dashboard-bar-fill"></div></div> */}
+    </div>,
+    // 산도(pH) 카드
+    <div className="dashboard-card" key="phValue" data-type="ph">
+      <div className="dashboard-card-section">
+        <Activity className="dashboard-card-icon green" />
+        <h3 className="dashboard-card-title">산도(pH)</h3>
+      </div>
+      <div className="dashboard-card-value green" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+        {phValue}
+      </div>
+      <div className="dashboard-card-unit" style={{ color: '#10b981', fontSize: '0.9rem', marginTop: '4px' }}>
+        pH
+      </div>
+      {/* <div className="dashboard-card-desc">실시간 측정값</div> */}
+      {/* <div className="dashboard-gradient-bar" style={{ 
+        height: '4px', 
+        borderRadius: '2px', 
+        marginTop: '8px',
+        width: '100%'
+      }}></div> */}
+    </div>
+  ];
+
+  const row2 = [
+    // 이산화탄소 카드
+    <div className="dashboard-card" key="carbonDioxide" data-type="co2">
+      <div className="dashboard-card-section">
+        <Activity className="dashboard-card-icon green" />
+        <h3 className="dashboard-card-title">이산화탄소</h3>
+      </div>
+      <div className="dashboard-card-value green" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+        {carbonDioxide}
+      </div>
+      <div className="dashboard-card-unit" style={{ color: '#10b981', fontSize: '0.9rem', marginTop: '4px' }}>
+        ppm
+      </div>
+      {/* <div className="dashboard-card-desc">실시간 측정값</div> */}
+      {/* <div className="dashboard-gradient-bar" style={{ 
+        height: '4px', 
+        borderRadius: '2px', 
+        marginTop: '8px',
+        width: '100%'
+      }}></div> */}
+    </div>,
+    // 전기전도도(EC) 카드
+    <div className="dashboard-card" key="elcDT" data-type="ec">
+      <div className="dashboard-card-section">
+        <Zap className="dashboard-card-icon yellow" />
+        <h3 className="dashboard-card-title">전기전도도(EC)</h3>
+      </div>
+      <div className="dashboard-card-value yellow" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+        {elcDT}
+      </div>
+      <div className="dashboard-card-unit" style={{ color: '#f59e0b', fontSize: '0.9rem', marginTop: '4px' }}>
+        mS/cm
+      </div>
+      {/* <div className="dashboard-card-desc">실시간 측정값</div> */}
+      {/* <div className="dashboard-gradient-bar" style={{ 
+        height: '4px', 
+        borderRadius: '2px', 
+        marginTop: '8px',
+        width: '100%'
+      }}></div> */}
+    </div>
+  ];
+
+
+
+  const row3 = [
+    // 풍향(기상청) 카드
+    <div className="dashboard-card" key="windDirection" data-type="wind">
+      <div className="dashboard-card-section">
+        <Cloud className="dashboard-card-icon blue" />
+        <h3 className="dashboard-card-title">풍향(기상청)</h3>
+      </div>
+      <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+        {iotData ? iotData.windDirection : '--'}
+      </div>
+      <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
+        °
+      </div>
+      {/* <div className="dashboard-card-desc">기상청 단기예보 기준</div> */}
+      {/* <div className="dashboard-gradient-bar" style={{
+        height: '4px',
+        borderRadius: '2px',
+        marginTop: '8px',
+        width: '100%'
+      }}></div> */}
+    </div>,
+    // 풍속(기상청) 카드
+    <div className="dashboard-card" key="windSpeed" data-type="wind">
+      <div className="dashboard-card-section">
+        <Cloud className="dashboard-card-icon blue" />
+        <h3 className="dashboard-card-title">풍속(기상청)</h3>
+      </div>
+      <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+        {iotData ? iotData.windSpeed : '--'}
+      </div>
+      <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
+        m/s
+      </div>
+      {/* <div className="dashboard-card-desc">기상청 단기예보 기준</div> */}
+      {/* <div className="dashboard-gradient-bar" style={{
+        height: '4px',
+        borderRadius: '2px',
+        marginTop: '8px',
+        width: '100%'
+      }}></div> */}
+    </div>
+  ];
+
+    const row4 = [
+      // 일사량 카드
+      <div className="dashboard-card" key="solarRadiation" data-type="solar">
+        <div className="dashboard-card-section">
+          <Sun className="dashboard-card-icon yellow" />
+          <h3 className="dashboard-card-title">일사량(기상청)</h3>
+        </div>
+        <div className="dashboard-card-value yellow" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+          {solarRadiation}
+        </div>
+        <div className="dashboard-card-unit" style={{ color: '#facc15', fontSize: '0.9rem', marginTop: '4px' }}>
+          mol/m²/d
+        </div>
+      </div>,
+      // 광량 카드
+      <div className="dashboard-card" key="illuminance" data-type="illuminance">
+        <div className="dashboard-card-section">
+          <Cloud className="dashboard-card-icon blue" />
+          <h3 className="dashboard-card-title">광량(LUX)</h3>
+        </div>
+        <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+          {illuminance}
+        </div>
+        <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
+          lux
+        </div>
+      </div>
+    ];
+
+  const row5 = [
+    // 이슬점(기상청) 카드
+    <div className="dashboard-card" key="dewPoint" data-type="dew">
+      <div className="dashboard-card-section">
+        <Cloud className="dashboard-card-icon blue" />
+        <h3 className="dashboard-card-title">이슬점(기상청)</h3>
+      </div>
+      <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+        {iotData ? iotData.dewPoint : '--'}
+      </div>
+      <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
+        ℃
+      </div>
+      {/* <div className="dashboard-card-desc">기상청 단기예보 기준</div> */}
+      {/* <div className="dashboard-gradient-bar" style={{
+        height: '4px',
+        borderRadius: '2px',
+        marginTop: '8px',
+        width: '100%'
+      }}></div> */}
+    </div>,
+    // 강수여부(기상청) 카드
+    <div className="dashboard-card" key="rainStatus" data-type="rain">
+      <div className="dashboard-card-section">
+        <Cloud className="dashboard-card-icon blue" />
+        <h3 className="dashboard-card-title">강수여부(기상청)</h3>
+      </div>
+      <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+        {iotData && iotData.rainStatus !== undefined
+          ? (iotData.rainStatus ? "강수" : "없음")
+          : "--"}
+      </div>
+      <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
+        상태
+      </div>
+      {/* <div className="dashboard-card-desc">기상청 단기예보 기준</div> */}
+      {/* <div className="dashboard-gradient-bar" style={{
+        height: '4px',
+        borderRadius: '2px',
+        marginTop: '8px',
+        width: '100%'
+      }}></div> */}
+    </div>
+  ];
+
+  // 카드 JSX를 배열로 모으기
+  // '일일 총 급수량' 카드 분리
+  const waterCard = (
+    <div className="dashboard-graph-card" key="waterData">
+      <div className="dashboard-graph-title">일일 총 급수량</div>
+      <ResponsiveContainer width="100%" height={120}>
+        <LineChart data={dashboardData.waterData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="time" fontSize={10} />
+          <YAxis fontSize={10} />
+          <Tooltip />
+          <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+
+  // 기존 allCards에서 waterData 카드 제거
+  let allCards = [
+    // 실내온도
+    <div className="dashboard-card" key="indoorTemp">
+      <h3 className="dashboard-card-title">실내온도</h3>
+      <div className="dashboard-card-value orange">{indoorTemp} ℃</div>
+      <div className="dashboard-card-desc">실시간 측정값</div>
+    </div>,
+    // 실내습도
+    <div className="dashboard-card" key="indoorHumi">
+      <h3 className="dashboard-card-title">실내습도</h3>
+      <div className="dashboard-card-value blue">{indoorHumi} %</div>
+      <div className="dashboard-card-desc">실시간 측정값</div>
+    </div>,
+    // 산도
+    <div className="dashboard-card" key="phValue">
+      <h3 className="dashboard-card-title">산도(pH)</h3>
+      <div className="dashboard-card-value green">{phValue}</div>
+      <div className="dashboard-card-desc">실시간 측정값</div>
+    </div>,
+    // 전기전도도
+    <div className="dashboard-card" key="elcDT">
+      <h3 className="dashboard-card-title">전기전도도(EC)</h3>
+      <div className="dashboard-card-value yellow">{elcDT} mS/cm</div>
+      <div className="dashboard-card-desc">실시간 측정값</div>
+    </div>,
+    // 일사량 (기상청 API)
+    <div className="dashboard-card" key="solar">
+      <h3 className="dashboard-card-title">일사량(기상청)</h3>
+      <div className="dashboard-card-value yellow">{solarRadiation}</div>
+      <div className="dashboard-card-desc">기상청 단기예보 기준</div>
+    </div>,
+    // 누적광량 (막대차트)
+    <div className="dashboard-card" key="illuminance">
+      <h3 className="dashboard-card-title">광량 (LUX)</h3>
+      <div className="dashboard-card-value yellow">{illuminance} lux</div>
+      <ResponsiveContainer width="100%" height={60}>
+        <BarChart data={iotData?.dliChartData ?? []}>
+          <Bar dataKey="value" fill="#facc15" />
+        </BarChart>
+      </ResponsiveContainer>
+      <div className="dashboard-card-desc">목표: {iotData ? iotData.dliTarget : '--'} mol/m²/d</div>
+    </div>,
+    // 이슬점 (기상청)
+    <div className="dashboard-card" key="dewPoint">
+      <h3 className="dashboard-card-title">이슬점(기상청)</h3>
+      <div className="dashboard-card-value blue">{iotData ? iotData.dewPoint : '--'} ℃</div>
+      <div className="dashboard-card-desc">기상청 단기예보 기준</div>
+    </div>,
+    // 강수여부 (기상청 API)
+    <div className="dashboard-card" key="rainStatus">
+      <h3 className="dashboard-card-title">강수여부(기상청)</h3>
+      <div className="dashboard-card-value blue">
+        {iotData && iotData.rainStatus !== undefined
+          ? (iotData.rainStatus ? "강수" : "없음")
+          : "--"}
+      </div>
+      <div className="dashboard-card-desc">기상청 단기예보 기준</div>
+    </div>,
+    // 풍향 (기상청 API)
+    <div className="dashboard-card dashboard-card-center" key="windDirection">
+      <h3 className="dashboard-card-title">풍향(기상청)</h3>
+      <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flex:1, height:'100%'}}>
+        <div className="dashboard-card-value orange" style={{fontSize:'2rem', margin:'16px 0 4px 0', textAlign:'center'}}>{iotData ? iotData.windSpeed : '--'} m/s</div>
+        <div className="dashboard-card-unit" style={{textAlign:'center'}}>{iotData ? iotData.windDirection : '--'}°</div>
+      </div>
+    </div>,
+    // 풍속 (기상청 API)
+    <div className="dashboard-card dashboard-card-center" key="windSpeed">
+      <h3 className="dashboard-card-title">풍속(기상청)</h3>
+      <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flex:1, height:'100%'}}>
+        <div className="dashboard-card-value orange" style={{fontSize:'2rem', margin:'16px 0 4px 0', textAlign:'center'}}>{iotData ? iotData.windSpeed : '--'} m/s</div>
+        <div className="dashboard-card-unit" style={{textAlign:'center'}}>{iotData ? iotData.windDirection : '--'}°</div>
+      </div>
+    </div>,
+    // CO2(이산화탄소)
+    <div className="dashboard-card" key="carbonDioxide" style={{ minHeight: '220px' }}>
+      <div className="dashboard-card-section">
+        <Activity className="dashboard-card-icon green" />
+        <h3 className="dashboard-card-title">이산화탄소</h3>
+      </div>
+      <div className="dashboard-card-status">센서</div>
+      <div className="dashboard-card-value green">{carbonDioxide}</div>
+      <div className="dashboard-card-unit">ppm</div>
+      <div className="dashboard-card-desc">실시간 측정값</div>
+    </div>,
+    // 광량
+    <div className="dashboard-card" key="light" style={{ minHeight: '220px' }}>
+      <div className="dashboard-card-section">
+        <Sun className="dashboard-card-icon yellow" />
+        <h3 className="dashboard-card-title">광량</h3>
+      </div>
+      <div className="dashboard-card-status">조도 센서</div>
+      <div className="dashboard-card-value yellow">{iotData ? iotData.acSlrdQy : '--'}</div>
+      <div className="dashboard-card-status">μmol/m²/s</div>
+      <div className="dashboard-card-desc">DLI {iotData ? iotData.dliValue : '--'} mol/m²/d</div>
+      <div className="dashboard-bar-bg"><div className="dashboard-bar-fill"></div></div>
+    </div>,
+    // 습도 관리 (이전에는 광량 위였으나, 이제 아래로 이동)
+    <div className="dashboard-card" key="humidityControl">
+      <div className="dashboard-card-section">
+        <Droplets className="dashboard-card-icon blue" />
+        <h3 className="dashboard-card-title">습도 관리</h3>
+      </div>
+      <div className="dashboard-card-value blue">{iotData ? iotData.inHd : '--'}%</div>
+      <div className="dashboard-card-status">습도</div>
+      <ResponsiveContainer width="100%" height={120}>
+        <PieChart>
+          <Pie data={dashboardData.humidityPieData} cx="50%" cy="50%" innerRadius={30} outerRadius={50} dataKey="value">
+            {dashboardData.humidityPieData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Pie>
+        </PieChart>
+      </ResponsiveContainer>
+      <div className="dashboard-card-desc">목표 습도 60-70%</div>
+    </div>,
+    // 일일 온/습도 모니터링
+    <div className="dashboard-graph-card" key="tempHumidData">
+      <div className="dashboard-graph-title">일일 온/습도 모니터링</div>
+      <ResponsiveContainer width="100%" height={120}>
+        <LineChart data={dashboardData.tempHumidData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="time" fontSize={10} />
+          <YAxis yAxisId="left" fontSize={10} />
+          <YAxis yAxisId="right" orientation="right" fontSize={10} />
+          <Tooltip />
+          <Line yAxisId="left" type="monotone" dataKey="temp" stroke="#ef4444" strokeWidth={2} />
+          <Line yAxisId="right" type="monotone" dataKey="humid" stroke="#3b82f6" strokeWidth={2} />
+        </LineChart>
+      </ResponsiveContainer>
+      <div className="dashboard-graph-desc">
+        평균 온도 <span style={{ color: "#ef4444" }}>23.8°C</span> / 평균 습도 <span style={{ color: "#3b82f6" }}>60.3%</span>
+      </div>
+    </div>,
+  ];
+  allCards = allCards.filter(card => card.key !== 'waterData');
+
+  // 맨 마지막에 waterCard 추가
+  allCards.push(waterCard);
+
+  // 2개씩 row로 묶고, 마지막 3개는 따로 처리
+  const cardRows = [];
+  const n = allCards.length;
+  for (let i = 0; i < n - 3; i += 2) {
+    cardRows.push(allCards.slice(i, i + 2));
+  }
 
   return (
     <div className="dashboard-cards-container">
-      {/* 상단 sticky header */}
-      <div className="dashboard-sticky-header">
-        <div className="dashboard-title">대시보드</div>
-        <div className="dashboard-card-value.time">{currentTime}</div>
-      </div>
-      {/* WebGL 3D 모델 + 새로고침 버튼 */}
-      <div style={{ width: '100%', minHeight: '400px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', position: 'relative', marginTop: '32px' }}>
-        <div style={{ flex: 1, maxWidth: '900px', position: 'relative' }}>
-          {/* Unity 로딩 오버레이 */}
-          {!isLoaded && (
-            <div className="unity-loading-overlay">
-              <div className="unity-loading-text">
-                Unity 로딩 중... {loadingPercentage}%
-              </div>
-              <div className="unity-loading-bar-bg">
-                <div
-                  className="unity-loading-bar-fill"
-                  style={{ width: `${loadingPercentage}%` }}
-                ></div>
-              </div>
-            </div>
-          )}
-          <Unity
-            style={{
-              width: '100%',
-              height: '400px',
-              background: '#222',
-              borderRadius: '16px',
-              opacity: isLoaded ? 1 : 0.3,
-              transition: 'opacity 0.3s'
-            }}
-            unityProvider={unityProvider}
-            devicePixelRatio={Math.min(window.devicePixelRatio, 2)} // 최대 2배로 제한
-          />
-        </div>
-        {/* 새로고침 버튼 */}
+      {/* 새로고침 버튼 */}
+      {/* <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
         <button
           className="dashboard-refresh-btn"
           onClick={handleRefresh}
           disabled={refreshDisabled}
           style={{
-            marginLeft: '24px',
             height: '48px',
             minWidth: '48px',
             borderRadius: '12px',
@@ -358,247 +674,96 @@ useEffect(() => {
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            fontSize: '1.5rem',
-            position: 'relative',
-            top: 0
+            fontSize: '1.5rem'
           }}
           title="대시보드 새로고침"
         >
           <RotateCcw size={28} />
         </button>
         {refreshDisabled && (
-          <span style={{ marginLeft: 8, color: "#888", fontSize: "0.95em" }}>
+          <span style={{ marginLeft: 8, color: "#888", fontSize: "0.95em", alignSelf: 'center' }}>
             {Math.floor(refreshTimer / 60)}:{(refreshTimer % 60).toString().padStart(2, "0")} 후 재시도 가능
           </span>
         )}
-      </div>
+      </div> */}
 
-      {/* WebGL 밑에 기본 정보 카드 배치 */}
+      {/* 기본 정보 카드 배치 */}
       {/* 1번째 줄: 현재 날씨, 현재 시간, 주간/야간 */}
-      <div className="dashboard-info-row">
+      <div className="dashboard-cards-row" style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
         {/* OpenWeather 카드 추가 */}
-        <div className="dashboard-card">
-          <OpenWeather />
-        </div>
-        {/* 현재 시간 */}
-        <div className="dashboard-card">
-          <div className="dashboard-card-section">
-            <Activity className="dashboard-card-icon green" />
-            <h3 className="dashboard-card-title">현재 시간</h3>
-          </div>
-          <div className="dashboard-card-value">{currentTime}</div>
+        <div style={{ flex: 1 }}>
+          {/* <div className="dashboard-card crop-card-hover" data-type="weather"> */}
+            <OpenWeather />
+          {/* </div> */}
         </div>
         {/* 주간/야간 */}
-        <div className="dashboard-card">
-          <div className="dashboard-card-section">
-            {new Date().getHours() >= 6 && new Date().getHours() < 18 ? <Sun className="dashboard-card-icon yellow" /> : <Moon className="dashboard-card-icon gray" />}
-            <h3 className="dashboard-card-title">주간/야간</h3>
-          </div>
-          <div className="dashboard-card-center">
-            {new Date().getHours() >= 6 && new Date().getHours() < 18 ? (
-              <span className="dashboard-daynight-text day">
-                ☀️ 주간
-              </span>
-            ) : (
-              <span className="dashboard-daynight-text night">
-                🌙 야간
-              </span>
-            )}
+        <div style={{ flex: 1 }}>
+          <div className="dashboard-card crop-card-hover" data-type="daynight">
+            <div className="dashboard-card-section">
+              {new Date().getHours() >= 6 && new Date().getHours() < 18 ? <Sun className="dashboard-card-icon yellow" /> : <Moon className="dashboard-card-icon gray" />}
+              <h3 className="dashboard-card-title">주간/야간</h3>
+            </div>
+            <div className="dashboard-card-value yellow" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+              {new Date().getHours() >= 6 && new Date().getHours() < 18 ? '주간' : '야간'}
+            </div>
+            <div className="dashboard-card-unit" style={{ color: '#f59e0b', fontSize: '0.9rem', marginTop: '4px' }}>
+              {new Date().getHours() >= 6 && new Date().getHours() < 18 ? '☀️' : '🌙'}
+            </div>
           </div>
         </div>
       </div>
 
       {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
       {autoMode && (
-        <div className="dashboard-info-row">
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 온도1</h3>
-            <div className="dashboard-card-value orange">{temp1} ℃</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
+        <div className="dashboard-cards-row" style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
+          <div style={{ flex: 1 }}>
+            <div className="dashboard-card crop-card-hover" data-type="temperature">
+              <div className="dashboard-card-section">
+                <Thermometer className="dashboard-card-icon red" />
+                <h3 className="dashboard-card-title">자동 제어 기준 온도</h3>
+              </div>
+              <div className="dashboard-card-value red" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                {temp1}
+              </div>
+              <div className="dashboard-card-unit" style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '4px' }}>
+                ℃
+              </div>
+
+            </div>
           </div>
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 습도1</h3>
-            <div className="dashboard-card-value blue">{humid1} %</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
+          <div style={{ flex: 1 }}>
+            <div className="dashboard-card crop-card-hover" data-type="humidity">
+              <div className="dashboard-card-section">
+                <Droplets className="dashboard-card-icon blue" />
+                <h3 className="dashboard-card-title">자동 제어 기준 습도</h3>
+              </div>
+              <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                {humid1}
+              </div>
+              <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
+                %
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* 실내온도, 실내습도, 산도, 전기전도도 카드를 한 줄로 배치 */}
-      <div className="dashboard-cards-row">
-       
-        {/* 실내온도 */}
-        <div className="dashboard-card">
-          <h3 className="dashboard-card-title">실내온도</h3>
-          <div className="dashboard-card-value orange">{indoorTemp} ℃</div> 
-          <div className="dashboard-card-desc">실시간 측정값</div>
+      {/* 첫 번째 줄: 실내온도/습도, 산도/전기전도도 */}
+      {/* 두 번째 줄: 풍향, 풍속 */}
+      {/* 세 번째 줄: CO2, 광량 */}
+      {/* 네 번째 줄: 강수여부, 기타 카드 등 */}
+      {/* 필요시 추가 줄... */}
+
+   
+              {[row1, row2, row3, row4, row5].map((row, idx) => (
+        <div className="dashboard-cards-row" key={idx} style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
+          {row.map((card, cidx) => (
+            <div style={{ flex: 1 }} key={cidx}>{card}</div>
+          ))}
         </div>
-        {/* 실내습도 */}
-        <div className="dashboard-card">
-          <h3 className="dashboard-card-title">실내습도</h3>
-          <div className="dashboard-card-value blue">{indoorHumi} %</div>
-          <div className="dashboard-card-desc">실시간 측정값</div>
-        </div>
-        {/* 산도 */}
-        <div className="dashboard-card">
-          <h3 className="dashboard-card-title">산도(pH)</h3>
-          <div className="dashboard-card-value green">{phValue}</div>
-          <div className="dashboard-card-desc">실시간 측정값</div>
-        </div>
-        {/* 전기전도도 */}
-        <div className="dashboard-card">
-          <h3 className="dashboard-card-title">전기전도도(EC)</h3>
-          <div className="dashboard-card-value yellow">{elcDT} mS/cm</div>
-          <div className="dashboard-card-desc">실시간 측정값</div>
-        </div>
-      </div>
-      {/* 기존의 수분 부족량, 일사량, 누적광량, 이슬점 카드를 한 줄로 배치 */}
-      <div className="dashboard-cards-row">
-        {/* 수분 부족량 */}
-        <div className="dashboard-card">
-          <h3 className="dashboard-card-title">수분 부족량</h3>
-          <div className="dashboard-card-value red">{iotData ? iotData.moistureDeficit : 0} L</div>
-          <div className="dashboard-bar-bg">
-            <div
-              className="dashboard-bar-fill" // 수분 부족량 바 채우기
-              style={{
-                width: `${iotData ? iotData.moistureDeficitPercent : 0}%`,
-                background: (iotData ? iotData.moistureDeficitPercent : 0) > 70 ? 'red' : '#10b981',
-                height: '10px',
-                borderRadius: '5px'
-              }}
-            ></div>
-          </div>
-          <div className="dashboard-card-desc">
-            {(iotData ? iotData.moistureDeficitPercent : 0) > 70 ? "수분 부족! 급수 필요" : "정상 범위"}
-          </div>
-        </div>
-        {/* 일사량 (기상청 API) */}
-        <div className="dashboard-card">
-          <h3 className="dashboard-card-title">일사량(기상청)</h3>
-          <div className="dashboard-card-value yellow">{iotData ? iotData.dliValue : '--'} mol/m²/d</div>
-          <div className="dashboard-card-desc">기상청 단기예보 기준</div>
-        </div>
-        {/* 누적광량 (막대차트) */}
-        <div className="dashboard-card">
-          <h3 className="dashboard-card-title">누적광량 (DLI)</h3>
-          <div className="dashboard-card-value yellow">{iotData ? iotData.dliValue : '--'} mol/m²/d</div>
-          <ResponsiveContainer width="100%" height={60}>
-            <BarChart data={iotData?.dliChartData ?? []}>
-              <Bar dataKey="value" fill="#facc15" />
-            </BarChart>
-          </ResponsiveContainer>
-          <div className="dashboard-card-desc">목표: {iotData ? iotData.dliTarget : '--'} mol/m²/d</div>
-        </div>
-        {/* 이슬점 (기상청 API) */}
-        <div className="dashboard-card">
-          <h3 className="dashboard-card-title">이슬점(기상청)</h3>
-          <div className="dashboard-card-value blue">{iotData ? iotData.dewPoint : '--'} ℃</div>
-          <div className="dashboard-card-desc">기상청 단기예보 기준</div>
-        </div>
-      </div>
-      {/* 상단 카드 4개 */}
-      <div className="dashboard-cards-row">
-        {/* 풍향/풍속 (기상청 API) */}
-        <div className="dashboard-card dashboard-card-center">
-          <h3 className="dashboard-card-title">풍향/풍속(기상청)</h3>
-          <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flex:1, height:'100%'}}>
-            <div className="dashboard-card-value orange" style={{fontSize:'2rem', margin:'16px 0 4px 0', textAlign:'center'}}>{iotData ? iotData.windSpeed : '--'} m/s</div>
-            <div className="dashboard-card-unit" style={{textAlign:'center'}}>{iotData ? iotData.windDirection : '--'}°</div>
-          </div>
-        </div>
-        {/* CO2(이산화탄소) */}
-        <div className="dashboard-card dashboard-card-center">
-          <h3 className="dashboard-card-title">이산화탄소</h3>
-          <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flex:1, height:'100%'}}>
-            <div className="dashboard-card-value green" style={{fontSize:'2rem', margin:'16px 0 4px 0', textAlign:'center'}}>{carbonDioxide}</div>
-            <div className="dashboard-card-unit" style={{textAlign:'center'}}>ppm</div>
-          </div>
-        </div>
-        {/* 양액 */}
-        <div className="dashboard-card dashboard-card-center">
-          <h3 className="dashboard-card-title">양액</h3>
-          <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', flex:1, height:'100%'}}>
-            <div className="dashboard-card-value blue" style={{fontSize:'2rem', margin:'16px 0 4px 0', textAlign:'center'}}>{nutrient}</div>
-            <div className="dashboard-card-unit" style={{textAlign:'center'}}>L</div>
-          </div>
-        </div>
-        {/* 생육 예측 차트 (임시) */}
-        <div className="dashboard-card">
-          <div className="dashboard-predict-label">생육 예측: 94.2%</div>
-          <div className="dashboard-predict-bad">● 부실생 예측: 3.1%</div>
-          <div className="dashboard-predict-good">● 성장 속도: 예상보다 8% 빠름</div>
-          <ResponsiveContainer width="100%" height={60}>
-            <BarChart data={dashboardData.growthData}>
-              <Bar dataKey="value" fill="#10b981" />
-            </BarChart>
-          </ResponsiveContainer>
-          <button className="dashboard-predict-btn">AI 분석결과</button>
-        </div>
-      </div>
-      {/* 나머지 카드: 2개씩 한 줄 */}
-      <div className="dashboard-cards-grid">
-        {/* 습도 관리 (임시) */}
-        <div className="dashboard-card">
-          <div className="dashboard-card-section">
-            <Droplets className="dashboard-card-icon blue" />
-            <h3 className="dashboard-card-title">습도 관리</h3>
-          </div>
-          <div className="dashboard-card-value blue">{iotData ? iotData.inHd : '--'}%</div>
-          <div className="dashboard-card-status">습도</div>
-          <ResponsiveContainer width="100%" height={120}>
-            <PieChart>
-              <Pie data={dashboardData.humidityPieData} cx="50%" cy="50%" innerRadius={30} outerRadius={50} dataKey="value">
-                {dashboardData.humidityPieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="dashboard-card-desc">목표 습도 60-70%</div>
-        </div>
-        {/* 광량 (임시) */}
-        <div className="dashboard-card">
-          <div className="dashboard-card-section">
-            <Sun className="dashboard-card-icon yellow" />
-            <h3 className="dashboard-card-title">광량</h3>
-          </div>
-          <div className="dashboard-card-status">조도 센서</div>
-          <div className="dashboard-card-value yellow">{iotData ? iotData.acSlrdQy : '--'}</div>
-          <div className="dashboard-card-status">μmol/m²/s</div>
-          <div className="dashboard-card-desc">DLI {iotData ? iotData.dliValue : '--'} mol/m²/d</div>
-          <div className="dashboard-bar-bg"><div className="dashboard-bar-fill"></div></div>
-        </div>
-      </div>
-      {/* 하단 그래프 4개 (임시 데이터) */}
-      <div className="dashboard-graph-grid">
-        {/* 일일 총 급수량 */}
-        <div className="dashboard-graph-card">
-          <div className="dashboard-graph-title">일일 총 급수량</div>
-          <ResponsiveContainer width="100%" height={120}>
-            <LineChart data={dashboardData.waterData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" fontSize={10} />
-              <YAxis fontSize={10} />
-              <Tooltip />
-              <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        {/* 일일 양액 급여량 */}
-        <div className="dashboard-graph-card">
-          <div className="dashboard-graph-title">일일 양액 급여량</div>
-          <ResponsiveContainer width="100%" height={120}>
-            <BarChart data={dashboardData.nutrientDayData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" fontSize={10} />
-              <YAxis fontSize={10} />
-              <Tooltip />
-              <Bar dataKey="value" fill="#8b5cf6" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        {/* 일일 온/습도 모니터링 */}
+      ))}
+      {/* 일일 온/습도 모니터링 그래프 */}
+      <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
         <div className="dashboard-graph-card">
           <div className="dashboard-graph-title">일일 온/습도 모니터링</div>
           <ResponsiveContainer width="100%" height={120}>
@@ -616,21 +781,21 @@ useEffect(() => {
             평균 온도 <span style={{ color: "#ef4444" }}>23.8°C</span> / 평균 습도 <span style={{ color: "#3b82f6" }}>60.3%</span>
           </div>
         </div>
-        {/* 일일 양액 급여량 (시간별) */}
+      </div>
+      
+      {/* 일일 총 급수량 그래프 */}
+      <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
         <div className="dashboard-graph-card">
-          <div className="dashboard-graph-title">일일 양액 시간별 급여량</div>
+          <div className="dashboard-graph-title">일일 총 급수량</div>
           <ResponsiveContainer width="100%" height={120}>
-            <BarChart data={dashboardData.nutrientHourData}>
+            <LineChart data={dashboardData.waterData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="time" fontSize={10} />
               <YAxis fontSize={10} />
               <Tooltip />
-              <Bar dataKey="value" fill="#22c55e" />
-            </BarChart>
+              <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} />
+            </LineChart>
           </ResponsiveContainer>
-          <div className="dashboard-graph-desc">
-            일평균 양액량 <span style={{ color: "#22c55e" }}>88.0L</span> / 평균 EC <span style={{ color: "#3b82f6" }}>1.87</span> / 평균 pH <span style={{ color: "#10b981" }}>6.18</span>
-          </div>
         </div>
       </div>
     </div>

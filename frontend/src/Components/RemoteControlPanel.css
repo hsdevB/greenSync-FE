@@ -4,9 +4,15 @@
   justify-content: center;
   align-items: flex-start;
   width: 100%;
-  gap: 40px; /* 좌우 간격, 필요시 조절 */
+  gap: 20px; /* 좌우 간격, 필요시 조절 */
   color: #bfdbfe;
   margin: 0 auto;
+  overflow-x: auto;
+  box-sizing: border-box; /* 추가 */
+}
+
+.remote-panel-root * {
+  box-sizing: border-box; /* 모든 자식에도 적용 */
 }
 
 .left-panel {
@@ -29,7 +35,7 @@
 .panel-title {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #219653;
+  color: #FFBB00;
   margin-bottom: 2px;
 }
 
@@ -40,11 +46,12 @@
 }
 
 .section-title {
-  background: #219653;
+  background: #FFBB00;/* 연한 녹색 */
   color: #fff;
   font-weight: 600;
   padding: 7px 0;
   border-radius: 8px;
+  margin-top: 12px;
   margin-bottom: 12px;
   text-align: center;
   font-size: 1.05rem;
@@ -69,9 +76,17 @@
   min-width: 80px;
 }
 
+.data-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 4px auto;
+  width: 100%;
+}
+
 .data-label {
   font-size: 0.95rem;
-  color: #219653;
+  color: #FFBB00;
   font-weight: 500;
   margin-bottom: 2px;
 }
@@ -119,7 +134,7 @@
 
 /* ON 상태 */
 .btn-on {
-  background-color: #219653; /* 초록 */
+  background-color: #FFBB00; /* 초록 */
   opacity: 1;
 }
 
@@ -142,14 +157,14 @@
   font-size: 1.1rem;
   font-weight: 700;
   margin: 24px 0 10px 0;
-  color: #219653;
+  color: #FFBB00;
   gap: 6px;
 }
 
 .control-card-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 10px;
   margin-bottom: 24px;
 }
 

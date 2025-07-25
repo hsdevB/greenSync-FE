@@ -92,7 +92,7 @@ const LoginPage = () => {
         </button>
       </form>
       <div style={{ fontSize: 15, color: "#666" }}>
-        계정이 없으신가요? <a href="#" style={{ color: "#388e3c", textDecoration: "underline" }}>회원가입</a>
+        계정이 없으신가요? <a href="/signup" style={{ color: "#388e3c", textDecoration: "underline" }}>회원가입</a>
       </div>
     </div>
   );
