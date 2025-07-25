@@ -10,11 +10,8 @@ import SignupPage from './Page/SignupPage';
 import CropControlUI from './Components/CropControlUI';
 import AIAnalysisModal from './Components/AIAnalysisModal';
 import UserProfilePage from './Page/UserProfilePage';
-<<<<<<< HEAD
 import { IotDataProvider } from './api/IotDataProvider.jsx';
 import { UserProvider } from './store/useUserStore.jsx';
-=======
->>>>>>> d9e4379e3d0ee0294ecd06e6d69ac4b38d4eb702
 import './App.css';
 
 function getCurrentTimeString() {
@@ -139,7 +136,6 @@ function App() {
   const unityContext = useSharedUnityContext();
 
   return (
-<<<<<<< HEAD
     <UserProvider>
       <IotDataProvider>
         <BrowserRouter>
@@ -154,18 +150,6 @@ function App() {
         </BrowserRouter>
       </IotDataProvider>
     </UserProvider>
-=======
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<MainPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/user-profile" element={<UserProfilePage />} />
-        <Route path="/dashboard" element={<DashboardLayout unityContext={unityContext} />} />
-        <Route path="/crop-control" element={<CropControlUI />} />
-      </Routes>
-    </BrowserRouter>
->>>>>>> d9e4379e3d0ee0294ecd06e6d69ac4b38d4eb702
   );
 }
 

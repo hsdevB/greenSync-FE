@@ -81,7 +81,8 @@ const DashBoardCards = () => {
   const [phValue, setPhValue] = useState('--');
   const [carbonDioxide, setCarbonDioxide] = useState('--');
   const [elcDT, setElcDT] = useState('--');
-  // const [illuminance, setIlluminance] = useState('--'); // 사용하지 않는 변수 제거
+  const [illuminance, setIlluminance] = useState('--');
+  const [solarRadiation, setSolarRadiation] = useState('--');
 
   const {
     temp1,
@@ -289,21 +290,45 @@ const DashBoardCards = () => {
         const res = await axios.get(`/api/sensor/illuminance/${id}`);
         console.log("Illuminance response: ", res.data);
         if (res.data && typeof res.data === 'number') {
-          // setIlluminance(res.data); // 사용하지 않는 변수 제거
+          setIlluminance(res.data);
         } else if (res.data && res.data.data && res.data.data.illuminance) {
-          // setIlluminance(res.data.data.illuminance); // 사용하지 않는 변수 제거
+          setIlluminance(res.data.data.illuminance);
         } else if (res.data && res.data.illuminance) {
-          // setIlluminance(res.data.illuminance); // 사용하지 않는 변수 제거
+          setIlluminance(res.data.illuminance);
         } else {
-          // setIlluminance('--'); // 사용하지 않는 변수 제거
+          setIlluminance('--');
         }
       } catch (e) {
         console.error('Illuminance fetch error:', e);
         console.error('Error response:', e.response?.data);
-        // setIlluminance('--'); // 사용하지 않는 변수 제거
+        setIlluminance('--');
       }
     };
     fetchIlluminance();
+  }, []);
+
+  // 일사량 데이터 가져오기
+  useEffect(() => {
+    const fetchSolarRadiation = async () => {
+      try {
+        const id = 1;
+        const res = await axios.get(`/api/sensor/solarRadiation/${id}`);
+        console.log("Solar Radiation response: ", res.data);
+        if (res.data && typeof res.data === 'number') {
+          setSolarRadiation(res.data);
+        } else if (res.data && res.data.data && res.data.data.solarRadiation) {
+          setSolarRadiation(res.data.data.solarRadiation);
+        } else if (res.data && res.data.solarRadiation) {
+          setSolarRadiation(res.data.solarRadiation);
+        } else {
+          setSolarRadiation('--');
+        }
+      } catch (e) {
+        console.error('Solar Radiation fetch error:', e);
+        console.error('Error response:', e.response?.data);
+      }
+    };
+    fetchSolarRadiation();
   }, []);
 
   // 대시보드 데이터 (임시)
@@ -411,6 +436,8 @@ const DashBoardCards = () => {
     </div>
   ];
 
+
+
   const row3 = [
     // 풍향(기상청) 카드
     <div className="dashboard-card" key="windDirection" data-type="wind">
@@ -454,7 +481,36 @@ const DashBoardCards = () => {
     </div>
   ];
 
-  const row4 = [
+    const row4 = [
+      // 일사량 카드
+      <div className="dashboard-card" key="solarRadiation" data-type="solar">
+        <div className="dashboard-card-section">
+          <Sun className="dashboard-card-icon yellow" />
+          <h3 className="dashboard-card-title">일사량(기상청)</h3>
+        </div>
+        <div className="dashboard-card-value yellow" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+          {solarRadiation}
+        </div>
+        <div className="dashboard-card-unit" style={{ color: '#facc15', fontSize: '0.9rem', marginTop: '4px' }}>
+          mol/m²/d
+        </div>
+      </div>,
+      // 광량 카드
+      <div className="dashboard-card" key="illuminance" data-type="illuminance">
+        <div className="dashboard-card-section">
+          <Cloud className="dashboard-card-icon blue" />
+          <h3 className="dashboard-card-title">광량(LUX)</h3>
+        </div>
+        <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+          {illuminance}
+        </div>
+        <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
+          lux
+        </div>
+      </div>
+    ];
+
+  const row5 = [
     // 이슬점(기상청) 카드
     <div className="dashboard-card" key="dewPoint" data-type="dew">
       <div className="dashboard-card-section">
@@ -545,7 +601,7 @@ const DashBoardCards = () => {
     // 일사량 (기상청 API)
     <div className="dashboard-card" key="solar">
       <h3 className="dashboard-card-title">일사량(기상청)</h3>
-      <div className="dashboard-card-value yellow">추가예정</div>
+      <div className="dashboard-card-value yellow">{solarRadiation}</div>
       <div className="dashboard-card-desc">기상청 단기예보 기준</div>
     </div>,
     // 누적광량 (막대차트)
@@ -663,7 +719,6 @@ const DashBoardCards = () => {
   for (let i = 0; i < n - 3; i += 2) {
     cardRows.push(allCards.slice(i, i + 2));
   }
-  const lastThree = allCards.slice(n - 3);
 
   return (
     <div className="dashboard-cards-container">
@@ -695,7 +750,6 @@ const DashBoardCards = () => {
             {Math.floor(refreshTimer / 60)}:{(refreshTimer % 60).toString().padStart(2, "0")} 후 재시도 가능
           </span>
         )}
-<<<<<<< HEAD
       </div> */}
 
       {/* 기본 정보 카드 배치 */}
@@ -720,13 +774,6 @@ const DashBoardCards = () => {
             <div className="dashboard-card-unit" style={{ color: '#f59e0b', fontSize: '0.9rem', marginTop: '4px' }}>
               {new Date().getHours() >= 6 && new Date().getHours() < 18 ? '☀️' : '🌙'}
             </div>
-            {/* <div className="dashboard-card-desc">현재 시간 기준</div> */}
-            {/* <div className="dashboard-gradient-bar" style={{ 
-              height: '4px', 
-              borderRadius: '2px', 
-              marginTop: '8px',
-              width: '100%'
-            }}></div> */}
           </div>
         </div>
       </div>
@@ -746,13 +793,7 @@ const DashBoardCards = () => {
               <div className="dashboard-card-unit" style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '4px' }}>
                 ℃
               </div>
-              {/* <div className="dashboard-card-desc">자동 모드 기준값</div> */}
-              {/* <div className="dashboard-gradient-bar" style={{ 
-                height: '4px', 
-                borderRadius: '2px', 
-                marginTop: '8px',
-                width: '100%'
-              }}></div> */}
+
             </div>
           </div>
           <div style={{ flex: 1 }}>
@@ -785,43 +826,8 @@ const DashBoardCards = () => {
       {/* 네 번째 줄: 강수여부, 기타 카드 등 */}
       {/* 필요시 추가 줄... */}
 
-      {/* 일일 온/습도 모니터링 - 밑으로 배치, 좌우로 길게 */}
-      {/* <div className="dashboard-cards-row" style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
-        <div className="dashboard-graph-card" key="tempHumidData" style={{ width: '100%', padding: '20px', borderRadius: '12px', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-          <div className="dashboard-graph-title">일일 온/습도 모니터링</div>
-          <ResponsiveContainer width="100%" height={120}>
-            <LineChart data={dashboardData.tempHumidData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" fontSize={10} />
-              <YAxis yAxisId="left" fontSize={10} />
-              <YAxis yAxisId="right" orientation="right" fontSize={10} />
-              <Tooltip />
-              <Line yAxisId="left" type="monotone" dataKey="temp" stroke="#ef4444" strokeWidth={2} />
-              <Line yAxisId="right" type="monotone" dataKey="humid" stroke="#3b82f6" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-          <div className="dashboard-graph-desc">
-            평균 온도 <span style={{ color: "#ef4444" }}>23.8°C</span> / 평균 습도 <span style={{ color: "#3b82f6" }}>60.3%</span>
-          </div>
-        </div>
-      </div> */}
-
-      {/* 일일 총 급수량 - 밑으로 배치, 좌우로 길게 */}
-      {/* <div className="dashboard-cards-row" style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
-        <div className="dashboard-graph-card" key="waterData" style={{ width: '100%', padding: '20px', borderRadius: '12px', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-          <div className="dashboard-graph-title">일일 총 급수량</div>
-          <ResponsiveContainer width="100%" height={120}>
-            <LineChart data={dashboardData.waterData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" fontSize={10} />
-              <YAxis fontSize={10} />
-              <Tooltip />
-              <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div> */}
-      {[row1, row2, row3, row4].map((row, idx) => (
+   
+              {[row1, row2, row3, row4, row5].map((row, idx) => (
         <div className="dashboard-cards-row" key={idx} style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
           {row.map((card, cidx) => (
             <div style={{ flex: 1 }} key={cidx}>{card}</div>
@@ -862,38 +868,6 @@ const DashBoardCards = () => {
               <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
-=======
-      </div>
-      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
-      {autoMode && (
-        <div className="dashboard-info-row">
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 온도</h3>
-            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
-          </div>
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 습도</h3>
-            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
-          </div>
-        </div>
-      )}
-      {/* 2개씩 카드 렌더링 */}
-      {cardRows.map((row, idx) => (
-        <div className="dashboard-cards-row" key={idx} style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
-          {row.map((card, cidx) => (
-            <div style={{ flex: 1 }} key={cidx}>{card}</div>
-          ))}
-        </div>
-      ))}
-      {/* 마지막 줄: 왼쪽 1개, 오른쪽 2개 세로 */}
-      <div className="dashboard-cards-row" style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
-        <div style={{ flex: 1 }}>{lastThree[0]}</div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {lastThree[1]}
-          {lastThree[2]}
->>>>>>> d9e4379e3d0ee0294ecd06e6d69ac4b38d4eb702
         </div>
       </div>
     </div>

@@ -27,11 +27,34 @@ export default function OpenWeather() {
       });
   }, []);
 
+  // 날씨 아이콘을 이모티콘으로 변환하는 함수
+  const getWeatherEmoji = (weatherMain) => {
+    switch (weatherMain?.toLowerCase()) {
+      case 'clear':
+        return '☀️';
+      case 'clouds':
+        return '☁️';
+      case 'rain':
+        return '🌧️';
+      case 'snow':
+        return '❄️';
+      case 'thunderstorm':
+        return '⛈️';
+      case 'drizzle':
+        return '🌦️';
+      case 'mist':
+      case 'fog':
+        return '🌫️';
+      default:
+        return '🌤️';
+    }
+  };
+
   return (
-    <div className="dashboard-card" style={{ minHeight: 180 }}>
+    <div className="dashboard-card">
       <div className="dashboard-card-section">
-        {weather?.icon ? (
-          <div style={{ display: 'flex', alignItems: 'center', marginRight: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginRight: 8 }}>
+          {weather?.icon ? (
             <img
               src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
               alt="날씨 아이콘"
@@ -43,12 +66,22 @@ export default function OpenWeather() {
               onError={(e) => {
                 console.log('날씨 아이콘 로드 실패:', e.target.src);
                 e.target.style.display = 'none';
+                // 아이콘 로드 실패 시 이모티콘 표시
+                e.target.nextSibling.style.display = 'block';
               }}
             />
-          </div>
-        ) : (
-          <span style={{ fontSize: 24, color: "#3b82f6", marginRight: 8 }}>☁️</span>
-        )}
+          ) : null}
+          <span 
+            style={{ 
+              fontSize: 24, 
+              color: "#3b82f6", 
+              marginRight: 8,
+              display: weather?.icon ? 'none' : 'block'
+            }}
+          >
+            {getWeatherEmoji(weather?.main)}
+          </span>
+        </div>
         <h3 className="dashboard-card-title">현재 날씨</h3>
       </div>
       <div className="dashboard-card-value" style={{ fontSize: '2rem', fontWeight: 'bold', color: '#222' }}>
@@ -60,12 +93,6 @@ export default function OpenWeather() {
       <div className="dashboard-card-desc">
         {weather?.desc || "기상청 API 연동 필요"}
       </div>
-      <div className="dashboard-gradient-bar" style={{ 
-        height: '4px', 
-        borderRadius: '2px', 
-        marginTop: '8px',
-        width: '100%'
-      }}></div>
     </div>
   );
 }
