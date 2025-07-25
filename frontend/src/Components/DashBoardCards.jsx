@@ -9,7 +9,7 @@ import OpenWeather from "./OpenWheater.jsx";
 import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
-import { useAutoMode } from '../hooks/useAutoMode.jsx';
+// import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 class UnityMessage {
   constructor(name, data) {
     this.name = name;
@@ -48,53 +48,65 @@ const DashBoardCards = ({ unityContext }) => {
   const [illuminance, setIlluminance] = useState('--');
 
 
- // unity 초기화할 때 보내줄 제어값
- const sendToUnity = useCallback((eventName, payload) => {
-  if (!unityContext.isLoaded) {
-    console.log("Unity not loaded yet, skipping message:", eventName);
-    return;
-  }
-  
-  try {
-    const message = new UnityMessage(eventName, payload);
-    console.log("Sending to Unity:", JSON.stringify(message));
-    sendMessage("MessageManager", "ReceiveMessage", JSON.stringify(message));
-  } catch (error) {
-    console.error("Error sending message to Unity:", error);
-  }
-}, [sendMessage, unityContext.isLoaded]);
-
-const {
-  water, fan, ledLevel, temp, humid, restoreFromLocal, autoMode,
-} = useControlStore();
-
-// 자동모드 커스텀 훅 사용
-const { simulatedData } = useAutoMode(sendToUnity);
-
-useEffect(() => {
-// 상태 복원 (로컬스토리지에 저장한 상태 있다면)
-restoreFromLocal();
-}, []);
-
-useEffect(() => {
-  // Unity 메시지 전송 (Unity가 로드되었는지 확인)
-  if (unityContext.isLoaded) {
-    try {
-      sendToUnity("startWater", { status: water });
-      sendToUnity("fanStatus", { status: fan });
-      sendToUnity("ledLevel", { level: ledLevel ? 3 : 0 });
-      sendToUnity("tempControl", { value: temp });
-      sendToUnity("humidControl", { value: humid });
-      
-      // 주간/야간 설정
-      const currentHour = new Date().getHours();
-      const isDay = currentHour >= 6 && currentHour < 18;
-      sendToUnity("toggleDayNight", { isDay: isDay });
-    } catch (error) {
-      console.error("Error initializing Unity:", error);
+  // unity 초기화할 때 보내줄 제어값
+  const sendToUnity = useCallback((eventName, payload) => {
+    if (!isLoaded) {
+      console.log("Unity not loaded yet, skipping message:", eventName);
+      return;
     }
-  }
-}, [unityContext.isLoaded, sendToUnity, water, fan, ledLevel, temp, humid]);
+    
+    try {
+      const message = new UnityMessage(eventName, payload);
+      console.log("Sending to Unity:", JSON.stringify(message));
+      sendMessage("MessageManager", "ReceiveMessage", JSON.stringify(message));
+    } catch (error) {
+      console.error("Error sending message to Unity:", error);
+    }
+  }, [sendMessage, isLoaded]);
+
+  const {
+    water, fan, ledLevel,
+    temp1,
+    humid1,
+    restoreFromLocal, autoMode,
+  } = useControlStore();
+
+  // 자동모드 커스텀 훅 사용
+  // const { simulatedData } = useAutoMode(sendToUnity);
+
+  useEffect(() => {
+  // 상태 복원 (로컬스토리지에 저장한 상태 있다면)
+  restoreFromLocal();
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      // Unity 로드 완료 후 약간의 지연을 두고 메시지 전송
+      setTimeout(() => {
+        try {
+          sendToUnity("startWater", { status: water });
+          sendToUnity("fanStatus", { status: fan });
+          sendToUnity("ledLevel", { level: ledLevel ? 3 : 0 });
+          
+          sendToUnity("tempControl1", { value: temp1 });
+          // sendToUnity("tempControl2", { value: temp2 });
+          // sendToUnity("tempControl3", { value: temp3 });
+          // sendToUnity("tempControl4", { value: temp4 });
+          sendToUnity("humidControl1", { value: humid1 });
+          // sendToUnity("humidControl2", { value: humid2 });
+          // sendToUnity("humidControl3", { value: humid3 });
+          // sendToUnity("humidControl4", { value: humid4 });
+          
+          // 주간/야간 설정
+          const currentHour = new Date().getHours();
+          const isDay = currentHour >= 6 && currentHour < 18;
+          sendToUnity("toggleDayNight", { isDay: isDay });
+        } catch (error) {
+          console.error("Error initializing Unity:", error);
+        }
+      }, 500); // 500ms 지연
+    }
+  }, [isLoaded, sendToUnity, water, fan, ledLevel, temp1, humid1]);
 
   useEffect(() => {
     // 새로고침 상태 복원
@@ -170,6 +182,7 @@ useEffect(() => {
       }
     };
     fetchIndoorTemp();
+    sendToUnity(`tempControl${0}`, { value: indoorTemp });
   }, []);
 //실내습도 데이터 가져오기
 useEffect(() => {
@@ -190,6 +203,7 @@ useEffect(() => {
     }
   };
   fetchIndoorHumi();
+  sendToUnity(`humidControl${0}`, { value: indoorHumi });
 }, []);
 
 // 산도(phLevel)와 전기전도도(elcDT) 한 번에 가져오기
@@ -273,8 +287,42 @@ useEffect(() => {
 
   return (
     <div className="dashboard-cards-container">
-      {/* 새로고침 버튼 */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px', marginBottom: '24px' }}>
+      {/* 상단 sticky header */}
+      <div className="dashboard-sticky-header">
+        <div className="dashboard-title">대시보드</div>
+        <div className="dashboard-card-value.time">{currentTime}</div>
+      </div>
+      {/* WebGL 3D 모델 + 새로고침 버튼 */}
+      <div style={{ width: '100%', minHeight: '400px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', position: 'relative', marginTop: '32px' }}>
+        <div style={{ flex: 1, maxWidth: '900px', position: 'relative' }}>
+          {/* Unity 로딩 오버레이 */}
+          {!isLoaded && (
+            <div className="unity-loading-overlay">
+              <div className="unity-loading-text">
+                Unity 로딩 중... {loadingPercentage}%
+              </div>
+              <div className="unity-loading-bar-bg">
+                <div
+                  className="unity-loading-bar-fill"
+                  style={{ width: `${loadingPercentage}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+          <Unity
+            style={{
+              width: '100%',
+              height: '400px',
+              background: '#222',
+              borderRadius: '16px',
+              opacity: isLoaded ? 1 : 0.3,
+              transition: 'opacity 0.3s'
+            }}
+            unityProvider={unityProvider}
+            devicePixelRatio={Math.min(window.devicePixelRatio, 2)} // 최대 2배로 제한
+          />
+        </div>
+        {/* 새로고침 버튼 */}
         <button
           className="dashboard-refresh-btn"
           onClick={handleRefresh}
@@ -335,65 +383,16 @@ useEffect(() => {
         <div className="dashboard-info-row">
           <div className="dashboard-card">
             <h3 className="dashboard-card-title">자동 제어 기준 온도1</h3>
-            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
+            <div className="dashboard-card-value orange">{temp1} ℃</div>
             <div className="dashboard-card-desc">자동 모드 기준값</div>
           </div>
           <div className="dashboard-card">
             <h3 className="dashboard-card-title">자동 제어 기준 습도1</h3>
-            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
+            <div className="dashboard-card-value blue">{humid1} %</div>
             <div className="dashboard-card-desc">자동 모드 기준값</div>
           </div>
         </div>
       )}
-  
-      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
-      {autoMode && (
-        <div className="dashboard-info-row">
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 온도2</h3>
-            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
-          </div>
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 습도2</h3>
-            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
-          </div>
-        </div>
-      )}
-
-      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
-      {autoMode && (
-        <div className="dashboard-info-row">
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 온도3</h3>
-            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
-          </div>
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 습도3</h3>
-            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
-          </div>
-        </div>
-      )}
-
-      {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
-      {autoMode && (
-        <div className="dashboard-info-row">
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 온도4</h3>
-            <div className="dashboard-card-value orange">{simulatedData.temp} ℃</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
-          </div>
-          <div className="dashboard-card">
-            <h3 className="dashboard-card-title">자동 제어 기준 습도4</h3>
-            <div className="dashboard-card-value blue">{simulatedData.humid} %</div>
-            <div className="dashboard-card-desc">자동 모드 기준값</div>
-          </div>
-        </div>
-      )}
-
 
       {/* 실내온도, 실내습도, 산도, 전기전도도 카드를 한 줄로 배치 */}
       <div className="dashboard-cards-row">
