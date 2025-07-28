@@ -6,6 +6,54 @@ import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스�
 import { MQTTClient } from "../utils/MQTTClient.jsx";
 import AIAnalysisModal from "./AIAnalysisModal";
 
+const api = {
+  getControlState: async () => {
+    // fetch/axios를 사용하여 GET 요청 보냄
+    const response = await fetch('/api/controls'); 
+    return await response.json();
+  },
+  updateTemperature: async (newState) => {
+    // fetch/axios를 사용하여 POST 또는 PUT 요청 보냄
+    await fetch('/api/controls/temperature', { 
+      method: 'PUT', 
+      body: JSON.stringify(newState), 
+      headers: {'Content-Type': 'application/json'} 
+    });
+  },
+  updateHumidity: async (newState) => {
+    // fetch/axios를 사용하여 POST 또는 PUT 요청 보냄
+    await fetch('/api/controls/humidity', { 
+      method: 'PUT', 
+      body: JSON.stringify(newState), 
+      headers: {'Content-Type': 'application/json'} 
+    });
+  },
+  updateFan: async (newState) => {
+    // fetch/axios를 사용하여 POST 또는 PUT 요청 보냄
+    await fetch('/api/controls/fan', { 
+      method: 'PUT', 
+      body: JSON.stringify(newState), 
+      headers: {'Content-Type': 'application/json'} 
+    });
+  },
+  updateWater: async (newState) => {
+    // fetch/axios를 사용하여 POST 또는 PUT 요청 보냄
+    await fetch('/api/controls/water', { 
+      method: 'PUT', 
+      body: JSON.stringify(newState), 
+      headers: {'Content-Type': 'application/json'} 
+    });
+  },
+  updateLed: async (newState) => {
+    // fetch/axios를 사용하여 POST 또는 PUT 요청 보냄
+    await fetch('/api/controls/led', { 
+      method: 'PUT', 
+      body: JSON.stringify(newState), 
+      headers: {'Content-Type': 'application/json'} 
+    });
+  }
+};
+
 class UnityMessage {
   constructor(name, data) {
     this.name = name;
@@ -230,6 +278,36 @@ export default function RemoteControlPanel({unityContext}) {
     };
   }, []);
 
+  // 전역 store 업데이트 및 저장
+  const {
+    water, fan, ledLevel,
+    temp1,
+    humid1,
+    setWater, setFan, setLed, 
+    setTemp1,
+    setHumid1,
+    autoMode, manualMode,
+    setState: setControlState // store의 모든 상태를 한 번에 업데이트하는 함수
+  } = useControlStore();
+
+  const [isLoading, setIsLoading] = useState(true); // 데이터 로딩 상태
+
+  // 컴포넌트 마운트 시 백엔드에서 최신 상태를 가져옴
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        setIsLoading(true);
+        const initialState = await api.getControlState();
+        setControlState(initialState); // 가져온 데이터로 store 상태 전체 업데이트
+      } catch (error) {
+        console.error("백엔드로부터 초기 상태를 가져오는 데 실패했습니다:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchInitialData();
+  }, [setControlState]);
+
   const sendToUnity = useCallback((eventName, payload) => {
     const message = new UnityMessage(eventName, payload);
     console.log("Sending to Unity:", JSON.stringify(message));
@@ -240,26 +318,8 @@ export default function RemoteControlPanel({unityContext}) {
     }
   }, [safeSendMessage]);
 
-  // 전역 store 업데이트 및 저장
-  const {
-    water, fan, ledLevel,
-    temp1,
-    humid1,
-    setWater, setFan, setLed, 
-    setTemp1,
-    setHumid1,
-    persistToLocal,
-    autoMode, manualMode,
-    toggleAutoMode, toggleManualMode,
-  } = useControlStore();
-
   // 자동 모드 커스텀 훅 사용
   const { simulatedData } = useAutoMode(sendToUnity);
-  
-  // 마운트 시 store 초기화
-  useEffect(() => {
-    useControlStore.getState().restoreFromLocal();
-  }, []);
 
   // 새로고침 비활성화 상태 및 타이머
   const [refreshDisabled, setRefreshDisabled] = useState(false);
@@ -309,39 +369,52 @@ export default function RemoteControlPanel({unityContext}) {
   // 수동 모드 ---------------------------------------------------
   // 온도 제어 ▲▼
   const handleTempChange = async (sensorNum, delta) => {
-    const currentTemp = temp1;
-    const newValue = Math.max(10, Math.min(40, currentTemp + delta));
-    
-    sendToUnity(`tempControl${sensorNum}`, { value: newValue });
-    // MQTT로 LED 깜박임 신호 전송
-    if (mqttClientRef.current) {
-      await mqttClientRef.current.blinkLed(0, fan);
-    }
+    const originalValue = temp1; // 실패 시 되돌리기 위한 원래 값
+    const newValue = Math.max(10, Math.min(40, originalValue + delta));
 
-    if (sensorNum === 1) setTemp1(newValue);
-    // else if (sensorNum === 2) setTemp2(newValue);
-    // else if (sensorNum === 3) setTemp3(newValue);
-    // else if (sensorNum === 4) setTemp4(newValue);
-    persistToLocal();
+    // 1. UI 즉시 업데이트 (낙관적 업데이트)
+    setTemp1(newValue);
+    sendToUnity(`tempControl${sensorNum}`, { value: newValue });
+    
+    try {
+      // 2. 백그라운드에서 API 호출
+      await api.updateTemperature(newValue);
+      console.log("온도 변경 성공!");
+      // MQTT 로직은 성공 시에만 실행하는 것이 더 안정적일 수 있음
+      if (mqttClientRef.current) {
+        await mqttClientRef.current.blinkLed(3, fan);
+      }
+    } catch (error) {
+      // 3. API 호출 실패 시 롤백
+      console.error("온도 업데이트 실패, 원래 값으로 롤백:", error);
+      setTemp1(originalValue); // UI 상태를 원래대로
+      sendToUnity(`tempControl${sensorNum}`, { value: originalValue }); // Unity도 원래대로
+    }
   };
 
   // 습도 제어 ▲▼
   const handleHumidChange = async (sensorNum, delta) => {
-    const currentHumid = humid1;
-    const newValue = Math.max(30, Math.min(90, currentHumid + delta));
-    
+    const originalValue = humid1;
+    const newValue = Math.max(30, Math.min(90, originalValue + delta));
+
+    // 1. UI 즉시 업데이트
+    setHumid1(newValue);
     sendToUnity(`humidControl${sensorNum}`, { value: newValue });
-    // MQTT로 LED 깜박임 신호 전송
-    if (mqttClientRef.current && mqttClientRef.current.isConnected) {
-      await mqttClientRef.current.blinkLed(2, fan);
+
+    try {
+      // 2. 백그라운드 API 호출
+      await api.updateHumidity(newValue);
+      console.log("습도 변경 성공!");
+      // MQTT 로직은 성공 시에만 실행하는 것이 더 안정적일 수 있음
+      if (mqttClientRef.current) {
+        await mqttClientRef.current.blinkLed(2, fan);
+      }
+    } catch (error) {
+      // 3. 실패 시 롤백
+      console.error("습도 업데이트 실패, 롤백:", error);
+      setHumid1(originalValue);
+      sendToUnity(`humidControl${sensorNum}`, { value: originalValue });
     }
-    
-    if (sensorNum === 1) setHumid1(newValue);
-    // else if (sensorNum === 2) setHumid2(newValue);
-    // else if (sensorNum === 3) setHumid3(newValue);
-    // else if (sensorNum === 4) setHumid4(newValue);
-    
-    persistToLocal();
   };
   
 
@@ -350,66 +423,105 @@ export default function RemoteControlPanel({unityContext}) {
     // 센서로 on/off 전달 (sendToSensor('water', !prev))
     if(water) return; // 이미 급수 중이면 무시
 
-    sendToUnity("startWater", { status: true });
-    // MQTT로 LED 깜박임 신호 전송
-    if (mqttClientRef.current && mqttClientRef.current.isConnected) {
-      await mqttClientRef.current.blinkLed(0, fan);
-    }
-
+    // 1. UI 즉시 업데이트
     setWater(true);
-    persistToLocal();
+    sendToUnity("startWater", { status: true });
 
-    // 5초 후 자동 종료
-    setTimeout(() => {
+    try {
+      // 2. 백그라운드 API 호출
+      await api.updateWater({ water: true });
+      
+      if (mqttClientRef.current?.isConnected) {
+        await mqttClientRef.current.blinkLed(0, fan);
+      }
+      // 5초 후 자동 종료
+      setTimeout(async () => {
+        try {
+          await api.updateWater({ water: false });
+          setWater({ water: false });
+        } catch (error) {
+          console.error("급수 종료 업데이트 실패:", error);
+          setWater(true);
+          sendToUnity("startWater", { status: true });
+        }
+      }, 5000);
+    } catch (error) {
+      console.error("급수 시작 업데이트 실패:", error);
       setWater(false);
-      persistToLocal();
-    }, 5000);
+      sendToUnity("startWater", { status: false });
+    }
   };
 
   // 환기 시스템 토글
-  const handleFanToggle = () => {
-    const newState = !fan;
+  const handleFanToggle = async () => {
+    const originalState = fan;
+    const newState = !originalState;
+
+    // 1. UI 즉시 업데이트
+    setFan(newState);
     sendToUnity("fanStatus", { status: newState });
 
-    // MQTT로 팬 제어 신호 전송
-    if (mqttClientRef.current && mqttClientRef.current.isConnected) {
-      mqttClientRef.current.publish('device/control/ABCD1234', {
-        "fan": newState,
-      });
-      console.log("fan작동");
+    try {
+      // 2. 백그라운드 API 호출
+      await api.updateFan(newState);
+      console.log("팬 상태 변경 성공!");
+      if (mqttClientRef.current?.isConnected) {
+        mqttClientRef.current.publish('device/control/ABCD1234', { "fan": newState });
+      }
+    } catch (error) {
+      // 3. 실패 시 롤백
+      console.error("팬 상태 업데이트 실패, 롤백:", error);
+      setFan(originalState);
+      sendToUnity("fanStatus", { status: originalState });
     }
-
-    setFan(newState);
-    persistToLocal();
   };
 
   // LED 조명
   const handleLedToggle = async (e) => {
     // 센서로는 밝기기 조절 할 때마다 led 꺼졌다 켜졌다 전달해야 함.
+    const originallevel = ledLevel;
     const level = parseInt(e.target.value);
-    console.log("LED 밝기 설정:", level);
+
+    // 1. UI 즉시 업데이트
+    setLed({ ledLevel: level });
     sendToUnity("ledLevel", { level });
 
-    // MQTT로 LED 깜박임 신호 전송 (밝기 조절할 때마다)
-    if (mqttClientRef.current && mqttClientRef.current.isConnected && level > 0) {
-      mqttClientRef.current.blinkLed(1, fan);
+    try {
+      // 2. 백그라운드 API 호출
+      await api.updateLed({ ledLevel: level });
+      console.log("LED 밝기 변경 성공!");
+      if (mqttClientRef.current?.isConnected && level > 0) {
+        mqttClientRef.current.blinkLed(1, fan);
+      }
+    } catch (error) {
+      // 3. 실패 시 롤백
+      console.error("LED 밝기 업데이트 실패, 롤백백:", error);
+      setLed({ ledLevel: originallevel });
+      sendToUnity("ledLevel", { originallevel });
     }
-
-    setLed(level);
-    persistToLocal();
   };
 
-  const handleAutoModeToggle = () => {
-    toggleAutoMode();
-  };
-
-  const handleManualModeToggle = () => {
-    toggleManualMode();
+  const handleModeToggle = async (mode) => {
+    const isAuto = mode === 'auto';
+      const newState = {
+          autoMode: isAuto,
+          manualMode: !isAuto
+      };
+      try {
+          await api.updateControlState(newState);
+          setControlState(newState);
+      } catch (error) {
+          console.error("모드 변경 실패:", error);
+      }
   };
 
   const controlDisabled = autoMode;
 
   const [aiModalOpen, setAiModalOpen] = useState(false);
+
+  if (isLoading) {
+    return <div className="remote-panel-root"><h2>Loading...</h2></div>;
+  }
 
   return (
     <div className="remote-panel-root">
@@ -474,7 +586,7 @@ export default function RemoteControlPanel({unityContext}) {
         </div>
         {/* MQTT 연결 상태 표시 */}
         <div className="realtime-data-section">
-          <div className="section-title">MQTT 연결 상태(확인용)</div>
+          <div className="section-title">MQTT 연결 상태</div>
           <div className="data-grid">
             <DataCard 
               label="MQTT" 
@@ -505,18 +617,17 @@ export default function RemoteControlPanel({unityContext}) {
           <div className="control-row">
             <span>자동모드</span>
             <button 
-              onClick={handleAutoModeToggle}
-              disabled={!manualMode} // 수동모드가 꺼져 있으면 자동모드도 못 누르게
-              className={autoMode ? "btn-on" : "btn-off"}
-            >
-              {autoMode ? "ON" : "OFF"}
+              onClick={() => handleModeToggle('auto')} 
+              disabled={autoMode} 
+              className={autoMode ? "btn-on" : "btn-off"}>
+                {autoMode ? "ON" : "OFF"}
             </button>
           </div>
           <div className="control-row">
             <span>수동모드</span>
             <button 
-              onClick={handleManualModeToggle}
-              disabled={!autoMode} // 자동모드가 꺼져 있으면 수동모드도 못 누르게게
+              onClick={() => handleModeToggle('manual')}
+              disabled={manualMode} // 자동모드가 꺼져 있으면 수동모드도 못 누르게게
               className={manualMode ? "btn-on" : "btn-off"}
             >
               {manualMode ? "ON" : "OFF"}
