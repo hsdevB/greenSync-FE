@@ -15,8 +15,7 @@ const DashBoardCards = ({ farmData }) => {
   // 디버깅을 위한 콘솔 로그
   console.log('DashBoardCards rendered with farmData:', farmData);
 
-  // farmData가 없을 때를 대비한 기본값 설정
-  const safeFarmData = farmData || { farmId: 1 };
+
 
   // 상태 관리 초기화
   const [refreshDisabled, setRefreshDisabled] = useState(false); // 새로고침 비활성화 상태
@@ -34,17 +33,11 @@ const DashBoardCards = ({ farmData }) => {
     // water, fan, ledLevel,
     temp1,
     humid1,
-    restoreFromLocal, autoMode,
+    autoMode,
   } = useControlStore();
 
   // // 자동모드 커스텀 훅 사용
   // const { simulatedData } = useAutoMode();
-
-
-  useEffect(() => {
-  // 상태 복원 (로컬스토리지에 저장한 상태 있다면)
-  restoreFromLocal();
-  }, []);
 
   useEffect(() => {
     // 새로고침 상태 복원
@@ -376,30 +369,32 @@ useEffect(() => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              height: "100%",
-              flexDirection: "row"
+              height: "100%"
             }}>
               {/* 온도 영역 */}
               <div style={{ flex: 1, textAlign: "center" }}>
-                <div style={{ color: "#e57373", fontSize: "1.2rem" }}>🌡️</div>
-                <div style={{ fontWeight: "bold", marginBottom: 4, fontSize: "0.9rem" }}>실내온도</div>
-                <div style={{ fontSize: "1.5rem", color: "#e57373", fontWeight: "bold", textAlign: "center" }}>{indoorTemp ?? "--"}</div>
-                <div style={{ color: "#e57373", fontWeight: "bold", fontSize: "0.8rem" }}>℃</div>
+                <div style={{ color: "#e57373", fontSize: "2rem" }}>🌡️</div>
+                <div style={{ fontWeight: "bold", marginBottom: 4 }}>실내온도</div>
+                <div style={{ fontSize: "1.5rem", color: "#e57373" }}>{indoorTemp ?? "--"}</div>
+                <div style={{ color: "#e57373", fontWeight: "bold" }}>℃</div>
               </div>
               {/* 구분선 */}
               <div style={{
                 width: 1,
-                height: "60%",
+                height: 60,
                 background: "#eee",
                 margin: "0 16px"
               }}></div>
               {/* 습도 영역 */}
               <div style={{ flex: 1, textAlign: "center" }}>
-                <div style={{ color: "#2196f3", fontSize: "1.2rem" }}>💧</div>
-                <div style={{ fontWeight: "bold", marginBottom: 4, fontSize: "0.9rem" }}>실내습도</div>
-                <div style={{ fontSize: "1.5rem", color: "#2196f3", fontWeight: "bold", textAlign: "center" }}>{indoorHumi ?? "--"}</div>
-                <div style={{ color: "#2196f3", fontWeight: "bold", fontSize: "0.8rem" }}>%</div>
+                <div style={{ color: "#2196f3", fontSize: "2rem" }}>💧</div>
+                <div style={{ fontWeight: "bold", marginBottom: 4 }}>실내습도</div>
+                <div style={{ fontSize: "1.5rem", color: "#2196f3" }}>{indoorHumi ?? "--"}</div>
+                <div style={{ color: "#2196f3", fontWeight: "bold" }}>%</div>
               </div>
+            </div>
+            <div style={{ textAlign: "center", marginTop: 16, color: "#888", fontWeight: "bold" }}>
+              {/* 실시간 측정값 */}
             </div>
           </div>
         </div>
@@ -412,7 +407,7 @@ useEffect(() => {
               <h3 className="dashboard-card-title">산도(pH)</h3>
             </div>
             <div className="dashboard-card-value green" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              {phValue === '--' ? "6.04" : phValue}
+              {phValue}
             </div>
             <div className="dashboard-card-unit" style={{ color: '#10b981', fontSize: '0.9rem', marginTop: '4px' }}>
               pH
@@ -463,7 +458,7 @@ useEffect(() => {
           <div className="dashboard-card" data-type="solar">
             <div className="dashboard-card-section">
               <Sun className="dashboard-card-icon yellow" />
-              <h3 className="dashboard-card-title">일사량(기상청)</h3>
+              <h3 className="dashboard-card-title">일사량</h3>
             </div>
             <div className="dashboard-card-value yellow" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
               {solarRadiation}
