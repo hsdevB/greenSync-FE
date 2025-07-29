@@ -9,6 +9,7 @@ import OpenWeather from "./OpenWheater.jsx";
 import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
+import DailyTempHumidityChart from './DailyTempHumidityChart.jsx';
 // import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 
 const DashBoardCards = ({ farmData }) => {
@@ -560,23 +561,7 @@ useEffect(() => {
 
       {/* 일일 온/습도 모니터링 그래프 */}
       <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
-        <div className="dashboard-graph-card">
-          <div className="dashboard-graph-title">일일 온/습도 모니터링</div>
-          <ResponsiveContainer width="100%" height={120}>
-            <LineChart data={dashboardData.tempHumidData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" fontSize={10} />
-              <YAxis yAxisId="left" fontSize={10} />
-              <YAxis yAxisId="right" orientation="right" fontSize={10} />
-              <Tooltip />
-              <Line yAxisId="left" type="monotone" dataKey="temp" stroke="#ef4444" strokeWidth={2} />
-              <Line yAxisId="right" type="monotone" dataKey="humid" stroke="#3b82f6" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-          <div className="dashboard-graph-desc">
-            평균 온도 <span style={{ color: "#ef4444" }}>23.8°C</span> / 평균 습도 <span style={{ color: "#3b82f6" }}>60.3%</span>
-          </div>
-        </div>
+        <DailyTempHumidityChart farmId={1} />
       </div>
       
       {/* 일일 총 급수량 그래프 */}
