@@ -5,4 +5,6 @@
 **/[Bb]uilds/
 **/[Ll]ogs/
 **/[Uu]ser[Ss]ettings/
+**/[Aa]ssets/00.Scenes/
 **/[Aa]ssets/02.Models/*.glb
+**/[Aa]ssets/04.FarmModel/*.prefab
