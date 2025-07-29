@@ -1,2 +1,0 @@
-S: Soil
-G: Glass

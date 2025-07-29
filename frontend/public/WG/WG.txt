@@ -1,2 +1,0 @@
-W: Water
-G: Glass
