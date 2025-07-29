@@ -465,43 +465,43 @@ export default function RemoteControlPanel({unityContext}) {
         )}
 
         {/* 원격제어 상태 section-title 추가 */}
-        <div className="section-title">원격제어 상태</div>
+        <div className="section-title">💻 원격제어 상태</div>
         <div className="data-grid">
           <DataCard label="난방" value={temp1 ? "ON" : "OFF"} unit={temp1 ? "🟢" : "🔴"} icon={<HeaterIcon isOn={temp1} />} />
           <DataCard label="습도" value={humid1 ? "ON" : "OFF"} unit={humid1 ? "🟢" : "🔴"} icon={<HeaterIcon isOn={humid1} />} />
+        
+        </div>
+        <div className="data-grid" style={{ marginTop: "12px" }}>
           <DataCard label="배기" value={fan ? "ON" : "OFF"} unit={fan ? "🟢" : "🔴"} icon={<ExhaustFanIcon isOn={fan} />} />
           <DataCard label="급수" value={water ? "ON" : "OFF"} unit={water ? "🟢" : "🔴"} icon={<WateringPlantsIcon isOn={water} />} />
         </div>
         {/* MQTT 연결 상태 표시 */}
         <div className="realtime-data-section">
-          <div className="section-title">MQTT 연결 상태(확인용)</div>
+          {/* <div className="section-title">MQTT 연결 상태(확인용)</div> */}
           <div className="data-grid">
-            <DataCard 
-              label="MQTT" 
-              value={mqttClientRef.current?.isConnected ? "연결됨" : "연결 안됨"} 
-              unit={mqttClientRef.current?.isConnected ? "🟢" : "🔴"} 
-            />
+           
           </div>
         </div>
         {/* 기기 제어 */}
         <div className="device-control-section">
           <div className="section-title">공조 설비 기기 - 원격제어</div>
           {/* AI 스마트팜 분석 버튼 추가 */}
-          <button
-            onClick={() => setAiModalOpen(true)}
-            style={{
-              margin: "12px 0",
-              padding: "10px 24px",
-              background: "#388e3c",
-              color: "#fff",
-              border: "none",
-              borderRadius: "6px",
-              fontSize: "16px",
-              cursor: "pointer"
-            }}
-          >
-            AI 스마트팜 분석
-          </button>
+          <div style={{ display: "flex", justifyContent: "center", margin: "12px 0" }}>
+            <button
+              onClick={() => setAiModalOpen(true)}
+              style={{
+                padding: "10px 24px",
+                background: "#388e3c",
+                color: "#fff",
+                border: "none",
+                borderRadius: "6px",
+                fontSize: "16px",
+                cursor: "pointer"
+              }}
+            >
+              AI 스마트팜 분석
+            </button>
+          </div>
           <div className="control-row">
             <span>자동모드</span>
             <button 
@@ -528,10 +528,7 @@ export default function RemoteControlPanel({unityContext}) {
       {/* 오른쪽 패널 */}
       <div className="right-panel">
         {/* 제어판 카드 UI (2x2 grid) */}
-        <div className="panel-title-row">
-          <span className="panel-title-icon">📋</span>
-          <span className="panel-title-text">제어판</span>
-        </div>
+        <div className="section-title">📋 제어판</div>
         <div className="control-card-grid">
           {/* 관개 시스템 */}
           <div className="control-card">
@@ -572,7 +569,7 @@ export default function RemoteControlPanel({unityContext}) {
           {/* 온·습도 제어1 */}
           <div className="control-card">
             <div className="control-card-header">
-              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️💧</span>
+              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️</span>
               <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어1</span>
             </div>
             <div className="control-card-body">
@@ -597,23 +594,61 @@ export default function RemoteControlPanel({unityContext}) {
           </div>
 
           {/* LED 조명 */}
-          <div className="control-card">
+          <div className="control-card-led">
             <div className="control-card-header">
               <span className="control-card-icon" style={{ color: "#ffd600" }}>💡</span>
               <span className="control-card-title" style={{ color: "#ffd600" }}>LED 조명</span>
             </div>
             <div className="control-card-body">
-              <input
-                type="range"
-                min={0}
-                max={3}
-                value={ledLevel ?? 0}
-                onChange={handleLedToggle}
-                disabled={controlDisabled}
-                className="slider-range"
+              <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "8px" }}>
+                <input
+                  type="range"
+                  min={0}
+                  max={3}
+                  value={ledLevel ?? 0}
+                  onChange={handleLedToggle}
+                  disabled={controlDisabled}
+                  className="slider-range"
+                  style={{ width: "80%", maxWidth: "120px" }}
                 />
+              </div>
               <div className="control-card-desc">
                 {autoMode ? `자동 제어 중 (${ledLevel ?? 0})` : `LED 밝기 제어(${ledLevel ?? 0})`}
+              </div>
+            </div>
+          </div>
+
+          {/* MQTT 연결 상태 */}
+          <div className="control-card mqtt-card">
+            <div className="control-card-header">
+              <span className="control-card-icon" style={{ color: "#9c27b0" }}>📡</span>
+              <span className="control-card-title" style={{ color: "#9c27b0" }}>MQTT 연결</span>
+            </div>
+            <div className="control-card-body">
+              <div style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center", 
+                gap: "8px",
+                marginBottom: "8px"
+              }}>
+                <span style={{ 
+                  fontSize: "1.2rem", 
+                  fontWeight: "bold",
+                  color: mqttClientRef.current?.isConnected ? "#22c55e" : "#ef4444"
+                }}>
+                  {mqttClientRef.current?.isConnected ? "🟢" : "🔴"}
+                </span>
+                <span style={{ 
+                  fontSize: "1rem", 
+                  fontWeight: "600",
+                  color: mqttClientRef.current?.isConnected ? "#22c55e" : "#ef4444"
+                }}>
+                  {mqttClientRef.current?.isConnected ? "연결됨" : "연결 안됨"}
+                </span>
+              </div>
+              <div className="control-card-desc">
+                {mqttClientRef.current?.isConnected ? "실시간 데이터 수신 중" : "연결 대기 중"}
               </div>
             </div>
           </div>

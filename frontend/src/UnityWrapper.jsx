@@ -28,7 +28,7 @@ const useSharedUnityContext = (farmId = 1, farmType = '수경', houseType = '유
       try {
         setIsReady(false);
         setError(null);
-        
+
         // Unity 로딩을 위해 준비 완료 상태로 설정
         setIsReady(true);
       } catch (err) {

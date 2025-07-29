@@ -53,7 +53,7 @@ export default function OpenWeather() {
   return (
     <div className="dashboard-card">
       <div className="dashboard-card-section">
-        <div style={{ display: 'flex', alignItems: 'center', marginRight: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center'}}>
           {weather?.icon ? (
             <img
               src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
@@ -75,7 +75,6 @@ export default function OpenWeather() {
             style={{ 
               fontSize: 24, 
               color: "#3b82f6", 
-              marginRight: 8,
               display: weather?.icon ? 'none' : 'block'
             }}
           >

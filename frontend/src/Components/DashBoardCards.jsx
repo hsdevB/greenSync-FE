@@ -374,28 +374,36 @@ useEffect(() => {
             }}>
               {/* 온도 영역 */}
               <div style={{ flex: 1, textAlign: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: 12, marginBottom: 4 }}>
-                  <span style={{ color: "#e57373", fontSize: "1.5rem", marginBottom: 20, marginRight: 8 }}>🌡️</span>
-                  <span style={{ marginBottom: 15, fontWeight: "bold" }}>실내온도</span>
+                <div className="dashboard-card-section">
+                  <span style={{ color: "#e57373", fontSize: "1.5rem" }}>🌡️</span>
+                  <h3 className="dashboard-card-title">온도</h3>
                 </div>
-                <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#e57373" }}>{indoorTemp ?? "--"}</div>
-                <div style={{ color: "#e57373", fontWeight: "bold" }}>℃</div>
+                <div className="dashboard-card-value red" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                  {indoorTemp ?? "--"}
+                </div>
+                <div className="dashboard-card-unit" style={{ color: '#e57373', fontSize: '0.9rem', marginTop: '10px' }}>
+                  ℃
+                </div>
               </div>
               {/* 구분선 */}
               <div style={{
                 width: 1,
                 height: 60,
                 background: "#eee",
-                margin: "0 16px"
+                margin: "0 16px" // 온도 습도 간격
               }}></div>
               {/* 습도 영역 */}
               <div style={{ flex: 1, textAlign: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: 12, marginBottom: 4 }}>
-                  <span style={{ color: "#2196f3", fontSize: "1.5rem", marginBottom: 20, marginRight: 8 }}>💧</span>
-                  <span style={{ marginBottom: 15, fontWeight: "bold" }}>실내습도</span>
+                <div className="dashboard-card-section">
+                  <span style={{ color: "#2196f3", fontSize: "1.5rem" }}>💧</span>
+                  <h3 className="dashboard-card-title">습도</h3>
                 </div>
-                <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#2196f3" }}>{indoorHumi ?? "--"}</div>
-                <div style={{ color: "#2196f3", fontWeight: "bold" }}>%</div>
+                <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                  {indoorHumi ?? "--"}
+                </div>
+                <div className="dashboard-card-unit" style={{ color: '#2196f3', fontSize: '0.9rem', marginTop: '10px' }}>
+                  %
+                </div>
               </div>
             </div>
             <div style={{ textAlign: "center", marginTop: 16, color: "#888", fontWeight: "bold" }}>

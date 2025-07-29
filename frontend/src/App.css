@@ -139,6 +139,7 @@ body, * {
   height: calc(100vh - 80px);
   margin-top: 80px;
   margin-left: 256px;
+  overflow-y: auto;
 }
 
 /* 왼쪽: Unity 3D 화면 섹션 */
