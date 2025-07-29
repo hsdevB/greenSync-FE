@@ -66,56 +66,58 @@ function DashboardLayout({ unityContext }) {
       
       {/* 좌우 분할 레이아웃 */}
       <div className="split-layout">
-        {/* 왼쪽: Unity 3D 화면 */}
-        <div className="unity-section">
-      <div className="unity-container">
-        <div className="unity-content">
-          <Unity
-            style={{
-              width: '100%',
-              height: '100%',
-              background: '#222',
-              borderRadius: '0px',
-              opacity: unityContext.isLoaded ? 1 : 0.3,
-              transition: 'opacity 0.3s'
-            }}
-            unityProvider={unityContext.unityProvider}
-            devicePixelRatio={window.devicePixelRatio}
-            config={{
-              companyName: "GreenSync",
-              productName: "SmartFarm",
-              productVersion: "1.0.0"
-            }}
-            onError={(error) => {
-              console.error('Unity 에러:', error);
-            }}
-            onProgress={(progress) => {
-              console.log('Unity 로딩 진행률:', progress);
-            }}
-            onInitialized={() => {
-              console.log('Unity 초기화 완료!');
-            }}
-          />
-          {/* Unity 로딩 오버레이 */}
-          {!unityContext.isLoaded && (
-            <div className="unity-loading-overlay">
-              <div className="unity-loading-text">
-                Unity 로딩 중... {Math.round(unityContext.loadingProgression * 100)}%
+        {/* 왼쪽: Unity 3D 화면 - AI 분석 페이지에서는 숨김 */}
+        {selectedMenu !== 'ai-analysis' && (
+          <div className="unity-section">
+            <div className="unity-container">
+              <div className="unity-content">
+                <Unity
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    background: '#222',
+                    borderRadius: '0px',
+                    opacity: unityContext.isLoaded ? 1 : 0.3,
+                    transition: 'opacity 0.3s'
+                  }}
+                  unityProvider={unityContext.unityProvider}
+                  devicePixelRatio={window.devicePixelRatio}
+                  config={{
+                    companyName: "GreenSync",
+                    productName: "SmartFarm",
+                    productVersion: "1.0.0"
+                  }}
+                  onError={(error) => {
+                    console.error('Unity 에러:', error);
+                  }}
+                  onProgress={(progress) => {
+                    console.log('Unity 로딩 진행률:', progress);
+                  }}
+                  onInitialized={() => {
+                    console.log('Unity 초기화 완료!');
+                  }}
+                />
+                {/* Unity 로딩 오버레이 */}
+                {!unityContext.isLoaded && (
+                  <div className="unity-loading-overlay">
+                    <div className="unity-loading-text">
+                      Unity 로딩 중... {Math.round(unityContext.loadingProgression * 100)}%
+                    </div>
+                    <div className="unity-loading-bar-bg">
+                      <div
+                        className="unity-loading-bar-fill"
+                        style={{ width: `${Math.round(unityContext.loadingProgression * 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="unity-loading-bar-bg">
-                <div
-                  className="unity-loading-bar-fill"
-                  style={{ width: `${Math.round(unityContext.loadingProgression * 100)}%` }}
-                ></div>
-              </div>
-            </div>
-          )}
             </div>
           </div>
-        </div>
+        )}
         
-        {/* 오른쪽: UI 콘텐츠 */}
-        <div className="ui-section">
+        {/* 오른쪽: UI 콘텐츠 - AI 분석 페이지에서는 전체 화면 */}
+        <div className={`ui-section ${selectedMenu === 'ai-analysis' ? 'full-width' : ''}`}>
           <main className="dashboard-area">
             <Dashboard selectedMenu={selectedMenu} unityContext={unityContext} />
           </main>

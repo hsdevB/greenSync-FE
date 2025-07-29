@@ -160,6 +160,12 @@ body, * {
   overflow-y: auto;
 }
 
+/* AI 분석 페이지에서 UI 섹션이 전체 화면을 차지 */
+.ui-section.full-width {
+  width: 100%;
+  margin-left: 0;
+}
+
 /* Unity 3D 화면 컨테이너 */
 .unity-container {
   width: 100%;

@@ -4,7 +4,7 @@
   justify-content: center;
   align-items: flex-start;
   width: 100%;
-  gap: 5px; /* 좌우 간격 줄임 */
+  gap: 10px; /* 좌우 간격 줄임 */
   color: #bfdbfe;
   margin: 0 auto;
   overflow-x: auto;
@@ -36,7 +36,7 @@
 .panel-title {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #FFBB00;
+  color: #163C26;
   margin-bottom: 2px;
 }
 
@@ -47,8 +47,8 @@
 }
 
 .section-title {
-  background: #FFBB00;/* 연한 녹색 */
-  color: #fff;
+  background: #fff;/* 연한 녹색 */
+  color: #08160E;
   font-weight: 600;
   padding: 6px 0;
   border-radius: 8px;
@@ -87,7 +87,7 @@
 
 .data-label {
   font-size: 0.95rem;
-  color: #FFBB00;
+  color: #163C26;
   font-weight: 500;
   margin-bottom: 2px;
 }
@@ -135,7 +135,7 @@
 
 /* ON 상태 */
 .btn-on {
-  background-color: #FFBB00; /* 초록 */
+  background-color: #163C26; /* 초록 */
   opacity: 1;
 }
 
@@ -158,7 +158,7 @@
   font-size: 1.1rem;
   font-weight: 700;
   margin: 24px 0 10px 0;
-  color: #FFBB00;
+  color: #163C26;
   gap: 6px;
 }
 
