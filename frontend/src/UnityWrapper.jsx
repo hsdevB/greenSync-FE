@@ -86,10 +86,10 @@
 
 //   // Unity Context 생성 (개별 농장 경로 사용)
 //   const unityContext = useUnityContext({
-//     loaderUrl: farmId ? `/${farmId}/Build/Build.loader.js` : '',
-//     dataUrl: farmId ? `/${farmId}/Build/Build.data` : '',
-//     frameworkUrl: farmId ? `/${farmId}/Build/Build.framework.js` : '',
-//     codeUrl: farmId ? `/${farmId}/Build/Build.wasm` : '',
+//     loaderUrl: farmId ? `Build/${farmId}/Build.loader.js` : '',
+//     dataUrl: farmId ? `Build/${farmId}/Build.data` : '',
+//     frameworkUrl: farmId ? `Build/${farmId}/Build.framework.js` : '',
+//     codeUrl: farmId ? `Build/${farmId}/Build.wasm` : '',
 //   });
 
 //   useEffect(() => {
@@ -279,14 +279,15 @@
 // };
 
 // export default useSharedUnityContext;
+
 import { useUnityContext } from "react-unity-webgl";
 
 const useSharedUnityContext = () => {
-  return useUnityContext({
-    loaderUrl: "Build/Build.loader.js",
-    dataUrl: "Build/Build.data",
-    frameworkUrl: "Build/Build.framework.js",
-    codeUrl: "Build/Build.wasm",
+  return useUnityContext({ // WG폴더 추가해서 폴더구조 맞춰주세요 
+    loaderUrl: "Build/WG/Build.loader.js",
+    dataUrl: "Build/WG/Build.data",
+    frameworkUrl: "Build/WG/Build.framework.js",
+    codeUrl: "Build/WG/Build.wasm",
   })
 };
 
