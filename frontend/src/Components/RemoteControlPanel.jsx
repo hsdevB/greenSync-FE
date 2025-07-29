@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./RemoteControlPanel.css";
-import { useIotData } from '../api/useIotData.js';
 import useControlStore from '../store/useControlStore.jsx';
 import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 import mqtt from 'mqtt'; // 실제 환경에서는 mqtt.js 라이브러리 사용
@@ -124,12 +123,7 @@ class UnityMessage {
   }
 }
 
-// SVG 아이콘 직접 삽입 (또는 public 폴더에 이미지 파일로 넣어도 됨)
-const RefreshIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-    <path d="M12 5V2L7 6.5L12 11V8C15.31 8 18 10.69 18 14C18 17.31 15.31 20 12 20C8.69 20 6 17.31 6 14H4C4 18.42 7.58 22 12 22C16.42 22 20 18.42 20 14C20 9.58 16.42 6 12 6V5Z" fill="black"/>
-  </svg>
-);
+
 
 const AnimatedExhaustIcon = ({ isOn }) => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
@@ -319,7 +313,6 @@ const WateringPlantsIcon = ({ isOn }) => (
 
 
 export default function RemoteControlPanel({unityContext}) {
-  const iotData = useIotData();
   const { sendMessage } = unityContext;
 
   // MQTT 클라이언트 인스턴스
@@ -354,7 +347,7 @@ export default function RemoteControlPanel({unityContext}) {
     persistToLocal,
     autoMode, manualMode,
     toggleAutoMode, toggleManualMode,
-    vent, setVent,
+    vent,
   } = useControlStore();
 
   // 자동 모드 커스텀 훅 사용
@@ -365,50 +358,7 @@ export default function RemoteControlPanel({unityContext}) {
     useControlStore.getState().restoreFromLocal();
   }, []);
 
-  // 새로고침 비활성화 상태 및 타이머
-  const [refreshDisabled, setRefreshDisabled] = useState(false);
-  const [refreshTimer, setRefreshTimer] = useState(0);
-  const timerRef = useRef(null);
 
-  // 마운트 시 localStorage에서 남은 시간 계산
-  useEffect(() => {
-    const lastRefresh = localStorage.getItem("lastRefreshTime");
-    if (lastRefresh) {
-      const elapsed = Math.floor((Date.now() - Number(lastRefresh)) / 1000);
-      if (elapsed < 300) {
-        setRefreshDisabled(true);
-        setRefreshTimer(300 - elapsed);
-      }
-    }
-  }, []);
-
-  // 새로고침 버튼 클릭 핸들러
-  const handleRefresh = () => {
-    // 실제 새로고침 로직 (예: 데이터 fetch 등)
-    // fetchData();
-    const now = Date.now();
-    localStorage.setItem("lastRefreshTime", now.toString());
-    setRefreshDisabled(true);
-    setRefreshTimer(300); // 5분(300초)
-  };
-
-  // 타이머 관리 (useEffect)
-  useEffect(() => {
-    if (refreshDisabled && refreshTimer > 0) {
-      timerRef.current = setInterval(() => {
-        setRefreshTimer(prev => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(timerRef.current);
-  }, [refreshTimer, refreshDisabled]);
-
-  useEffect(() => {
-    if (refreshTimer === 0 && refreshDisabled) {
-      setRefreshDisabled(false);
-      localStorage.removeItem("lastRefreshTime");
-      clearInterval(timerRef.current);
-    }
-  }, [refreshTimer, refreshDisabled]);
 
   // 수동 모드 ---------------------------------------------------
   // 온도 제어 ▲▼
@@ -540,29 +490,6 @@ export default function RemoteControlPanel({unityContext}) {
     <div className="remote-panel-root">
       {/* 왼쪽 패널 */}
       <div className="left-panel">
-        {/* 새로고침 버튼을 오른쪽 상단에 flex로 배치 */}
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px" }}>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshDisabled}
-            className="refresh-btn"
-            style={{
-              background: "none",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
-              outline: "none"
-            }}
-            aria-label="새로고침"
-          >
-            <RefreshIcon />
-          </button>
-          {refreshDisabled && (
-            <span style={{ marginLeft: 8, color: "#888", fontSize: "0.95em" }}>
-              {Math.floor(refreshTimer / 60)}:{(refreshTimer % 60).toString().padStart(2, "0")} 후 재시도 가능
-            </span>
-          )}
-        </div>
 
         {/* 상단 타이틀 */}
         <div className="panel-header">
@@ -592,8 +519,8 @@ export default function RemoteControlPanel({unityContext}) {
         {/* 원격제어 상태 section-title 추가 */}
         <div className="section-title">원격제어 상태</div>
         <div className="data-grid">
-          <DataCard label="난방" value={fan ? "ON" : "OFF"} unit={fan ? "🟢" : "🔴"} icon={<HeaterIcon isOn={fan} />} />
-          <DataCard label="배기" value={vent ? "ON" : "OFF"} unit={vent ? "🟢" : "🔴"} icon={<ExhaustFanIcon isOn={vent} />} />
+          <DataCard label="난방" value={vent ? "ON" : "OFF"} unit={vent ? "🟢" : "🔴"} icon={<HeaterIcon isOn={vent} />} />
+          <DataCard label="배기" value={fan ? "ON" : "OFF"} unit={fan ? "🟢" : "🔴"} icon={<ExhaustFanIcon isOn={fan} />} />
           <DataCard label="급수량" value={water ? "ON" : "OFF"} unit={water ? "🟢" : "🔴"} icon={<WateringPlantsIcon isOn={water} />} />
         </div>
         {/* MQTT 연결 상태 표시 */}
@@ -696,7 +623,7 @@ export default function RemoteControlPanel({unityContext}) {
           {/* 온·습도 제어1 */}
           <div className="control-card">
             <div className="control-card-header">
-              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️💧</span>
+              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️</span>
               <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어1</span>
             </div>
             <div className="control-card-body">
