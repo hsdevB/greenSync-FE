@@ -16,6 +16,15 @@ export default defineConfig({
           console.log('Proxy error:', err);
         }
       },
+      '/api': {
+        target: 'http://localhost:3002', // 일일 온습도 API를 위한 프록시 추가
+        changeOrigin: true,
+        secure: false,
+        timeout: 10000,
+        onError: (err) => {
+          console.log('API Proxy error:', err);
+        }
+      },
       '/api/ollama': {
         target: 'http://localhost:11434',
         changeOrigin: true,

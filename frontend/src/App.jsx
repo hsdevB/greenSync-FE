@@ -168,6 +168,11 @@ function DashboardLayout({ unityContext }) {
                         style={{ width: `${Math.round(unityContext.loadingProgression * 100)}%` }}
                       ></div>
                     </div>
+                    {unityContext.error && (
+                      <div className="unity-error-text">
+                        오류: {unityContext.error}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

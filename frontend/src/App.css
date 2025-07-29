@@ -257,6 +257,17 @@ body, * {
   transition: width 0.3s ease;
 }
 
+.unity-loading-overlay .unity-error-text {
+  color: #f44336;
+  font-size: 14px;
+  margin-top: 8px;
+  text-align: center;
+  background: rgba(244, 67, 54, 0.1);
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
 .dashboard-cards-container {
   width: 100%;
   margin-left: 0;

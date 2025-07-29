@@ -43,33 +43,16 @@ export class MQTTClient {
     }
   }
 
-  // LED 상태 업데이트 (현재 상태 추적)
-  updateLedState(ledStates) {
-    // 배열인지 확인하고 안전하게 업데이트
-    if (Array.isArray(ledStates) && ledStates.length === 4) {
-      this.currentLedState = [...ledStates];
-    } else {
-      console.warn('잘못된 LED 상태 데이터:', ledStates);
-      this.currentLedState = [false, false, false, false];
-    }
-  }
-
   // LED 깜박임 제어 (각 센서별 개별 제어)
   async blinkLed(ledIndex, currentFanState) {
-    // 현재 LED 상태를 복사
-    const currentState = Array.isArray(this.currentLedState) ? this.currentLedState : [false, false, false, false];
-    const newLedState = [...currentState];
-
-    // 특정 LED만 켜기 (온도센서=3, 습도센서=2, LED밝기=1, 급수=0)
-    newLedState[ledIndex] = true;
+    // 특정 LED만 켜기 (온도센서=0, 습도센서=1, 급수=2, LED밝기=3)
+    const ledObject = [false, false, false, false];
+    ledObject[ledIndex] = true;
     
     this.publish('device/control/ABCD1234', {
       "fan": currentFanState,
-      "leds": newLedState
+      "leds": ledObject
     });
-
-    // 상태 업데이트
-    this.updateLedState(newLedState);
     
     // 딜레이
     if (ledIndex != 0)
@@ -77,18 +60,10 @@ export class MQTTClient {
     else
       await new Promise(resolve => setTimeout(resolve, 5000)); // 급수 끝나는 시간(5초)
     
-    // 해당 LED만 끄기 (다른 LED는 현재 상태 유지)
-    const currentStateAfterDelay = Array.isArray(this.currentLedState) ? this.currentLedState : [false, false, false, false];
-    const updatedLedState = [...currentStateAfterDelay];
-    updatedLedState[ledIndex] = false;
-    
+    // LED 끄기
     this.publish('device/control/ABCD1234', {
-      "fan": currentFanState,
-      "leds": updatedLedState
+      "leds": [false, false, false, false]
     });
-    
-    // 상태 업데이트
-    this.updateLedState(updatedLedState);
   }
 
   disconnect() {
