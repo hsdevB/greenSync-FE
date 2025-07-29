@@ -484,7 +484,7 @@ export default function RemoteControlPanel({unityContext}) {
         </div>
         {/* 기기 제어 */}
         <div className="device-control-section">
-          <div className="section-title">공조 설비 기기 - 원격제어</div>
+          <div className="section-title">⚙️ 공조 설비 기기 - 원격제어</div>
           {/* AI 스마트팜 분석 버튼 추가 */}
           <div style={{ display: "flex", justifyContent: "center", margin: "12px 0" }}>
             <button
@@ -566,57 +566,6 @@ export default function RemoteControlPanel({unityContext}) {
             </div>
           </div>
           
-          {/* 온·습도 제어1 */}
-          <div className="control-card">
-            <div className="control-card-header">
-              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️</span>
-              <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어1</span>
-            </div>
-            <div className="control-card-body">
-              <div className="temp-control-row">
-                <button className="temp-btn" onClick={() => handleTempChange(1, -1)} disabled={controlDisabled}>-</button>
-                <span className="temp-value">{temp1}℃</span>
-                <button className="temp-btn" onClick={() => handleTempChange(1, 1)} disabled={controlDisabled}>+</button>
-              </div>
-              <div className="control-card-desc">
-                {autoMode ? "자동 난방 제어" : "수동 난방 시스템"}
-              </div>
-
-              <div className="temp-control-row" style={{ marginTop: "12px" }}>
-                <button className="temp-btn" onClick={() => handleHumidChange(1, -1)} disabled={controlDisabled}>-</button>
-                <span className="temp-value">{humid1}%</span>
-                <button className="temp-btn" onClick={() => handleHumidChange(1, 1)} disabled={controlDisabled}>+</button>
-              </div>
-              <div className="control-card-desc">
-                {autoMode ? "자동 가습 제어" : "수동 가습 시스템"}
-              </div>
-            </div>
-          </div>
-
-          {/* LED 조명 */}
-          <div className="control-card-led">
-            <div className="control-card-header">
-              <span className="control-card-icon" style={{ color: "#ffd600" }}>💡</span>
-              <span className="control-card-title" style={{ color: "#ffd600" }}>LED 조명</span>
-            </div>
-            <div className="control-card-body">
-              <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "8px" }}>
-                <input
-                  type="range"
-                  min={0}
-                  max={3}
-                  value={ledLevel ?? 0}
-                  onChange={handleLedToggle}
-                  disabled={controlDisabled}
-                  className="slider-range"
-                  style={{ width: "80%", maxWidth: "120px" }}
-                />
-              </div>
-              <div className="control-card-desc">
-                {autoMode ? `자동 제어 중 (${ledLevel ?? 0})` : `LED 밝기 제어(${ledLevel ?? 0})`}
-              </div>
-            </div>
-          </div>
 
           {/* MQTT 연결 상태 */}
           <div className="control-card mqtt-card">
@@ -652,6 +601,64 @@ export default function RemoteControlPanel({unityContext}) {
               </div>
             </div>
           </div>
+
+          {/* 온·습도 제어1 */}
+          <div className="control-card-temp-humid">
+            <div className="control-card-header" style={{ gridColumn: "1 / -1", marginBottom: "16px" }}>
+              <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️</span>
+              <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어1</span>
+            </div>
+            
+            {/* 온도 제어 섹션 */}
+            <div className="temp-humid-control-section">
+              <div className="temp-control-row">
+                <button className="temp-btn" onClick={() => handleTempChange(1, -1)} disabled={controlDisabled}>-</button>
+                <span className="temp-value">{temp1}℃</span>
+                <button className="temp-btn" onClick={() => handleTempChange(1, 1)} disabled={controlDisabled}>+</button>
+              </div>
+              <div className="control-card-desc">
+                {autoMode ? "자동 난방 제어" : "수동 난방 시스템"}
+              </div>
+            </div>
+
+            {/* 습도 제어 섹션 */}
+            <div className="temp-humid-control-section">
+              <div className="temp-control-row">
+                <button className="temp-btn" onClick={() => handleHumidChange(1, -1)} disabled={controlDisabled}>-</button>
+                <span className="temp-value">{humid1}%</span>
+                <button className="temp-btn" onClick={() => handleHumidChange(1, 1)} disabled={controlDisabled}>+</button>
+              </div>
+              <div className="control-card-desc">
+                {autoMode ? "자동 가습 제어" : "수동 가습 시스템"}
+              </div>
+            </div>
+          </div>
+
+          {/* LED 조명 */}
+          <div className="control-card-led">
+            <div className="control-card-header">
+              <span className="control-card-icon" style={{ color: "#ffd600" }}>💡</span>
+              <span className="control-card-title" style={{ color: "#ffd600" }}>LED 조명</span>
+            </div>
+            <div className="control-card-body">
+              <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "8px" }}>
+                <input
+                  type="range"
+                  min={0}
+                  max={3}
+                  value={ledLevel ?? 0}
+                  onChange={handleLedToggle}
+                  disabled={controlDisabled}
+                  className="slider-range"
+                  style={{ width: "80%", maxWidth: "120px" }}
+                />
+              </div>
+              <div className="control-card-desc">
+                {autoMode ? `자동 제어 중 (${ledLevel ?? 0})` : `LED 밝기 제어(${ledLevel ?? 0})`}
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
       {/* AI 분석 모달 */}

@@ -1,0 +1,183 @@
+.daily-monitoring-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+
+.daily-monitoring-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.daily-monitoring-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.daily-monitoring-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.stat-value.temp {
+  color: #ef4444;
+}
+
+.stat-value.humid {
+  color: #3b82f6;
+}
+
+.daily-monitoring-chart {
+  height: 300px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.daily-monitoring-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.daily-monitoring-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #ef4444;
+  font-size: 0.875rem;
+  background: #fef2f2;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+}
+
+.daily-monitoring-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.summary-value.temp {
+  color: #ef4444;
+}
+
+.summary-value.humid {
+  color: #3b82f6;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .daily-monitoring-card {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .daily-monitoring-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .daily-monitoring-stats {
+    gap: 12px;
+  }
+  
+  .daily-monitoring-chart {
+    height: 250px;
+  }
+  
+  .daily-monitoring-summary {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .daily-monitoring-title {
+    font-size: 1.125rem;
+  }
+  
+  .daily-monitoring-chart {
+    height: 200px;
+  }
+  
+  .stat-item {
+    padding: 6px 10px;
+  }
+  
+  .summary-item {
+    padding: 6px 0;
+  }
+} 

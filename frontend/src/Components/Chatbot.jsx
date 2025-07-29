@@ -9,18 +9,32 @@ function getTime() {
 const BOT_AVATAR = 'https://cdn-icons-png.flaticon.com/512/4712/4712035.png';
 const USER_AVATAR = 'https://cdn-icons-png.flaticon.com/512/4712/4712036.png';
 
-export default function Chatbot() {
+export default function Chatbot({ isOpen, onClose }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([]); // {role, text, time}
   const chatEndRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // 외부에서 전달받은 isOpen prop이 있으면 사용, 없으면 내부 상태 사용
+  const isChatbotOpen = isOpen !== undefined ? isOpen : open;
+  const handleClose = onClose || (() => setOpen(false));
 
   useEffect(() => {
-    if (open && chatEndRef.current) {
+    if (isChatbotOpen && chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, open]);
+  }, [messages, isChatbotOpen]);
+
+  // 채팅이 열릴 때 입력창에 자동 포커스
+  useEffect(() => {
+    if (isChatbotOpen && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current.focus();
+      }, 100);
+    }
+  }, [isChatbotOpen]);
 
   // 스마트팜 전문 LLM 호출 함수
   const askSmartFarmBot = async (userMessage) => {
@@ -127,10 +141,13 @@ Always answer in natural, fluent Korean.
 
   return (
     <>
-      <button className="cb-fab" onClick={() => setOpen(true)} aria-label="스마트팜 AI 챗봇 열기">
-        <img src={BOT_AVATAR} alt="스마트팜 AI" style={{width: 38, height: 38}} />
-      </button>
-      {open && (
+      {/* 외부에서 제어되지 않을 때만 FAB 버튼 표시 */}
+      {isOpen === undefined && (
+        <button className="cb-fab" onClick={() => setOpen(true)} aria-label="스마트팜 AI 챗봇 열기">
+          <img src={BOT_AVATAR} alt="스마트팜 AI" style={{width: 38, height: 38}} />
+        </button>
+      )}
+      {isChatbotOpen && (
         <div className="cb-modal-overlay">
           <div className="cb-modal">
             <div className="cb-header">
@@ -139,7 +156,7 @@ Always answer in natural, fluent Korean.
                 <div className="cb-header-name">스마트팜 AI 어시스턴트</div>
                 <div className="cb-header-status online">● 전문 농업 상담</div>
               </div>
-              <button className="cb-close" onClick={() => setOpen(false)}>×</button>
+              <button className="cb-close" onClick={handleClose}>×</button>
             </div>
             <div className="cb-body">
               <div className="cb-messages">
@@ -181,6 +198,7 @@ Always answer in natural, fluent Korean.
               </div>
               <form className="cb-input-area" onSubmit={e => { e.preventDefault(); send(); }}>
                 <textarea
+                  ref={inputRef}
                   className="cb-input"
                   placeholder="스마트팜 관련 질문을 입력하세요 (예: 토마토 최적 온도는?)"
                   value={input}

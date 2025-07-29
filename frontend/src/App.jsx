@@ -10,6 +10,7 @@ import SignupPage from './Page/SignupPage';
 import CropControlUI from './Components/CropControlUI';
 import AIAnalysisModal from './Components/AIAnalysisModal';
 import UserProfilePage from './Page/UserProfilePage';
+import Chatbot from './Components/Chatbot';
 import { IotDataProvider } from './api/IotDataProvider.jsx';
 import { UserProvider } from './store/useUserStore.jsx';
 import { MQTTProvider } from './hooks/MQTTProvider';
@@ -88,6 +89,7 @@ function DashboardLayout({ unityContext }) {
   // 기존 대시보드 레이아웃을 별도 컴포넌트로 분리
   const [selectedMenu, setSelectedMenu] = React.useState('dashboard');
   const [showAIModal, setShowAIModal] = React.useState(false);
+  const [showChatbot, setShowChatbot] = React.useState(false);
   const handleLogout = () => { /* 로그아웃 처리 */ 
     // 로그아웃 시 농장 정보 초기화
     // localStorage.removeItem('farmData');
@@ -96,16 +98,21 @@ function DashboardLayout({ unityContext }) {
   };
   const handleMenuSelect = (menu) => {
     setSelectedMenu(menu);
-    // AI 분석 버튼 클릭 시 모달이 열리지 않도록 주석 처리
-    // if (menu === 'ai-analysis') {
-    //   setShowAIModal(true);
-    // }
+    // AI 분석 버튼 클릭 시 채팅봇 열기
+    if (menu === 'ai-analysis') {
+      setShowChatbot(true);
+    }
   };
 
   const handleAIModalClose = () => {
     setShowAIModal(false);
     // AI 분석 모달이 닫혀도 selectedMenu는 'ai-analysis'로 유지
     setSelectedMenu('ai-analysis');
+  };
+
+  const handleChatbotClose = () => {
+    setShowChatbot(false);
+    setSelectedMenu('dashboard'); // 채팅봇 닫을 때 대시보드로 돌아가기
   };
   return (
     // Dashboard에서만 MQTTContext 사용
@@ -204,6 +211,12 @@ function DashboardLayout({ unityContext }) {
           isOpen={showAIModal}
           onClose={handleAIModalClose}
           farmId="farm001"
+        />
+
+        {/* AI 분석 채팅봇 */}
+        <Chatbot 
+          isOpen={showChatbot}
+          onClose={handleChatbotClose}
         />
       </div>
     </MQTTProvider>

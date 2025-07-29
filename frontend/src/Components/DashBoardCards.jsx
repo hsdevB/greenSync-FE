@@ -10,6 +10,7 @@ import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
 import DailyTempHumidityChart from './DailyTempHumidityChart.jsx';
+import DailyTempHumidityMonitoring from './DailyTempHumidityMonitoring.jsx';
 // import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 
 const DashBoardCards = ({ farmData }) => {
@@ -376,7 +377,7 @@ useEffect(() => {
               <div style={{ flex: 1, textAlign: "center" }}>
                 <div className="dashboard-card-section">
                   <span style={{ color: "#e57373", fontSize: "1.5rem" }}>🌡️</span>
-                  <h3 className="dashboard-card-title">온도</h3>
+                  <h3 className="dashboard-card-title">실내온도</h3>
                 </div>
                 <div className="dashboard-card-value red" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
                   {indoorTemp ?? "--"}
@@ -396,7 +397,7 @@ useEffect(() => {
               <div style={{ flex: 1, textAlign: "center" }}>
                 <div className="dashboard-card-section">
                   <span style={{ color: "#2196f3", fontSize: "1.5rem" }}>💧</span>
-                  <h3 className="dashboard-card-title">습도</h3>
+                  <h3 className="dashboard-card-title">실내습도</h3>
                 </div>
                 <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
                   {indoorHumi ?? "--"}
@@ -573,7 +574,7 @@ useEffect(() => {
 
       {/* 일일 온/습도 모니터링 그래프 */}
       <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
-        <DailyTempHumidityChart farmId={1} />
+        <DailyTempHumidityMonitoring farmId={1} />
       </div>
       
       {/* 일일 총 급수량 그래프 */}
