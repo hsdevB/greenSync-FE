@@ -54,7 +54,7 @@ const MOCK_USERS = [
       ...MOCK_FARM_DATA,
       farmId: "farm002",
       farmName: "스마트 그린하우스",
-      farmType: "토양",
+      farmType: "고형배지",
       houseType: "유리",
       owner: "이농부"
     }

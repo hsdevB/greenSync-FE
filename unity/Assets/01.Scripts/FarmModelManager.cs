@@ -13,8 +13,8 @@ public class FarmInitData
     public string farmId;
     public string farmName;
     public string owner;
-    public string farmType;    // "수경", "토양"
-    public string houseType;   // "유리", "비닐"
+    public string farmType;    // "수경", "고형배지"
+    public string houseType;   // "유리", "플라스틱"
     public string cropType;    // "방울토마토"
     //public string location;
     //public string establishedDate;
@@ -25,10 +25,10 @@ public class FarmInitData
 public class FarmModelManager : MonoBehaviour
 {
     [Header("Farm Models - Prefabs")]
-    public GameObject soilGlassFarm;    // 토양 + 유리 (SG)
-    public GameObject soilVinylFarm;    // 토양 + 비닐 (SV)  
+    public GameObject solidGlassFarm;    // 고형배지 + 유리 (SG)
+    public GameObject solidPlasticFarm;    // 고형배지 + 플라스틱 (SP)  
     public GameObject hydroGlassFarm;   // 수경 + 유리 (WG)
-    public GameObject hydroVinylFarm;   // 수경 + 비닐 (WV)
+    public GameObject hydroPlasticFarm;   // 수경 + 플라스틱 (WP)
 
     //[Header("Crop Models")]
     //public GameObject tomatoSeedling;   // 방울토마토 모종
@@ -97,24 +97,24 @@ public class FarmModelManager : MonoBehaviour
         GameObject prefabToLoad = null;
 
         // 농장 타입 조합에 따른 프리팹 선택
-        if (farmType == "토양" && houseType == "유리")
+        if (farmType == "고형배지" && houseType == "유리")
         {
-            prefabToLoad = soilGlassFarm;
-            Debug.Log("Loading Soil + Glass farm model");
+            prefabToLoad = solidGlassFarm;
+            Debug.Log("Loading Solid + Glass farm model");
         }
-        else if (farmType == "토양" && houseType == "비닐")
+        else if (farmType == "고형배지" && houseType == "플라스틱")
         {
-            prefabToLoad = soilVinylFarm;
-            Debug.Log("Loading Soil + Vinyl farm model");
+            prefabToLoad = solidPlasticFarm;
+            Debug.Log("Loading Solid + Plastic farm model");
         }
         else if (farmType == "수경" && houseType == "유리")
         {
             prefabToLoad = hydroGlassFarm;
             Debug.Log("Loading Hydroponic + Glass farm model");
         }
-        else if (farmType == "수경" && houseType == "비닐")
+        else if (farmType == "수경" && houseType == "플라스틱")
         {
-            prefabToLoad = hydroVinylFarm;
+            prefabToLoad = hydroPlasticFarm;
             Debug.Log("Loading Hydroponic + Vinyl farm model");
         }
 

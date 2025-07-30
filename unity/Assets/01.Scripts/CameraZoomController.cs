@@ -13,12 +13,12 @@ public class CameraZoomController : MonoBehaviour
     public Vector3 defaultPosition;
     public Quaternion defaultRotation;
 
-    public Vector3 fanPosition;
-    public Quaternion fanRotation;
-    public Vector3 sensorPosition;
-    public Quaternion sensorRotation;
-    public Vector3 waterPosition;
-    public Quaternion waterRotation;
+    private Vector3 fanPosition;
+    private Quaternion fanRotation;
+    private Vector3 sensorPosition;
+    private Quaternion sensorRotation;
+    private Vector3 waterPosition;
+    private Quaternion waterRotation;
 
     private bool isZooming = false;
     private Vector3 targetPosition;
@@ -35,11 +35,11 @@ public class CameraZoomController : MonoBehaviour
         targetPosition = defaultPosition;
         targetRotation = defaultRotation;
 
-        fanPosition = new Vector3(-0.38f, 2.23f, -28.75f);
+        fanPosition = new Vector3(-0.38f, 2.23f, -28f);
         fanRotation = Quaternion.Euler(0, 160, 0);
-        sensorPosition = new Vector3(-0.3f, 0.35f, -27.45f);
+        sensorPosition = new Vector3(-0.3f, 0.35f, -28f);
         sensorRotation = Quaternion.Euler(0, 0, 0);
-        waterPosition = new Vector3(-1.73f, 0.9f, -27.78f);
+        waterPosition = new Vector3(-1.73f, 0.9f, -28f);
         waterRotation = Quaternion.Euler(9.132f, 90, 0);
     }
 
