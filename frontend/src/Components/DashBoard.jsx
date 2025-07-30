@@ -5,7 +5,7 @@ import RemoteControlPanel from './RemoteControlPanel';
 import AIChatbot from './AIChatbot';
 import './DashBoard.css';
 
-const Dashboard = ({ selectedMenu, unityContext }) => {
+const Dashboard = ({ selectedMenu, unityContext, farmData }) => {
   // 디버깅을 위한 콘솔 로그
   console.log('Dashboard selectedMenu:', selectedMenu);
   console.log('showChatbot:', selectedMenu === 'ai-analysis');
@@ -17,7 +17,7 @@ const Dashboard = ({ selectedMenu, unityContext }) => {
         <div className="dashboard-time">{formatTime(currentTime)}</div> */}
       </div>
       {selectedMenu === 'dashboard' && <DashBoardCards 
-          // farmData={farmData} 
+          farmData={farmData} 
         />}
       {selectedMenu === 'dashboard-test' && <DashBoardCardsTest unityContext={unityContext}/>}
       {selectedMenu === 'remote' && <RemoteControlPanel unityContext={unityContext}/>}

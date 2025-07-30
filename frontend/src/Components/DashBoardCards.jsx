@@ -11,7 +11,7 @@ import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
 // import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 
-const DashBoardCards = () => {
+const DashBoardCards = ({ farmData }) => {
 
   // 상태 관리 초기화
   const [refreshDisabled, setRefreshDisabled] = useState(false); // 새로고침 비활성화 상태
@@ -35,11 +35,6 @@ const DashBoardCards = () => {
   // // 자동모드 커스텀 훅 사용
   // const { simulatedData } = useAutoMode();
 
-
-  // useEffect(() => {
-  // // 상태 복원 (로컬스토리지에 저장한 상태 있다면)
-  // restoreFromLocal();
-  // }, []);
 
   useEffect(() => {
     // 새로고침 상태 복원
@@ -93,6 +88,8 @@ const DashBoardCards = () => {
   // 농장 정보에 따른 센서 데이터 가져오기 함수들
   useEffect(() => {
     // if (!farmData?.farmId) return;
+    if (!farmData?.farmId)
+      console.log("아직 farmData.farmId가 없습니다.");
 
     const fetchIndoorTemp = async () => { // 화살표 함수 사용 
       try {
