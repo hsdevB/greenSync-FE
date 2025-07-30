@@ -26,14 +26,14 @@
   /* background: #f3f4f6; */
 }
 
-/* .dashboard-single-card-row {
+.dashboard-single-card-row {
   display: flex;
   flex-direction: row;
   justify-content: center;   /* 가운데 정렬 */
   align-items: stretch;
   width: 100%;
   margin-bottom: 24px;
-} */
+} 
 
 .dashboard-single-card-row > .dashboard-card,
 .dashboard-single-card-row > .dashboard-graph-card {
@@ -226,7 +226,7 @@
 
 .dashboard-bar-fill {
   width: 70%;
-  height: 120%;
+  height: 100%;
   background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
   border-radius: 6px;
 }

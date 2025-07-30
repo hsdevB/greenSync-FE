@@ -1,15 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Chatbot.css';
+import botAvatar from '../assets/4712035.png';
+import userAvatar from '../assets/4712036.png';
 
 function getTime() {
   const d = new Date();
   return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
 }
 
-const BOT_AVATAR = 'https://cdn-icons-png.flaticon.com/512/4712/4712035.png';
-const USER_AVATAR = 'https://cdn-icons-png.flaticon.com/512/4712/4712036.png';
+const BOT_AVATAR = botAvatar;
+const USER_AVATAR = userAvatar;
 
-export default function Chatbot({ isOpen, onClose }) {
+export default function Chatbot({ isOpen, onClose, sidebar }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -141,10 +143,25 @@ Always answer in natural, fluent Korean.
   };
 
   const handleKeyDown = e => {
+    // Enter 키로 전송 (Shift+Enter는 줄바꿈)
     if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
       e.preventDefault();
       send();
     }
+    // Ctrl+Enter로도 전송 가능
+    if (e.key === 'Enter' && e.ctrlKey && !isComposing) {
+      e.preventDefault();
+      send();
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+  };
+
+  const handleCompositionEnd = (e) => {
+    setIsComposing(false);
+    setInput(e.target.value);
   };
 
   return (
@@ -156,79 +173,96 @@ Always answer in natural, fluent Korean.
         </button>
       )}
       {isChatbotOpen && (
-        <div className="cb-modal-overlay">
-          <div className="cb-modal">
-            <div className="cb-header">
-              <img src={BOT_AVATAR} alt="SmartFarm AI" className="cb-header-avatar" />
-              <div className="cb-header-title">
-                <div className="cb-header-name">스마트팜 AI 어시스턴트</div>
-                <div className="cb-header-status online">● 전문 농업 상담</div>
-              </div>
-              <button className="cb-close" onClick={handleClose}>×</button>
-            </div>
-            <div className="cb-body">
-              <div className="cb-messages">
-                {messages.length === 0 && (
-                  <div className="cb-empty">
-                    <div style={{fontSize: '16px', fontWeight: 'bold', marginBottom: '8px'}}>
-                      🌱 스마트팜 AI 어시스턴트
-                    </div>
-                    <div style={{fontSize: '14px', color: '#666'}}>
-                      농작물 재배, 온도 관리, 수확량 예측 등<br/>
-                      스마트팜 운영에 관한 모든 것을 물어보세요!
-                    </div>
+        <div className="cb-fullscreen-overlay">
+          <div className="cb-fullscreen-layout">
+            {/* 사이드바 */}
+            {sidebar}
+            
+            {/* 메인 콘텐츠 */}
+            <div className="cb-fullscreen-container">
+              {/* 헤더 */}
+              <div className="cb-fullscreen-header">
+                <div className="cb-header-left">
+                  <img src={BOT_AVATAR} alt="SmartFarm AI" className="cb-header-avatar" />
+                  <div className="cb-header-info">
+                    <div className="cb-header-name">스마트팜 AI 어시스턴트</div>
+                    <div className="cb-header-status">● 전문 농업 상담</div>
                   </div>
-                )}
-                {messages.map((msg, idx) => (
-                  <div key={idx} className={`cb-bubble-row ${msg.role}`}>
-                    <img
-                      src={msg.role === 'user' ? USER_AVATAR : BOT_AVATAR}
-                      alt={msg.role}
-                      className="cb-avatar"
-                    />
-                    <div className={`cb-bubble ${msg.role}`}>
-                      <div className="cb-bubble-text">{msg.text}</div>
-                      <div className="cb-bubble-time">{msg.time}</div>
-                    </div>
-                  </div>
-                ))}
-                {loading && (
-                  <div className="cb-bubble-row bot">
-                    <img src={BOT_AVATAR} alt="bot" className="cb-avatar" />
-                    <div className="cb-bubble bot">
-                      <div className="cb-bubble-text cb-typing">
-                        <span>.</span><span>.</span><span>.</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={chatEndRef} />
-              </div>
-              <form className="cb-input-area" onSubmit={e => { e.preventDefault(); send(); }}>
-                <textarea
-                  ref={inputRef}
-                  className="cb-input"
-                  placeholder="스마트팜 관련 질문을 입력하세요 (예: 토마토 최적 온도는?)"
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onCompositionStart={() => setIsComposing(true)}
-                  onCompositionEnd={(e) => {
-                    setIsComposing(false);
-                    setInput(e.target.value);
-                  }}
-                  onKeyDown={handleKeyDown}
-                  rows={1}
-                  disabled={loading}
-                  style={{resize: 'none'}}
-                />
-                <button
-                  className="cb-send-btn"
-                  type="submit"
-                  disabled={loading || !input.trim()}
-                >
-                  <span role="img" aria-label="send">📤</span>
+                </div>
+                <button className="cb-close-btn" onClick={handleClose}>
+                  <span>×</span>
                 </button>
-              </form>
+              </div>
+
+              {/* 메인 콘텐츠 */}
+              <div className="cb-fullscreen-content">
+                {messages.length === 0 ? (
+                  <div className="cb-welcome-screen">
+                    <div className="cb-welcome-title">무엇을 도와드릴까요?</div>
+                    <div className="cb-welcome-subtitle">
+                      스마트팜 운영에 관한 모든 것을 물어보세요
+                    </div>
+                  </div>
+                ) : (
+                  <div className="cb-messages-container">
+                    {messages.map((msg, idx) => (
+                      <div key={idx} className={`cb-message ${msg.role}`}>
+                        <div className="cb-message-avatar">
+                          <img
+                            src={msg.role === 'user' ? USER_AVATAR : BOT_AVATAR}
+                            alt={msg.role}
+                          />
+                        </div>
+                        <div className="cb-message-content">
+                          <div className="cb-message-text">{msg.text}</div>
+                          <div className="cb-message-time">{msg.time}</div>
+                        </div>
+                      </div>
+                    ))}
+                    {loading && (
+                      <div className="cb-message bot">
+                        <div className="cb-message-avatar">
+                          <img src={BOT_AVATAR} alt="bot" />
+                        </div>
+                        <div className="cb-message-content">
+                          <div className="cb-typing-indicator">
+                            <span></span><span></span><span></span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={chatEndRef} />
+                  </div>
+                )}
+              </div>
+
+              {/* 입력 영역 */}
+              <div className="cb-input-container">
+                <div className="cb-input-wrapper">
+                  <textarea
+                    ref={inputRef}
+                    className="cb-input-field"
+                    placeholder="무엇이든 물어보세요"
+                    value={input}
+                    onChange={handleInputChange}
+                    onCompositionStart={() => setIsComposing(true)}
+                    onCompositionEnd={handleCompositionEnd}
+                    onKeyDown={handleKeyDown}
+                    rows={1}
+                    disabled={loading}
+                  />
+                  <div className="cb-input-actions">
+                    <button 
+                      className="cb-send-btn"
+                      onClick={send}
+                      disabled={loading || !input.trim()}
+                      title="전송"
+                    >
+                      <span>➤</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

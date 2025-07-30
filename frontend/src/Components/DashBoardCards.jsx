@@ -29,7 +29,11 @@ const DashBoardCards = ({ farmData }) => {
   const [carbonDioxide, setCarbonDioxide] = useState('--');
   const [elcDT, setElcDT] = useState('--');
   const [illuminance, setIlluminance] = useState('--');
-  const [solarRadiation, setSolarRadiation] = useState('--');
+  const [insolation, setInsolation] = useState('--');
+  const [windDirection, setWindDirection] = useState('--');
+  const [windSpeed, setWindSpeed] = useState('--');
+  const [dewPoint, setDewPoint] = useState('--');
+  const [isRain, setIsRain] = useState('--');
 
   const {
     // water, fan, ledLevel,
@@ -242,32 +246,127 @@ useEffect(() => {
 
 // 일사량 데이터 가져오기
 useEffect(() => {
-  // 첫 번째 데이터로 고정
-  const farmId = 1;
-
-  const fetchSolarRadiation = async () => {
+  const fetchInsolation = async () => {
     try {
-      const res = await axios.get(`/sensor/solarRadiation/${farmId}`);
-      console.log("Solar Radiation response: ", res.data);
+      const res = await axios.get(`/weather/mapped`);
+      console.log("Insolation response: ", res.data);
       if (res.data && typeof res.data === 'number') {
-        setSolarRadiation(res.data);
-      } else if (res.data && res.data.data && res.data.data.solarRadiation) {
-        setSolarRadiation(res.data.data.solarRadiation);
-      } else if (res.data && res.data.solarRadiation) {
-        setSolarRadiation(res.data.solarRadiation);
+        setInsolation(res.data);
+      } else if (res.data && res.data.data && res.data.data.insolation) {
+        setInsolation(res.data.data.insolation);
+      } else if (res.data && res.data.insolation) {
+        setInsolation(res.data.insolation);
       } else {
-        setSolarRadiation('--');
+        setInsolation('--');
       }
     } catch (e) {
-      console.error('Solar Radiation fetch error:', e);
+      console.error('Insolation fetch error:', e);
       console.error('Error response:', e.response?.data);
+      setInsolation('--');
     }
   };
-  fetchSolarRadiation();
+  fetchInsolation();
 }, []);
 
-  // 대시보드 데이터 (임시)
-  const dashboardData = DashBoardData;
+// 풍향 데이터 가져오기
+
+useEffect(() => {
+  const fetchWindDirection = async () => {
+    try {
+      const res = await axios.get(`/weather/mapped`);
+      console.log("Wind Direction response: ", res.data);
+      if (res.data && typeof res.data === 'number') {
+        setWindDirection(res.data);
+      } else if (res.data && res.data.data && res.data.data.windDirection) {
+        setWindDirection(res.data.data.windDirection);
+      } else if (res.data && res.data.windDirection) {
+        setWindDirection(res.data.windDirection);
+      } else {
+        setWindDirection('--');
+      }
+    } catch (e) {
+      console.error('Wind Direction fetch error:', e);
+      console.error('Error response:', e.response?.data);
+      setWindDirection('--');
+    }
+  };
+  fetchWindDirection();
+}, []);
+
+// 풍속 데이터 가져오기
+useEffect(() => {
+  const fetchWindSpeed = async () => {
+    try {
+      const res = await axios.get(`/weather/mapped`);
+      console.log("Wind Speed response: ", res.data);
+      if (res.data && typeof res.data === 'number') {
+        setWindSpeed(res.data);
+      } else if (res.data && res.data.data && res.data.data.windSpeed) {
+        setWindSpeed(res.data.data.windSpeed);
+      } else if (res.data && res.data.windSpeed) {
+        setWindSpeed(res.data.windSpeed);
+      } else {
+        setWindSpeed('--');
+      }
+    } catch (e) {
+      console.error('Wind Speed fetch error:', e);
+      console.error('Error response:', e.response?.data);
+      setWindSpeed('--');
+    }
+  };
+  fetchWindSpeed();
+}, []);
+
+// 이슬점 데이터 가져오기
+useEffect(() => {
+  const fetchDewPoint = async () => {
+    try {
+      const res = await axios.get(`/weather/mapped`);
+      console.log("Dew Point response: ", res.data);
+      if (res.data && typeof res.data === 'number') {
+        setDewPoint(res.data);
+      } else if (res.data && res.data.data && res.data.data.dewPoint) {
+        setDewPoint(res.data.data.dewPoint);
+      } else if (res.data && res.data.dewPoint) {
+        setDewPoint(res.data.dewPoint);
+      } else {
+        setDewPoint('--');
+      }
+    } catch (e) {
+      console.error('Dew Point fetch error:', e);
+      console.error('Error response:', e.response?.data);
+      setDewPoint('--');
+    }
+  };
+  fetchDewPoint();
+}, []);
+
+// 강수여부 데이터 가져오기
+useEffect(() => {
+  const fetchIsRain = async () => {
+    try {
+      const res = await axios.get(`/weather/mapped`);
+      console.log("Is Rain response: ", res.data);
+      if (res.data && typeof res.data === 'number') {
+        setIsRain(res.data);
+      } else if (res.data && res.data.data && res.data.data.isRain) {
+        setIsRain(res.data.data.isRain);
+      } else if (res.data && res.data.isRain) {
+        setIsRain(res.data.isRain);
+      } else {
+        setIsRain('--');
+      }
+    } catch (e) {
+      console.error('Is Rain fetch error:', e);
+      console.error('Error response:', e.response?.data);
+      setIsRain('--');
+    }
+  };
+  fetchIsRain();
+}, []);
+
+// 대시보드 데이터 (임시)
+const dashboardData = DashBoardData;
 
   return (
     <div className="dashboard-cards-container">
@@ -475,7 +574,7 @@ useEffect(() => {
               <h3 className="dashboard-card-title">일사량</h3>
             </div>
             <div className="dashboard-card-value yellow" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              {solarRadiation}
+              {insolation}
             </div>
             <div className="dashboard-card-unit" style={{ color: '#facc15', fontSize: '0.9rem', marginTop: '4px' }}>
               mol/m²/d
@@ -510,10 +609,10 @@ useEffect(() => {
               <h3 className="dashboard-card-title">풍향</h3>
             </div>
             <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              {iotData ? iotData.windDirection : '--'}
+              {windDirection}
             </div>
             <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
-              °
+              도(°)
             </div>
           </div>
         </div>
@@ -526,7 +625,7 @@ useEffect(() => {
               <h3 className="dashboard-card-title">풍속</h3>
             </div>
             <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              {iotData ? iotData.windSpeed : '--'}
+              {windSpeed}
             </div>
             <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
               m/s
@@ -545,7 +644,7 @@ useEffect(() => {
               <h3 className="dashboard-card-title">이슬점</h3>
             </div>
             <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              {iotData ? iotData.dewPoint : '--'}
+              {dewPoint}
             </div>
             <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
               ℃
@@ -561,9 +660,7 @@ useEffect(() => {
               <h3 className="dashboard-card-title">강수여부</h3>
             </div>
             <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              {iotData && iotData.rainStatus !== undefined
-                ? (iotData.rainStatus ? "강수" : "없음")
-                : "--"}
+              {isRain ? "true" : "false"}
             </div>
             <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
               상태

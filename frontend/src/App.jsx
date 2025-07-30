@@ -217,6 +217,13 @@ function DashboardLayout({ unityContext }) {
         <Chatbot 
           isOpen={showChatbot}
           onClose={handleChatbotClose}
+          sidebar={
+            <Sidebar
+              selected={selectedMenu}
+              onSelect={handleMenuSelect}
+              onLogout={handleLogout}
+            />
+          }
         />
       </div>
     </MQTTProvider>

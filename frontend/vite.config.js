@@ -16,13 +16,30 @@ export default defineConfig({
           console.log('Proxy error:', err);
         }
       },
-      '/api': {
-        target: 'http://localhost:3002', // 일일 온습도 API를 위한 프록시 추가
+      '/weather': {
+        target: 'http://192.168.0.33:3000', // 일사량 API 서버
         changeOrigin: true,
         secure: false,
         timeout: 10000,
         onError: (err) => {
-          console.log('API Proxy error:', err);
+          console.log('Weather Proxy error:', err);
+        }
+      },
+      '/api/iotdata': {
+        target: 'http://localhost:3001', // AI 서버로 프록시
+        changeOrigin: true,
+        secure: false,
+        timeout: 10000,
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
+            console.log('IoT Data Proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req) => {
+            console.log('IoT Data Proxy request:', req.method, req.url);
+          });
+          proxy.on('proxyRes', (proxyRes) => {
+            console.log('IoT Data Proxy response:', proxyRes.statusCode);
+          });
         }
       },
       '/api/ollama': {
@@ -43,21 +60,13 @@ export default defineConfig({
           });
         }
       },
-      '/api/iotdata': {
-        target: 'http://localhost:3001', // AI 서버로 프록시
+      '/api': {
+        target: 'http://106.254.212.23:3001',
         changeOrigin: true,
         secure: false,
         timeout: 10000,
-        configure: (proxy) => {
-          proxy.on('error', (err) => {
-            console.log('IoT Data Proxy error:', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req) => {
-            console.log('IoT Data Proxy request:', req.method, req.url);
-          });
-          proxy.on('proxyRes', (proxyRes) => {
-            console.log('IoT Data Proxy response:', proxyRes.statusCode);
-          });
+        onError: (err) => {
+          console.log('API Proxy error:', err);
         }
       },
     },

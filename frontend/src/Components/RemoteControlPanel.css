@@ -53,7 +53,7 @@
   padding: 6px 0;
   border-radius: 8px;
   margin-top: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 30px;
   text-align: center;
   font-size: 1rem;
 }
@@ -112,6 +112,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: 20px;
   margin-bottom: 10px;
   padding: 0 6px;
 }
