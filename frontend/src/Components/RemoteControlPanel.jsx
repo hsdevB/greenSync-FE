@@ -5,52 +5,90 @@ import useControlStore from '../store/useControlStore.jsx';
 import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 import { MQTTClient } from "../utils/MQTTClient.jsx";
 import AIAnalysisModal from "./AIAnalysisModal";
+import axios from 'axios'
 
-const api = {
-  getControlState: async () => {
-    // fetch/axios를 사용하여 GET 요청 보냄
-    const response = await fetch('/api/controls'); 
-    return await response.json();
+const farmCode = 'ABCD1234'; // 임시 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const DEVICE_STATUS_ENDPOINT = import.meta.env.VITE_DEVICE_STATUS_ENDPOINT;
+const SENSOR_ENDPOINT = import.meta.env.VITE_SENSOR_ENDPOINT;
+
+// axios 인스턴스 생성
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
   },
-  updateTemperature: async (newState) => {
-    // fetch/axios를 사용하여 POST 또는 PUT 요청 보냄
-    await fetch('/api/controls/temperature', { 
-      method: 'PUT', 
-      body: JSON.stringify(newState), 
-      headers: {'Content-Type': 'application/json'} 
-    });
+});
+
+
+
+const deviceStatusApi = {
+  // 초기 데이터 설정
+  setInitData: async (farmCode) => {
+    try {
+      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${DEVICE_STATUS_ENDPOINT}/${farmCode}`, {
+        fan: false,
+        controlTemperature: 25,
+        controlHumidity: 50,
+        led: 3
+      });
+      return response.data;
+
+    } catch (error) {
+      console.error('초기 데이터 설정 실패:', error);
+      throw error;
+    }
   },
-  updateHumidity: async (newState) => {
-    // fetch/axios를 사용하여 POST 또는 PUT 요청 보냄
-    await fetch('/api/controls/humidity', { 
-      method: 'PUT', 
-      body: JSON.stringify(newState), 
-      headers: {'Content-Type': 'application/json'} 
-    });
+
+  // 현재 상태 조회
+  getControlState: async (farmCode) => {
+    try {
+      const response = await apiClient.get(`${SENSOR_ENDPOINT}/${DEVICE_STATUS_ENDPOINT}/${farmCode}`);
+      return response.data;
+    } catch (error) {
+      console.error('상태 조회 실패:', error);
+      throw error;
+    }
   },
-  updateFan: async (newState) => {
-    // fetch/axios를 사용하여 POST 또는 PUT 요청 보냄
-    await fetch('/api/controls/fan', { 
-      method: 'PUT', 
-      body: JSON.stringify(newState), 
-      headers: {'Content-Type': 'application/json'} 
-    });
+
+  // 온도 업데이트 
+  updateTemperature: async (farmCode, newValue) => {
+    try {
+      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${DEVICE_STATUS_ENDPOINT}/${farmCode}`, {
+        controlTemperature: newValue
+      });
+      return response.data;
+    } catch (error) {
+      console.error('온도 업데이트 실패:', error);
+      throw error;
+    }
   },
-  updateWater: async (newState) => {
-    // fetch/axios를 사용하여 POST 또는 PUT 요청 보냄
-    await fetch('/api/controls/water', { 
-      method: 'PUT', 
-      body: JSON.stringify(newState), 
-      headers: {'Content-Type': 'application/json'} 
-    });
+
+  // 습도 업데이트
+  updateHumidity: async (farmCode, newValue) => {
+    try {
+      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${DEVICE_STATUS_ENDPOINT}/${farmCode}`, {
+        controlHumidity: newValue
+      });
+      return response.data;
+    } catch (error) {
+      console.error('습도 업데이트 실패:', error);
+      throw error;
+    }
   },
-  updateLed: async (newState) => {
-    // fetch/axios를 사용하여 POST 또는 PUT 요청 보냄
-    await fetch('/api/controls/led', { 
-      method: 'PUT', 
-      body: JSON.stringify(newState), 
-      headers: {'Content-Type': 'application/json'} 
-    });
+
+  // LED 레벨 업데이트 
+  updateLed: async (farmCode, newLevel) => {
+    try {
+      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${DEVICE_STATUS_ENDPOINT}/${farmCode}`, {
+        led: newLevel
+      });
+      return response.data;
+    } catch (error) {
+      console.error('LED 레벨 업데이트 실패:', error);
+      throw error;
+    }
   }
 };
 
@@ -254,7 +292,6 @@ const WateringPlantsIcon = ({ isOn }) => (
   </svg>
 );
 
-
 export default function RemoteControlPanel({unityContext}) {
   // const iotData = useIotData();
   const { sendMessage } = unityContext || {};
@@ -289,24 +326,11 @@ export default function RemoteControlPanel({unityContext}) {
     autoMode, manualMode,
     setState: setControlState // store의 모든 상태를 한 번에 업데이트하는 함수
   } = useControlStore();
-
+  
   const [isLoading, setIsLoading] = useState(true); // 데이터 로딩 상태
-
-  // 컴포넌트 마운트 시 백엔드에서 최신 상태를 가져옴
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        setIsLoading(true);
-        const initialState = await api.getControlState();
-        setControlState(initialState); // 가져온 데이터로 store 상태 전체 업데이트
-      } catch (error) {
-        console.error("백엔드로부터 초기 상태를 가져오는 데 실패했습니다:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchInitialData();
-  }, [setControlState]);
+  const [connectionStatus, setConnectionStatus] = useState({
+    backend: false,
+  });
 
   const sendToUnity = useCallback((eventName, payload) => {
     const message = new UnityMessage(eventName, payload);
@@ -320,6 +344,74 @@ export default function RemoteControlPanel({unityContext}) {
 
   // 자동 모드 커스텀 훅 사용
   const { simulatedData } = useAutoMode(sendToUnity);
+
+  // 컴포넌트 마운트 시 초기화
+  useEffect(() => {
+    const initializeComponent = async () => {
+      try {
+        setIsLoading(true);
+        
+        // 먼저 현재 상태를 조회해봄
+        try {
+          const currentState = await deviceStatusApi.getControlState(farmCode);
+          console.log('기존 상태 로드됨:', currentState);
+
+          // API 응답을 store 형태로 변환
+          const storeState = {
+            temp1: currentState.controlTemperature || 25,
+            humid1: currentState.controlHumidity || 50,
+            // water: currentState.water || false,
+            fan: currentState.fan || false,
+            ledLevel: currentState.led || 3,
+            // autoMode: currentState.autoMode !== undefined ? currentState.autoMode : true,
+            // manualMode: currentState.manualMode !== undefined ? currentState.manualMode : false
+          };
+
+          setControlState(storeState);
+          setConnectionStatus(prev => ({ ...prev, backend: true }));
+        } catch (error) {
+          console.log('기존 상태 없음, 초기 데이터 설정 중...', error);
+          
+          // 상태가 없으면 초기 데이터 설정 (회원가입 후 첫 접속)
+          const initialData = await deviceStatusApi.setInitData(farmCode);
+          
+          const storeState = {
+            temp1: initialData.controlTemperature || 25,
+            humid1: initialData.controlHumidity || 50,
+            // water: initialData.water || false,
+            fan: initialData.fan || false,
+            ledLevel: initialData.led || 3,
+            // autoMode: initialData.autoMode !== undefined ? initialData.autoMode : true,
+            // manualMode: initialData.manualMode !== undefined ? initialData.manualMode : false
+          };
+
+          setControlState(storeState);
+          setConnectionStatus(prev => ({ ...prev, backend: true }));
+          
+          console.log('초기 상태 설정 완료:', initialData);
+        }
+        
+      } catch (error) {
+        console.error("초기화 실패:", error);
+        // 초기화 실패시 기본값 사용
+        setControlState({
+          temp1: 25,
+          humid1: 50,
+          // water: false,
+          fan: false,
+          ledLevel: 3,
+          // autoMode: true,
+          // manualMode: false
+        });
+        setConnectionStatus(prev => ({ ...prev, backend: false }));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeComponent();
+  }, [setControlState]);
+
 
   // 새로고침 비활성화 상태 및 타이머
   const [refreshDisabled, setRefreshDisabled] = useState(false);
@@ -378,10 +470,10 @@ export default function RemoteControlPanel({unityContext}) {
     
     try {
       // 2. 백그라운드에서 API 호출
-      await api.updateTemperature(newValue);
+      await deviceStatusApi.updateTemperature(farmCode, newValue);
       console.log("온도 변경 성공!");
       // MQTT 로직은 성공 시에만 실행하는 것이 더 안정적일 수 있음
-      if (mqttClientRef.current) {
+      if (mqttClientRef.current?.isConnected) {
         await mqttClientRef.current.blinkLed(3, fan);
       }
     } catch (error) {
@@ -403,10 +495,10 @@ export default function RemoteControlPanel({unityContext}) {
 
     try {
       // 2. 백그라운드 API 호출
-      await api.updateHumidity(newValue);
+      await deviceStatusApi.updateHumidity(farmCode, newValue);
       console.log("습도 변경 성공!");
       // MQTT 로직은 성공 시에만 실행하는 것이 더 안정적일 수 있음
-      if (mqttClientRef.current) {
+      if (mqttClientRef.current?.isConnected) {
         await mqttClientRef.current.blinkLed(2, fan);
       }
     } catch (error) {
@@ -420,36 +512,20 @@ export default function RemoteControlPanel({unityContext}) {
 
   // 관개 시스템
   const handleWaterClick = async () => {
-    // 센서로 on/off 전달 (sendToSensor('water', !prev))
     if(water) return; // 이미 급수 중이면 무시
 
     // 1. UI 즉시 업데이트
     setWater(true);
     sendToUnity("startWater", { status: true });
 
-    try {
-      // 2. 백그라운드 API 호출
-      await api.updateWater({ water: true });
-      
-      if (mqttClientRef.current?.isConnected) {
-        await mqttClientRef.current.blinkLed(0, fan);
-      }
-      // 5초 후 자동 종료
-      setTimeout(async () => {
-        try {
-          await api.updateWater({ water: false });
-          setWater({ water: false });
-        } catch (error) {
-          console.error("급수 종료 업데이트 실패:", error);
-          setWater(true);
-          sendToUnity("startWater", { status: true });
-        }
-      }, 5000);
-    } catch (error) {
-      console.error("급수 시작 업데이트 실패:", error);
-      setWater(false);
-      sendToUnity("startWater", { status: false });
+    if (mqttClientRef.current?.isConnected) {
+      await mqttClientRef.current.blinkLed(0, fan);
     }
+    // 5초 후 자동 종료
+    setTimeout(async () => {
+        setWater(false);
+        sendToUnity("startWater", { status: false });
+    }, 5000);
   };
 
   // 환기 시스템 토글
@@ -461,18 +537,9 @@ export default function RemoteControlPanel({unityContext}) {
     setFan(newState);
     sendToUnity("fanStatus", { status: newState });
 
-    try {
-      // 2. 백그라운드 API 호출
-      await api.updateFan(newState);
-      console.log("팬 상태 변경 성공!");
-      if (mqttClientRef.current?.isConnected) {
-        mqttClientRef.current.publish('device/control/ABCD1234', { "fan": newState });
-      }
-    } catch (error) {
-      // 3. 실패 시 롤백
-      console.error("팬 상태 업데이트 실패, 롤백:", error);
-      setFan(originalState);
-      sendToUnity("fanStatus", { status: originalState });
+    if (mqttClientRef.current?.isConnected) {
+      mqttClientRef.current.publish(`device/control/${farmCode}`, { "fan": newState });
+      // mqttClientRef.current.publish('device/control/ABCD1234', { "fan": newState });
     }
   };
 
@@ -488,14 +555,14 @@ export default function RemoteControlPanel({unityContext}) {
 
     try {
       // 2. 백그라운드 API 호출
-      await api.updateLed({ ledLevel: level });
+      await deviceStatusApi.updateLed(farmCode, level);
       console.log("LED 밝기 변경 성공!");
       if (mqttClientRef.current?.isConnected && level > 0) {
         mqttClientRef.current.blinkLed(1, fan);
       }
     } catch (error) {
       // 3. 실패 시 롤백
-      console.error("LED 밝기 업데이트 실패, 롤백백:", error);
+      console.error("LED 밝기 업데이트 실패, 롤백:", error);
       setLed({ ledLevel: originallevel });
       sendToUnity("ledLevel", { originallevel });
     }
@@ -508,7 +575,6 @@ export default function RemoteControlPanel({unityContext}) {
           manualMode: !isAuto
       };
       try {
-          await api.updateControlState(newState);
           setControlState(newState);
       } catch (error) {
           console.error("모드 변경 실패:", error);
@@ -579,8 +645,8 @@ export default function RemoteControlPanel({unityContext}) {
         {/* 원격제어 상태 section-title 추가 */}
         <div className="section-title">원격제어 상태</div>
         <div className="data-grid">
-          <DataCard label="난방" value={temp1 ? "ON" : "OFF"} unit={temp1 ? "🟢" : "🔴"} icon={<HeaterIcon isOn={temp1} />} />
-          <DataCard label="습도" value={humid1 ? "ON" : "OFF"} unit={humid1 ? "🟢" : "🔴"} icon={<HeaterIcon isOn={humid1} />} />
+          <DataCard label="난방" value={temp1 > 20 ? "ON" : "OFF"} unit={temp1 > 20 ? "🟢" : "🔴"} icon={<HeaterIcon isOn={temp1 > 20} />} />
+          <DataCard label="습도" value={humid1 > 40 ? "ON" : "OFF"} unit={humid1 > 40 ? "🟢" : "🔴"} icon={<HeaterIcon isOn={humid1 > 40} />} />
           <DataCard label="배기" value={fan ? "ON" : "OFF"} unit={fan ? "🟢" : "🔴"} icon={<ExhaustFanIcon isOn={fan} />} />
           <DataCard label="급수" value={water ? "ON" : "OFF"} unit={water ? "🟢" : "🔴"} icon={<WateringPlantsIcon isOn={water} />} />
         </div>
@@ -588,6 +654,11 @@ export default function RemoteControlPanel({unityContext}) {
         <div className="realtime-data-section">
           <div className="section-title">MQTT 연결 상태</div>
           <div className="data-grid">
+            <DataCard 
+              label="백엔드 API" 
+              value={connectionStatus.backend ? "연결됨" : "연결 안됨"} 
+              unit={connectionStatus.backend ? "🟢" : "🔴"} 
+            />
             <DataCard 
               label="MQTT" 
               value={mqttClientRef.current?.isConnected ? "연결됨" : "연결 안됨"} 
