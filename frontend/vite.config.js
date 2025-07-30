@@ -25,6 +25,15 @@ export default defineConfig({
           console.log('Weather Proxy error:', err);
         }
       },
+      '/chart': {
+        target: 'http://192.168.0.33:3000', // 차트 API 서버
+        changeOrigin: true,
+        secure: false,
+        timeout: 10000,
+        onError: (err) => {
+          console.log('Chart Proxy error:', err);
+        }
+      },
       '/api/iotdata': {
         target: 'http://localhost:3001', // AI 서버로 프록시
         changeOrigin: true,

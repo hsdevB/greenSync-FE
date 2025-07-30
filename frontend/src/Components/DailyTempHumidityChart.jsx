@@ -34,40 +34,66 @@ const DailyTempHumidityChart = ({ farmId = 1 }) => {
         setLoading(true);
         setError(null);
         
-        const response = await axios.get(`/api/daily-temp-humidity/${farmId}`);
+        // 온도와 습도 데이터를 병렬로 가져오기
+        const [tempResponse, humidityResponse] = await Promise.all([
+          axios.get(`/chart/temperature/daily/ABCD1234`),
+          axios.get(`/chart/Humidity/daily/ABCD1234`)
+        ]);
         
-        if (response.data.success) {
-          const { data, summary } = response.data;
+        if (tempResponse.data.success && humidityResponse.data.success) {
+          // 온도 데이터 추출
+          const tempData = tempResponse.data.data;
+          const temperatures = tempData.datasets[0].data;
+          
+          // 습도 데이터 추출
+          const humidityData = humidityResponse.data.data;
+          const humidities = humidityData.datasets[0].data;
+          
+          const timeLabels = ['10시', '12시', '14시', '16시', '18시', '20시', '22시', '24시', '02시', '04시', '06시', '08시'];
           
           // Chart.js 데이터 형식으로 변환
           const chartDataConfig = {
-            labels: data.map(item => item.time),
+            labels: timeLabels,
             datasets: [
               {
                 label: '온도 (°C)',
-                data: data.map(item => item.temp),
+                data: temperatures,
                 borderColor: '#ef4444',
                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
                 yAxisID: 'y',
                 tension: 0.4,
                 pointRadius: 4,
                 pointHoverRadius: 6,
+                fill: true,
               },
               {
                 label: '습도 (%)',
-                data: data.map(item => item.humid),
+                data: humidities,
                 borderColor: '#3b82f6',
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 yAxisID: 'y1',
                 tension: 0.4,
                 pointRadius: 4,
                 pointHoverRadius: 6,
+                fill: true,
               },
             ],
           };
           
           setChartData(chartDataConfig);
-          setSummary(summary);
+          
+          // 요약 데이터 생성
+          const avgTemp = (temperatures.reduce((a, b) => a + b, 0) / temperatures.length).toFixed(1);
+          const avgHumid = (humidities.reduce((a, b) => a + b, 0) / humidities.length).toFixed(1);
+          
+          setSummary({
+            avgTemp: avgTemp,
+            avgHumid: avgHumid,
+            maxTemp: Math.max(...temperatures),
+            minTemp: Math.min(...temperatures),
+            maxHumid: Math.max(...humidities),
+            minHumid: Math.min(...humidities)
+          });
         } else {
           setError('데이터를 불러오는데 실패했습니다.');
         }
@@ -97,6 +123,7 @@ const DailyTempHumidityChart = ({ farmId = 1 }) => {
           padding: 20,
           font: {
             size: 12,
+            weight: 'bold'
           },
         },
       },
@@ -121,6 +148,9 @@ const DailyTempHumidityChart = ({ farmId = 1 }) => {
         cornerRadius: 8,
         displayColors: true,
         callbacks: {
+          title: function(context) {
+            return `시간: ${context[0].label}`;
+          },
           label: function(context) {
             const label = context.dataset.label || '';
             const value = context.parsed.y;
@@ -142,11 +172,19 @@ const DailyTempHumidityChart = ({ farmId = 1 }) => {
           text: '시간',
           font: {
             size: 12,
-          },
+            weight: 'bold'
+          }
         },
         grid: {
-          display: false,
+          display: true,
+          color: 'rgba(0, 0, 0, 0.1)'
         },
+        ticks: {
+          maxTicksLimit: 12,
+          font: {
+            size: 10
+          }
+        }
       },
       y: {
         type: 'linear',
@@ -157,16 +195,21 @@ const DailyTempHumidityChart = ({ farmId = 1 }) => {
           text: '온도 (°C)',
           font: {
             size: 12,
-          },
+            weight: 'bold'
+          }
         },
-        min: 15,
-        max: 30,
         grid: {
-          color: 'rgba(0, 0, 0, 0.1)',
+          display: true,
+          color: 'rgba(0, 0, 0, 0.1)'
         },
         ticks: {
           color: '#ef4444',
+          font: {
+            size: 10
+          }
         },
+        min: 0,
+        max: 40
       },
       y1: {
         type: 'linear',
@@ -177,24 +220,29 @@ const DailyTempHumidityChart = ({ farmId = 1 }) => {
           text: '습도 (%)',
           font: {
             size: 12,
-          },
+            weight: 'bold'
+          }
         },
-        min: 40,
-        max: 80,
         grid: {
           drawOnChartArea: false,
+          color: 'rgba(0, 0, 0, 0.1)'
         },
         ticks: {
           color: '#3b82f6',
+          font: {
+            size: 10
+          }
         },
-      },
-    },
+        min: 0,
+        max: 100
+      }
+    }
   };
 
   if (loading) {
     return (
       <div className="dashboard-graph-card">
-        <div className="dashboard-graph-title">일일 온/습도 모니터링</div>
+        {/* <div className="dashboard-graph-title">일일 온/습도 모니터링</div> */}
         <div style={{ 
           display: 'flex', 
           justifyContent: 'center', 

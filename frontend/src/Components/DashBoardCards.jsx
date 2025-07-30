@@ -10,7 +10,7 @@ import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
 import DailyTempHumidityChart from './DailyTempHumidityChart.jsx';
-import DailyTempHumidityMonitoring from './DailyTempHumidityMonitoring.jsx';
+
 // import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 
 const DashBoardCards = ({ farmData }) => {
@@ -34,6 +34,7 @@ const DashBoardCards = ({ farmData }) => {
   const [windSpeed, setWindSpeed] = useState('--');
   const [dewPoint, setDewPoint] = useState('--');
   const [isRain, setIsRain] = useState('--');
+  const [temperatureChartData, setTemperatureChartData] = useState([]);
 
   const {
     // water, fan, ledLevel,
@@ -365,8 +366,44 @@ useEffect(() => {
   fetchIsRain();
 }, []);
 
+// 온도 차트 데이터 가져오기
+useEffect(() => {
+  const fetchTemperatureChartData = async () => {
+    try {
+      const res = await axios.get(`/chart/temperature/daily/ABCD1234`); // 실제 API 엔드포인트로 수정
+      console.log("Temperature Chart response: ", res.data);
+      if (res.data && res.data.success) {
+        const transformedData = transformTemperatureData(res.data);
+        setTemperatureChartData(transformedData);
+      } else {
+        setTemperatureChartData([]);
+      }
+    } catch (e) {
+      console.error('Temperature Chart fetch error:', e);
+      console.error('Error response:', e.response?.data);
+      setTemperatureChartData([]);
+    }
+  };
+  fetchTemperatureChartData();
+}, []);
+
 // 대시보드 데이터 (임시)
 const dashboardData = DashBoardData;
+
+// 온도 차트 데이터 변환 함수
+const transformTemperatureData = (rawData) => {
+  if (!rawData || !rawData.data || !rawData.data.datasets || !rawData.data.datasets[0]) {
+    return [];
+  }
+  
+  const temperatures = rawData.data.datasets[0].data;
+  const timeLabels = ['10시', '12시', '14시', '16시', '18시', '20시', '22시', '24시', '02시', '04시', '06시', '08시'];
+  
+  return temperatures.map((temp, index) => ({
+    time: timeLabels[index],
+    temperature: temp
+  }));
+};
 
   return (
     <div className="dashboard-cards-container">
@@ -671,7 +708,7 @@ const dashboardData = DashBoardData;
 
       {/* 일일 온/습도 모니터링 그래프 */}
       <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
-        <DailyTempHumidityMonitoring farmId={1} />
+        <DailyTempHumidityChart farmId={1} />
       </div>
       
       {/* 일일 총 급수량 그래프 */}
@@ -689,6 +726,22 @@ const dashboardData = DashBoardData;
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* 온도 차트 그래프 */}
+      {/* <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
+        <div className="dashboard-graph-card">
+          <div className="dashboard-graph-title">일일 온도 변화</div>
+          <ResponsiveContainer width="100%" height={120}>
+            <LineChart data={temperatureChartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="time" fontSize={10} />
+              <YAxis fontSize={10} />
+              <Tooltip />
+              <Line type="monotone" dataKey="temperature" stroke="#ef4444" strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div> */}
     </div>
   );
 };

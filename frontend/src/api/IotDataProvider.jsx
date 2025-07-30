@@ -9,14 +9,16 @@ export function IotDataProvider({ children }) {
         let timer;
         const fetchData = async () => {
             try {
-                const res = await axios.get("/api/iotdata");
-                setIotData(res.data);
+                // const res = await axios.get("/api/iotdata");
+                // setIotData(res.data);
+                // 임시로 null 상태 유지
+                setIotData(null);
             } catch {
                 setIotData(null);
             }
         };
         fetchData();
-        timer = setInterval(fetchData, 5000);
+        // timer = setInterval(fetchData, 5000);
         return () => clearInterval(timer);
     }, []);
 
