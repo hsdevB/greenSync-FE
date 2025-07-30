@@ -11,7 +11,7 @@
       "RelativeMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|solutionrelative:assets\\01.scripts\\camerazoomcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|c:\\users\\uvc\\desktop\\greensync-fe\\unity\\assets\\01.scripts\\messagemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\assets\\01.scripts\\messagemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|solutionrelative:assets\\01.scripts\\messagemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -44,7 +44,7 @@
               "RelativeDocumentMoniker": "Assets\\01.Scripts\\FarmModelManager.cs",
               "ToolTip": "C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\Assets\\01.Scripts\\FarmModelManager.cs",
               "RelativeToolTip": "Assets\\01.Scripts\\FarmModelManager.cs",
-              "ViewState": "AgIAABUAAAAAAAAAAAAAwEgAAAANAAAAAAAAAA==",
+              "ViewState": "AgIAAM4AAAAAAAAAAAAAAHIAAAA5AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-29T04:43:13.616Z",
               "EditorCaption": ""
@@ -57,7 +57,7 @@
               "RelativeDocumentMoniker": "Assets\\01.Scripts\\CameraZoomController.cs",
               "ToolTip": "C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\Assets\\01.Scripts\\CameraZoomController.cs",
               "RelativeToolTip": "Assets\\01.Scripts\\CameraZoomController.cs",
-              "ViewState": "AgIAAF0AAAAAAAAAAAAAAGMAAAApAAAAAAAAAA==",
+              "ViewState": "AgIAABcAAAAAAAAAAAAAwCkAAAA1AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-18T01:19:17.988Z",
               "EditorCaption": ""
@@ -96,8 +96,7 @@
               "RelativeToolTip": "Assets\\01.Scripts\\MessageManager.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-08T05:38:19.93Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-08T05:38:19.93Z"
             },
             {
               "$type": "Document",

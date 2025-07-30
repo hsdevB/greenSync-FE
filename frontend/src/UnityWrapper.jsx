@@ -35,10 +35,10 @@
 // const getFolderName = (farmType, houseType) => {
 //   // farmType: 토양(S), 수경(W)
 //   // houseType: 비닐(V), 유리(G)
-//   const farmTypeCode = farmType === '토양' ? 'S' : farmType === '수경' ? 'W' : farmType;
-//   const houseTypeCode = houseType === '비닐' ? 'V' : houseType === '유리' ? 'G' : houseType;
+//   const farmTypeCode = farmType === '고형배지' ? 'S' : farmType === '수경' ? 'W' : farmType;
+//   const houseTypeCode = houseType === '플라스틱' ? 'P' : houseType === '유리' ? 'G' : houseType;
   
-//   return `${farmTypeCode}${houseTypeCode}`; // SV, SG, WV, WG
+//   return `${farmTypeCode}${houseTypeCode}`; // SP, SG, WP, WG
 // };
 
 // const useSharedUnityContext = (farmId, farmType, houseType) => {
@@ -286,9 +286,9 @@ import { useUnityContext } from "react-unity-webgl";
 const useSharedUnityContext = () => {
   return useUnityContext({ // WG폴더 추가해서 폴더구조 맞춰주세요 
     loaderUrl: "Build/WG/Build.loader.js",
-    dataUrl: "Build/WG/Build.data",
-    frameworkUrl: "Build/WG/Build.framework.js",
-    codeUrl: "Build/WG/Build.wasm",
+    dataUrl: "Build/WG/Build.data.unityweb",
+    frameworkUrl: "Build/WG/Build.framework.js.unityweb",
+    codeUrl: "Build/WG/Build.wasm.unityweb",
   })
 };
 
