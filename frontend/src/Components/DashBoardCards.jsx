@@ -488,7 +488,7 @@ useEffect(() => {
           <div className="dashboard-card" data-type="illuminance">
             <div className="dashboard-card-section">
               <Cloud className="dashboard-card-icon blue" />
-              <h3 className="dashboard-card-title">광량(LUX)</h3>
+              <h3 className="dashboard-card-title">광량</h3>
             </div>
             <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
               {illuminance}
@@ -507,7 +507,7 @@ useEffect(() => {
           <div className="dashboard-card" data-type="wind">
             <div className="dashboard-card-section">
               <Cloud className="dashboard-card-icon blue" />
-              <h3 className="dashboard-card-title">풍향(기상청)</h3>
+              <h3 className="dashboard-card-title">풍향</h3>
             </div>
             <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
               {iotData ? iotData.windDirection : '--'}
@@ -523,7 +523,7 @@ useEffect(() => {
           <div className="dashboard-card" data-type="wind">
             <div className="dashboard-card-section">
               <Cloud className="dashboard-card-icon blue" />
-              <h3 className="dashboard-card-title">풍속(기상청)</h3>
+              <h3 className="dashboard-card-title">풍속</h3>
             </div>
             <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
               {iotData ? iotData.windSpeed : '--'}
@@ -542,7 +542,7 @@ useEffect(() => {
           <div className="dashboard-card" data-type="dew">
             <div className="dashboard-card-section">
               <Cloud className="dashboard-card-icon blue" />
-              <h3 className="dashboard-card-title">이슬점(기상청)</h3>
+              <h3 className="dashboard-card-title">이슬점</h3>
             </div>
             <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
               {iotData ? iotData.dewPoint : '--'}
@@ -558,7 +558,7 @@ useEffect(() => {
           <div className="dashboard-card" data-type="rain">
             <div className="dashboard-card-section">
               <Cloud className="dashboard-card-icon blue" />
-              <h3 className="dashboard-card-title">강수여부(기상청)</h3>
+              <h3 className="dashboard-card-title">강수여부</h3>
             </div>
             <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
               {iotData && iotData.rainStatus !== undefined

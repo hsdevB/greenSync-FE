@@ -14,6 +14,7 @@ export default function Chatbot({ isOpen, onClose }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([]); // {role, text, time}
+  const [isComposing, setIsComposing] = useState(false); // IME 조합 상태
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -108,10 +109,11 @@ Always answer in natural, fluent Korean.
   };
 
   const send = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isComposing) return;
     const userMsg = { role: 'user', text: input, time: getTime() };
     setMessages(msgs => [...msgs, userMsg]);
     setInput('');
+    setIsComposing(false);
     setLoading(true);
     
     try {
@@ -129,11 +131,17 @@ Always answer in natural, fluent Korean.
       ]);
     } finally {
       setLoading(false);
+      // AI 응답 후 input에 포커스 복원
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 100);
     }
   };
 
   const handleKeyDown = e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
       e.preventDefault();
       send();
     }
@@ -203,6 +211,11 @@ Always answer in natural, fluent Korean.
                   placeholder="스마트팜 관련 질문을 입력하세요 (예: 토마토 최적 온도는?)"
                   value={input}
                   onChange={e => setInput(e.target.value)}
+                  onCompositionStart={() => setIsComposing(true)}
+                  onCompositionEnd={(e) => {
+                    setIsComposing(false);
+                    setInput(e.target.value);
+                  }}
                   onKeyDown={handleKeyDown}
                   rows={1}
                   disabled={loading}

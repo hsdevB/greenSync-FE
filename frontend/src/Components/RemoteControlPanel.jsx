@@ -604,7 +604,7 @@ export default function RemoteControlPanel({unityContext}) {
 
           {/* 온·습도 제어1 */}
           <div className="control-card-temp-humid">
-            <div className="control-card-header" style={{ gridColumn: "1 / -1", marginBottom: "16px" }}>
+            <div className="control-card-header" style={{ gridColumn: "1 / -1", marginBottom: "16px" ,justifyContent : "center" }}>
               <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️</span>
               <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어1</span>
             </div>

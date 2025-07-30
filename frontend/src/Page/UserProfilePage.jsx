@@ -185,7 +185,7 @@ const UserProfilePage = () => {
           style={{
             position: "absolute",
             right: 24,
-            top: 24,
+            top: 45,
             color: "#388e3c",
             textDecoration: "none",
             fontSize: "16px",
@@ -360,27 +360,48 @@ const UserProfilePage = () => {
           <div style={{
             display: "flex",
             justifyContent: "flex-end",
+            gap: "8px",
             marginBottom: "24px"
           }}>
             {!isEditing ? (
-              <button
-                onClick={handleEditStart}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "8px 16px",
-                  background: "#388e3c",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "14px"
-                }}
-              >
-                <Edit size={16} />
-                정보 수정
-              </button>
+              <>
+                <button
+                  onClick={handleEditStart}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 16px",
+                    background: "#388e3c",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontSize: "14px"
+                  }}
+                >
+                  <Edit size={16} />
+                  정보 수정
+                </button>
+                <button
+                  onClick={() => setIsPasswordEditing(true)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 16px",
+                    background: "#ff9800",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontSize: "14px"
+                  }}
+                >
+                  <Shield size={16} />
+                  비밀번호 변경
+                </button>
+              </>
             ) : (
               <div style={{ display: "flex", gap: "8px" }}>
                 <button
@@ -637,39 +658,12 @@ const UserProfilePage = () => {
             borderTop: "1px solid #e0e0e0",
             paddingTop: "24px"
           }}>
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "16px"
-            }}>
-              <h3 style={{
-                margin: 0,
-                fontSize: "18px",
-                color: "#333"
+            {isPasswordEditing && (
+              <div style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginBottom: "16px"
               }}>
-                {/* 비밀번호 변경 */}
-              </h3>
-              {!isPasswordEditing ? (
-                <button
-                  onClick={() => setIsPasswordEditing(true)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "8px 16px",
-                    background: "#ff9800",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    fontSize: "14px"
-                  }}
-                >
-                  <Shield size={16} />
-                  비밀번호 변경
-                </button>
-              ) : (
                 <div style={{ display: "flex", gap: "8px" }}>
                   <button
                     onClick={handlePasswordChange}
@@ -722,8 +716,8 @@ const UserProfilePage = () => {
                     취소
                   </button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {isPasswordEditing && (
               <div style={{
