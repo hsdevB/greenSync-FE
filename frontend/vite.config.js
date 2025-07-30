@@ -8,7 +8,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/sensor': {
-        target: 'http://192.168.0.10:3000', // 실제 백엔드 서버 주소로 수정
+        target: 'http://192.168.0.33:3000', // 실제 백엔드 서버 주소로 수정
         changeOrigin: true,
         secure: false,
         timeout: 10000, // 타임아웃 추가

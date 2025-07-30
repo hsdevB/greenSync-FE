@@ -1,5 +1,7 @@
 import mqtt from 'mqtt';
 
+const brokerURL = import.meta.env.VITE_MQTT_BROKER_URL;
+const farmCode = 'ABCD1234';
 export class MQTTClient {
   constructor() {
     this.client = null;
@@ -7,7 +9,7 @@ export class MQTTClient {
     this.isConnecting = false;
   }
 
-  connect(brokerUrl = 'ws://192.168.0.26:9001') {
+  connect(brokerUrl = `${brokerURL}`) {
     try {
       // 실제 환경
       this.client = mqtt.connect(brokerUrl);
@@ -63,7 +65,7 @@ export class MQTTClient {
     // 특정 LED만 켜기 (온도센서=3, 습도센서=2, LED밝기=1, 급수=0)
     newLedState[ledIndex] = true;
     
-    this.publish('device/control/ABCD1234', {
+    this.publish(`device/control/${farmCode}`, {
       "fan": currentFanState,
       "leds": newLedState
     });
@@ -82,7 +84,7 @@ export class MQTTClient {
     const updatedLedState = [...currentStateAfterDelay];
     updatedLedState[ledIndex] = false;
     
-    this.publish('device/control/ABCD1234', {
+    this.publish(`device/control/${farmCode}`, {
       "fan": currentFanState,
       "leds": updatedLedState
     });

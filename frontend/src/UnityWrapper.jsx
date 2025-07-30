@@ -81,15 +81,16 @@
 //     if (farmType && houseType) {
 //       const folder = getFolderName(farmType, houseType);
 //       setFolderName(folder);
+//       window.alert(folderName);
 //     }
 //   }, [farmType, houseType]);
 
 //   // Unity Context 생성 (개별 농장 경로 사용)
 //   const unityContext = useUnityContext({
-//     loaderUrl: farmId ? `Build/${farmId}/Build.loader.js` : '',
-//     dataUrl: farmId ? `Build/${farmId}/Build.data` : '',
-//     frameworkUrl: farmId ? `Build/${farmId}/Build.framework.js` : '',
-//     codeUrl: farmId ? `Build/${farmId}/Build.wasm` : '',
+//     loaderUrl: `Build/${folderName}/Build.loader.js`,
+//     dataUrl: `Build/${folderName}/Build.data`,
+//     frameworkUrl: `Build/${folderName}/Build.framework.js`,
+//     codeUrl: `Build/${folderName}/Build.wasm`,
 //   });
 
 //   useEffect(() => {
