@@ -29,17 +29,12 @@ const DashBoardCards = ({ farmData }) => {
     // water, fan, ledLevel,
     temp1,
     humid1,
-    restoreFromLocal, autoMode,
+    autoMode,
   } = useControlStore();
 
   // // 자동모드 커스텀 훅 사용
   // const { simulatedData } = useAutoMode();
 
-
-  useEffect(() => {
-  // 상태 복원 (로컬스토리지에 저장한 상태 있다면)
-  restoreFromLocal();
-  }, []);
 
   useEffect(() => {
     // 새로고침 상태 복원
@@ -92,13 +87,15 @@ const DashBoardCards = ({ farmData }) => {
 
   // 농장 정보에 따른 센서 데이터 가져오기 함수들
   useEffect(() => {
-    if (!farmData?.farmId) return;
+    // if (!farmData?.farmId) return;
+    if (!farmData?.farmId)
+      console.log("아직 farmData.farmId가 없습니다.");
 
     const fetchIndoorTemp = async () => { // 화살표 함수 사용 
       try {
         // 프록시를 사용하지 않고 직접 주소로 요청
-        // const id = 1;
-        const res = await axios.get(`/sensor/temperature/${farmData?.farmId}`);// 1인 수정 해야함 변수 추가 해야함
+        const id = 1;
+        const res = await axios.get(`/sensor/temperature/${id}`);// 1인 수정 해야함 변수 추가 해야함
         console.log("Temperature response: ", res.data);
         if (res.data && typeof res.data === 'number') {
           setIndoorTemp(res.data);
@@ -116,16 +113,16 @@ const DashBoardCards = ({ farmData }) => {
       }
     };
     fetchIndoorTemp();
-  }, [farmData?.farmId]);
+  }, []);
 
 //실내습도 데이터 가져오기
 useEffect(() => {
-  if (!farmData?.farmId) return;
+  // if (!farmData?.farmId) return;
 
   const fetchIndoorHumi = async () => {
     try {
-      // const id = 1;
-      const res = await axios.get(`/sensor/humidity/${farmData.farmId}`);
+      const id = 1;
+      const res = await axios.get(`/sensor/humidity/${id}`);
       console.log("Humidity response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setIndoorHumi(res.data);
@@ -143,16 +140,16 @@ useEffect(() => {
     }
   };
   fetchIndoorHumi();
-}, [farmData.farmId]);
+}, []);
 
 // 산도(phLevel)와 전기전도도(elcDT) 한 번에 가져오기
 useEffect(() => {
-  if (!farmData?.farmId) return;
+  // if (!farmData?.farmId) return;
 
   const fetchNutrient = async () => {
     try {
-      // const id = 1;
-      const res = await axios.get(`/sensor/nutrient/${farmData.farmId}`);
+      const id = 1;
+      const res = await axios.get(`/sensor/nutrient/${id}`);
       console.log("Nutrient response: ", res.data);
 
         // pH 값 설정
@@ -184,16 +181,16 @@ useEffect(() => {
       }
     };
     fetchNutrient();
-}, [farmData.farmId]);
+}, []);
 
 //이산화탄소 데이터 가져오기
 useEffect(() => {
-  if (!farmData?.farmId) return;
+  // if (!farmData?.farmId) return;
 
   const fetchCarbonDioxide = async () => {
       try {
-        // const id = 1;
-        const res = await axios.get(`/api/sensor/carbonDioxide/${farmData.farmId}`);
+        const id = 1;
+        const res = await axios.get(`/api/sensor/carbonDioxide/${id}`);
         console.log("CO2 response: ", res.data);
         if (res.data && typeof res.data === 'number') {
           setCarbonDioxide(res.data);
@@ -211,16 +208,16 @@ useEffect(() => {
       }
     };
     fetchCarbonDioxide();
-}, [farmData.farmId]);
+}, []);
 
 //광량 데이터 가져오기
 useEffect(() => {
-  if (!farmData?.farmId) return;
+  // if (!farmData?.farmId) return;
 
   const fetchIlluminance = async () => {
     try {
-      // const id = 1;
-      const res = await axios.get(`/api/sensor/illuminance/${farmData?.farmId}`);
+      const id = 1;
+      const res = await axios.get(`/api/sensor/illuminance/${id}`);
       console.log("Illuminance response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setIlluminance(res.data);
@@ -238,16 +235,16 @@ useEffect(() => {
     }
   };
   fetchIlluminance();
-}, [farmData?.farmId]);
+}, []);
 
 // 일사량 데이터 가져오기
 useEffect(() => {
-  if (!farmData?.farmId) return;
+  // if (!farmData?.farmId) return;
 
   const fetchSolarRadiation = async () => {
     try {
-      // const id = 1;
-      const res = await axios.get(`/api/sensor/solarRadiation/${farmData?.farmId}`);
+      const id = 1;
+      const res = await axios.get(`/api/sensor/solarRadiation/${id}`);
       console.log("Solar Radiation response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setSolarRadiation(res.data);
@@ -264,7 +261,7 @@ useEffect(() => {
     }
   };
   fetchSolarRadiation();
-}, [farmData?.farmId]);
+}, []);
 
   // 대시보드 데이터 (임시)
   const dashboardData = DashBoardData;

@@ -16,7 +16,9 @@ const Dashboard = ({ selectedMenu, unityContext, farmData }) => {
         {/* <h1 className="dashboard-title">대시보드</h1>
         <div className="dashboard-time">{formatTime(currentTime)}</div> */}
       </div>
-      {selectedMenu === 'dashboard' && <DashBoardCards farmData={farmData} />}
+      {selectedMenu === 'dashboard' && <DashBoardCards 
+          farmData={farmData} 
+        />}
       {selectedMenu === 'dashboard-test' && <DashBoardCardsTest unityContext={unityContext}/>}
       {selectedMenu === 'remote' && <RemoteControlPanel unityContext={unityContext}/>}
       {/* AI 분석은 사이드바에서 처리됨 */}
