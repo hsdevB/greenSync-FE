@@ -7,7 +7,6 @@ import { MQTTClient } from "../utils/MQTTClient.jsx";
 import AIAnalysisModal from "./AIAnalysisModal";
 import axios from 'axios'
 
-const farmCode = 'ABCD1234'; // 임시 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const DEVICE_STATUS_ENDPOINT = import.meta.env.VITE_DEVICE_STATUS_ENDPOINT;
 const CONTROL_SETTINGS_ENDPOINT = import.meta.env.VITE_CONTROL_SETTINGS_ENDPOINT;
@@ -21,8 +20,6 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
-
 
 const deviceStatusApi = {
   // 초기 데이터 설정
@@ -292,7 +289,7 @@ const WateringPlantsIcon = ({ isOn }) => (
   </svg>
 );
 
-export default function RemoteControlPanel({unityContext}) {
+export default function RemoteControlPanel({unityContext, farmCode}) {
   // const iotData = useIotData();
   const { sendMessage } = unityContext || {};
 
@@ -344,7 +341,7 @@ export default function RemoteControlPanel({unityContext}) {
   }, [safeSendMessage]);
 
   // 자동 모드 커스텀 훅 사용
-  const { simulatedData } = useAutoMode(sendToUnity);
+  const { simulatedData } = useAutoMode(farmCode, sendToUnity);
 
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
