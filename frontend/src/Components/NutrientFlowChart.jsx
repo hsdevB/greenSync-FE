@@ -56,7 +56,7 @@ const NutrientFlowChart = ({ farmId }) => {
     }
   };
 
-  // 실제 데이터 기반 시계열 데이터 생성 (00시~12시)
+     // 실제 데이터 기반 시계열 데이터 생성 (00시~10시)
   const generateTimeSeriesData = async () => {
     const now = new Date();
     const timeSeriesData = [];
@@ -68,17 +68,17 @@ const NutrientFlowChart = ({ farmId }) => {
     
     console.log(`기준값 설정 - pH: ${basePhLevel}, EC: ${baseEcLevel}`);
     
-    // 오늘 자정(00:00)부터 12시간 데이터 생성
+         // 오늘 자정(00:00)부터 10시간 데이터 생성
     const todayMidnight = new Date(now);
     todayMidnight.setHours(0, 0, 0, 0); // 00:00:00으로 설정
     
-    // 12시간 데이터 생성 (00시~12시)
-    for (let i = 0; i <= 12; i++) {
-      const time = new Date(todayMidnight.getTime() + i * 60 * 60 * 1000);
-      
-      // 시간대별 자연스러운 변동 패턴
-      const hourOfDay = i; // 0~12
-      const morningFactor = Math.sin((hourOfDay / 12) * Math.PI) * 0.1; // 아침에 점진적 증가
+         // 10시간 데이터 생성 (00시~10시)
+     for (let i = 0; i <= 10; i++) {
+       const time = new Date(todayMidnight.getTime() + i * 60 * 60 * 1000);
+       
+       // 시간대별 자연스러운 변동 패턴
+       const hourOfDay = i; // 0~10
+       const morningFactor = Math.sin((hourOfDay / 10) * Math.PI) * 0.1; // 아침에 점진적 증가
       const phVariation = morningFactor + (hourOfDay % 3 === 0 ? 0.02 : 0); // 3시간마다 작은 변동
       const ecVariation = morningFactor + (hourOfDay % 2 === 0 ? 0.01 : 0); // 2시간마다 작은 변동
       
@@ -104,13 +104,13 @@ const NutrientFlowChart = ({ farmId }) => {
         setData(timeSeriesData);
       } catch (error) {
         console.error('Data loading error:', error);
-        // 에러 시 기본 데이터 생성 (00시~12시)
-        const now = new Date();
-        const todayMidnight = new Date(now);
-        todayMidnight.setHours(0, 0, 0, 0); // 00:00:00으로 설정
-        
-        const fallbackData = [];
-        for (let i = 0; i <= 12; i++) {
+                 // 에러 시 기본 데이터 생성 (00시~10시)
+         const now = new Date();
+         const todayMidnight = new Date(now);
+         todayMidnight.setHours(0, 0, 0, 0); // 00:00:00으로 설정
+         
+         const fallbackData = [];
+         for (let i = 0; i <= 10; i++) {
           const time = new Date(todayMidnight.getTime() + i * 60 * 60 * 1000);
           fallbackData.push({
             timestamp: time,
@@ -184,16 +184,16 @@ const NutrientFlowChart = ({ farmId }) => {
       );
     }
 
-    const chartWidth = 800;
-    const chartHeight = 400;
-    const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+         const chartWidth = 500;
+     const chartHeight = 400;
+     const margin = { top: 20, right: 30, bottom: 40, left: 60 };
     const width = chartWidth - margin.left - margin.right;
     const height = chartHeight - margin.top - margin.bottom;
 
     return (
       <div className="nutrient-chart-container">
                  <div className="nutrient-chart-header">
-           <h3>양액 공급량 시계열 데이터 (00시~12시)</h3>
+           <h3>양액 공급량 시계열 데이터 (00시~10시)</h3>
           <div className="nutrient-chart-controls">
             <select 
               value={timeRange} 
@@ -201,8 +201,6 @@ const NutrientFlowChart = ({ farmId }) => {
               className="time-range-select"
             >
               <option value="24h">24시간</option>
-              <option value="7d">7일</option>
-              <option value="30d">30일</option>
             </select>
           </div>
         </div>
@@ -244,9 +242,9 @@ const NutrientFlowChart = ({ farmId }) => {
               />
             ))}
 
-            {/* X축 시간 라벨 */}
-            {data.filter((_, i) => i % 4 === 0).map((item, i) => {
-              const x = margin.left + (i * 4 * width / data.length);
+                         {/* X축 시간 라벨 */}
+             {data.filter((_, i) => i % 2 === 0).map((item, i) => {
+               const x = margin.left + (i * 2 * width / (data.length - 1));
               return (
                 <text
                   key={`time-${i}`}
@@ -307,7 +305,7 @@ const NutrientFlowChart = ({ farmId }) => {
 
             {/* Y축 라벨 */}
             {selectedMetrics.map((metric, index) => {
-              const [min, max] = getYAxisRange(metric);
+              // const [min, max] = getYAxisRange(metric);
               const color = getMetricColor(metric);
               
               return (
@@ -321,7 +319,7 @@ const NutrientFlowChart = ({ farmId }) => {
                   >
                     {getMetricLabel(metric)}
                   </text>
-                  <text
+                  {/* <text
                     x={margin.left - 10}
                     y={margin.top + 20 + index * 25}
                     fontSize="10"
@@ -329,37 +327,37 @@ const NutrientFlowChart = ({ farmId }) => {
                     textAnchor="end"
                   >
                     {min}-{max} {getMetricUnit(metric)}
-                  </text>
+                  </text> */}
                 </g>
               );
             })}
 
-            {/* 범례 */}
-            <g transform={`translate(${chartWidth - 200}, ${margin.top})`}>
-              {selectedMetrics.map((metric, index) => {
-                const color = getMetricColor(metric);
-                return (
-                  <g key={`legend-${metric}`} transform={`translate(0, ${index * 20})`}>
-                    <line
-                      x1="0"
-                      y1="0"
-                      x2="20"
-                      y2="0"
-                      stroke={color}
-                      strokeWidth="3"
-                    />
-                    <text
-                      x="30"
-                      y="4"
-                      fontSize="12"
-                      fill={color}
-                    >
-                      {getMetricLabel(metric)}
-                    </text>
-                  </g>
-                );
-              })}
-            </g>
+                         {/* 범례 */}
+             <g transform={`translate(${chartWidth - 180}, ${margin.top})`}>
+               {selectedMetrics.map((metric, index) => {
+                 const color = getMetricColor(metric);
+                 return (
+                   <g key={`legend-${metric}`} transform={`translate(0, ${index * 20})`}>
+                     <line
+                       x1="0"
+                       y1="0"
+                       x2="20"
+                       y2="0"
+                       stroke={color}
+                       strokeWidth="3"
+                     />
+                     <text
+                       x="30"
+                       y="4"
+                       fontSize="12"
+                       fill={color}
+                     >
+                       {getMetricLabel(metric)}
+                     </text>
+                   </g>
+                 );
+               })}
+             </g>
           </svg>
         </div>
 
@@ -377,7 +375,7 @@ const NutrientFlowChart = ({ farmId }) => {
                 </tr>
               </thead>
               <tbody>
-                {data.slice(-10).reverse().map((item, index) => (
+                                 {data.slice(0, 11).map((item, index) => (
                   <tr key={index}>
                     <td>{formatTime(item.timestamp)}</td>
                     {selectedMetrics.map(metric => (
