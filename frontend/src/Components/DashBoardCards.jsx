@@ -365,44 +365,14 @@ useEffect(() => {
 
   return (
     <div className="dashboard-cards-container">
-      {/* 새로고침 버튼 */}
-      {/* <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-        <button
-          className="dashboard-refresh-btn"
-          onClick={handleRefresh}
-          disabled={refreshDisabled}
-          style={{
-            height: '48px',
-            minWidth: '48px',
-            borderRadius: '12px',
-            border: 'none',
-            background: '#f4f4f4',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            fontSize: '1.5rem'
-          }}
-          title="대시보드 새로고침"
-        >
-          <RotateCcw size={28} />
-        </button>
-        {refreshDisabled && (
-          <span style={{ marginLeft: 8, color: "#888", fontSize: "0.95em", alignSelf: 'center' }}>
-            {Math.floor(refreshTimer / 60)}:{(refreshTimer % 60).toString().padStart(2, "0")} 후 재시도 가능
-          </span>
-        )}
-      </div> */}
+      {/* 새로고침 버튼 - 주석 처리됨 */}
 
       {/* 기본 정보 카드 배치 */}
       {/* 1번째 줄: 현재 날씨, 현재 시간, 주간/야간 */}
       <div className="dashboard-cards-row" style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
         {/* OpenWeather 카드 추가 */}
         <div style={{ flex: 1 }}>
-          {/* <div className="dashboard-card crop-card-hover" data-type="weather"> */}
-            <OpenWeather />
-          {/* </div> */}
+          <OpenWeather />
         </div>
         {/* 주간/야간 */}
         <div style={{ flex: 1 }}>
@@ -507,27 +477,8 @@ useEffect(() => {
           </div>
         </div>
         
-        {/* 산도(pH) 카드 */}
-        <div style={{ flex: 1 }}>
-          <div className="dashboard-card" data-type="ph">
-            <div className="dashboard-card-section">
-              <Activity className="dashboard-card-icon green" />
-              <h3 className="dashboard-card-title">산도(pH)</h3>
-            </div>
-            <div className="dashboard-card-value green" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              {phValue}
-            </div>
-            <div className="dashboard-card-unit" style={{ color: '#10b981', fontSize: '0.9rem', marginTop: '4px' }}>
-              pH
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 두 번째 줄: 이산화탄소, 전기전도도 */}
-      <div className="dashboard-cards-row" style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
-        {/* 이산화탄소 카드 */}
-        <div style={{ flex: 1 }}>
+         {/* 이산화탄소 카드 */}
+         <div style={{ flex: 1 }}>
           <div className="dashboard-card" data-type="co2">
             <div className="dashboard-card-section">
               <Activity className="dashboard-card-icon green" />
@@ -540,24 +491,11 @@ useEffect(() => {
               ppm
             </div>
           </div>
-        </div>
-        
-        {/* 전기전도도(EC) 카드 */}
-        <div style={{ flex: 1 }}>
-          <div className="dashboard-card" data-type="ec">
-            <div className="dashboard-card-section">
-              <Zap className="dashboard-card-icon yellow" />
-              <h3 className="dashboard-card-title">전기전도도(EC)</h3>
-            </div>
-            <div className="dashboard-card-value yellow" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              {elcDT}
-            </div>
-            <div className="dashboard-card-unit" style={{ color: '#f59e0b', fontSize: '0.9rem', marginTop: '4px' }}>
-              mS/cm
-            </div>
-          </div>
-        </div>
+        </div>      
+
+        {/* 산도(pH) 카드 - 주석 처리됨 */}
       </div>
+
 
       {/* 세 번째 줄: 일사량, 광량 */}
       <div className="dashboard-cards-row" style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
@@ -674,37 +612,8 @@ useEffect(() => {
         <NutrientFlowChart farmId={1} />
       </div>
 
-      {/* 일일 급수량 그래프 */}
-      {/* <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
-        <div className="dashboard-graph-card">
-          <div className="dashboard-graph-title">일일 총 급수량</div>
-          <ResponsiveContainer width="100%" height={120}>
-            <LineChart data={dashboardData.waterData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" fontSize={10} />
-              <YAxis fontSize={10} />
-              <Tooltip />
-              <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div> */}
-
-      {/* 온도 차트 그래프 */}
-      {/* <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
-        <div className="dashboard-graph-card">
-          <div className="dashboard-graph-title">일일 온도 변화</div>
-          <ResponsiveContainer width="100%" height={120}>
-            <LineChart data={temperatureChartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" fontSize={10} />
-              <YAxis fontSize={10} />
-              <Tooltip />
-              <Line type="monotone" dataKey="temperature" stroke="#ef4444" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div> */}
+      {/* 일일 급수량 그래프 - 주석 처리됨 */}
+      {/* 온도 차트 그래프 - 주석 처리됨 */}
     </div>
   );
 };

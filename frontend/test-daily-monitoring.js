@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from 'axios';
 
 // API 테스트 함수
 async function testDailyTempHumidityMonitoring() {

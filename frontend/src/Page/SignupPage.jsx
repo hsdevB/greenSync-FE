@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import FarmCode from "../utils/FarmCode";
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -37,10 +38,7 @@ const SignupPage = () => {
       setError("이름은 2자 이상 50자 이하여야 합니다.");
       return false;
     }
-    if (!farmCode || farmCode.trim() === "") {
-      setError("소속농장코드는 필수입니다.");
-      return false;
-    }
+    // 소속농장코드는 관리자와 직원 모두 자동 생성되므로 검증 불필요
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError("유효한 이메일 형식이 아닙니다.");
       return false;
@@ -84,7 +82,7 @@ const SignupPage = () => {
 
     try {
       const response = await axios.post('http://localhost:3000/signup', {
-        farmCode: farmCode.trim(),
+        farmCode: FarmCode.createFarmCode(),
         userId: userId.trim(),
         password: password,
         name: name.trim(),
@@ -144,35 +142,20 @@ const SignupPage = () => {
         회원가입
       </div>
       
-      {/* 에러 메시지 */}
-      {error && (
-        <div style={{
-          width: 450,
-          padding: "12px 16px",
-          background: "#ffebee",
-          color: "#c62828",
-          borderRadius: 6,
-          marginBottom: 16,
-          fontSize: 14
-        }}>
-          {error}
-        </div>
-      )}
-      
-      {/* 성공 메시지 */}
-      {success && (
-        <div style={{
-          width: 450,
-          padding: "12px 16px",
-          background: "#e8f5e8",
-          color: "#2e7d32",
-          borderRadius: 6,
-          marginBottom: 16,
-          fontSize: 14
-        }}>
-          {success}
-        </div>
-      )}
+             {/* 성공 메시지 */}
+       {success && (
+         <div style={{
+           width: 450,
+           padding: "12px 16px",
+           background: "#e8f5e8",
+           color: "#2e7d32",
+           borderRadius: 6,
+           marginBottom: 16,
+           fontSize: 14
+         }}>
+           {success}
+         </div>
+       )}
 
       <form onSubmit={handleSignup} style={{
         display: "flex",
@@ -240,27 +223,44 @@ const SignupPage = () => {
             직원
           </span>
         </div>
-        {/* 아이디 */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-          <div style={{ width: 110, fontWeight: "bold" }}>아이디</div>
-          <input
-            type="text"
-            placeholder="아이디를 입력하세요"
-            value={userId}
-            onChange={e => setUserId(e.target.value)}
-            required
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: "12px 16px",
-              border: "1px solid #bdbdbd",
-              borderRadius: 6,
-              fontSize: 16,
-              opacity: loading ? 0.6 : 1
-            }}
-          />
-        </div>
-        {/* 비밀번호 */}
+                 {/* 아이디 */}
+         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
+           <div style={{ width: 110, fontWeight: "bold" }}>아이디</div>
+           <input
+             type="text"
+             placeholder="아이디를 입력하세요"
+             value={userId}
+             onChange={e => setUserId(e.target.value)}
+             required
+             disabled={loading}
+             style={{
+               flex: 1,
+               padding: "12px 16px",
+               border: "1px solid #bdbdbd",
+               borderRadius: 6,
+               fontSize: 16,
+               opacity: loading ? 0.6 : 1
+             }}
+           />
+         </div>
+         
+         {/* 아이디 관련 에러 메시지 */}
+         {error && (error.includes("아이디") || error.includes("아이디는")) && (
+           <div style={{
+             width: "100%",
+             padding: "8px 12px",
+             background: "#ffebee",
+             color: "#c62828",
+             borderRadius: 4,
+             marginBottom: 16,
+             fontSize: 12,
+             textAlign: "center"
+           }}>
+             {error}
+           </div>
+         )}
+         
+         {/* 비밀번호 */}
         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
           <div style={{ width: 110, fontWeight: "bold" }}>비밀번호</div>
           <input
@@ -280,26 +280,42 @@ const SignupPage = () => {
             }}
           />
         </div>
-        {/* 비밀번호 확인 */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-          <div style={{ width: 110, fontWeight: "bold" }}>비밀번호 확인</div>
-          <input
-            type="password"
-            placeholder="비밀번호를 다시 입력하세요"
-            value={passwordCheck}
-            onChange={e => setPasswordCheck(e.target.value)}
-            required
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: "12px 16px",
-              border: "1px solid #bdbdbd",
-              borderRadius: 6,
-              fontSize: 16,
-              opacity: loading ? 0.6 : 1
-            }}
-          />
-        </div>
+                 {/* 비밀번호 확인 */}
+         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
+           <div style={{ width: 110, fontWeight: "bold" }}>비밀번호 확인</div>
+           <input
+             type="password"
+             placeholder="비밀번호를 다시 입력하세요"
+             value={passwordCheck}
+             onChange={e => setPasswordCheck(e.target.value)}
+             required
+             disabled={loading}
+             style={{
+               flex: 1,
+               padding: "12px 16px",
+               border: "1px solid #bdbdbd",
+               borderRadius: 6,
+               fontSize: 16,
+               opacity: loading ? 0.6 : 1
+             }}
+           />
+         </div>
+         
+         {/* 비밀번호 관련 에러 메시지 */}
+         {error && (error.includes("비밀번호") || error.includes("비밀번호가")) && (
+           <div style={{
+             width: "100%",
+             padding: "8px 12px",
+             background: "#ffebee",
+             color: "#c62828",
+             borderRadius: 4,
+             marginBottom: 16,
+             fontSize: 12,
+             textAlign: "center"
+           }}>
+             {error}
+           </div>
+         )}
         {/* 이메일 + 이메일 확인 버튼 */}
         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
           <div style={{ width: 110, fontWeight: "bold" }}>이메일</div>
@@ -376,62 +392,95 @@ const SignupPage = () => {
             확인
           </button>
         </div>
-        {/* 이름 */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-          <div style={{ width: 110, fontWeight: "bold" }}>이름</div>
-          <input
-            type="text"
-            placeholder="이름을 입력하세요"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            required
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: "12px 16px",
-              border: "1px solid #bdbdbd",
-              borderRadius: 6,
-              fontSize: 16,
-              opacity: loading ? 0.6 : 1
-            }}
-          />
-        </div>
-        {/* 휴대전화 */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-          <div style={{ width: 110, fontWeight: "bold" }}>휴대전화</div>
-          <input
-            type="tel"
-            placeholder="휴대전화번호를 입력하세요 (선택)"
-            value={phone}
-            onChange={e => setPhone(e.target.value)}
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: "12px 16px",
-              border: "1px solid #bdbdbd",
-              borderRadius: 6,
-              fontSize: 16,
-              opacity: loading ? 0.6 : 1
-            }}
-          />
-        </div>
+                 {/* 이름 */}
+         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
+           <div style={{ width: 110, fontWeight: "bold" }}>이름</div>
+           <input
+             type="text"
+             placeholder="이름을 입력하세요"
+             value={name}
+             onChange={e => setName(e.target.value)}
+             required
+             disabled={loading}
+             style={{
+               flex: 1,
+               padding: "12px 16px",
+               border: "1px solid #bdbdbd",
+               borderRadius: 6,
+               fontSize: 16,
+               opacity: loading ? 0.6 : 1
+             }}
+           />
+         </div>
+         
+         {/* 이름 관련 에러 메시지 */}
+         {error && error.includes("이름") && (
+           <div style={{
+             width: "100%",
+             padding: "8px 12px",
+             background: "#ffebee",
+             color: "#c62828",
+             borderRadius: 4,
+             marginBottom: 16,
+             fontSize: 12,
+             textAlign: "center"
+           }}>
+             {error}
+           </div>
+         )}
+                 {/* 휴대전화 */}
+         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
+           <div style={{ width: 110, fontWeight: "bold" }}>휴대전화</div>
+           <input
+             type="tel"
+             placeholder="휴대전화번호를 입력하세요 (선택)"
+             value={phone}
+             onChange={e => setPhone(e.target.value)}
+             disabled={loading}
+             style={{
+               flex: 1,
+               padding: "12px 16px",
+               border: "1px solid #bdbdbd",
+               borderRadius: 6,
+               fontSize: 16,
+               opacity: loading ? 0.6 : 1
+             }}
+           />
+         </div>
+         
+         {/* 이메일/전화번호 관련 에러 메시지 */}
+         {error && (error.includes("이메일") || error.includes("전화번호") || error.includes("휴대전화")) && (
+           <div style={{
+             width: "100%",
+             padding: "8px 12px",
+             background: "#ffebee",
+             color: "#c62828",
+             borderRadius: 4,
+             marginBottom: 16,
+             fontSize: 12,
+             textAlign: "center"
+           }}>
+             {error}
+           </div>
+         )}
         {/* 소속농장코드 */}
         <div style={{ display: "flex", alignItems: "center", marginBottom: 24, width: "100%" }}>
           <div style={{ width: 110, fontWeight: "bold" }}>소속농장코드</div>
           <input
             type="text"
-            placeholder="소속농장코드를 입력하세요"
-            value={farmCode}
+            placeholder="자동으로 생성됩니다"
+            value={FarmCode.createFarmCode()}
             onChange={e => setFarmCode(e.target.value)}
-            required
-            disabled={loading}
+            required={false}
+            disabled={loading || true}
             style={{
               flex: 1,
               padding: "12px 16px",
               border: "1px solid #bdbdbd",
               borderRadius: 6,
               fontSize: 16,
-              opacity: loading ? 0.6 : 1
+              opacity: 0.6,
+              backgroundColor: "#f5f5f5"
             }}
           />
         </div>
@@ -474,11 +523,28 @@ const SignupPage = () => {
           >
             취소
           </button>
-        </div>
-      </form>
-      <div style={{ fontSize: 15, color: "#666" }}>
-        이미 계정이 있으신가요? <a href="/login" style={{ color: "#388e3c", textDecoration: "underline" }}>로그인</a>
-      </div>
+                 </div>
+       </form>
+       
+               {/* 일반적인 에러 메시지 - 폼 아래에 배치 */}
+        {error && !error.includes("아이디") && !error.includes("비밀번호") && !error.includes("이름") && !error.includes("이메일") && !error.includes("전화번호") && !error.includes("휴대전화") && (
+          <div style={{
+            width: 450,
+            padding: "12px 16px",
+            background: "#ffebee",
+            color: "#c62828",
+            borderRadius: 6,
+            marginBottom: 16,
+            fontSize: 14,
+            textAlign: "center"
+          }}>
+            {error}
+          </div>
+        )}
+       
+       <div style={{ fontSize: 15, color: "#666" }}>
+         이미 계정이 있으신가요? <a href="/login" style={{ color: "#388e3c", textDecoration: "underline" }}>로그인</a>
+       </div>
     </div>
   );
 };

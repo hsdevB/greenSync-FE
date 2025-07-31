@@ -63,11 +63,10 @@ export const useAutoMode = (sendToUnity) => {
   const mqttClientRef = useRef(null);
 
   const {
-    fan, ledLevel,
+    fan, ledLevel, temp1, humid1,
     setWater, setFan, setLed,
     setTemp1,
     setHumid1,
-    persistToLocal,
     autoMode
   } = useControlStore();
 
@@ -139,7 +138,7 @@ export const useAutoMode = (sendToUnity) => {
     // 1. 온도 자동 제어 (센서별 개별 제어)
     sensors.forEach(async (sensor, index) => {
       const sensorNum = index + 1;
-      let newTargetTemp = sensor.temp;
+      let newTargetTemp = null;
       
       if (sensor.temp < 20) {
         newTargetTemp = 24;
@@ -149,9 +148,10 @@ export const useAutoMode = (sendToUnity) => {
       
       // 목표 온도가 변경되었을 때만 처리
       if (newTargetTemp !== null && prevTargetTempsRef.current[index] !== newTargetTemp) {
-        if (sensorNum === 1) setTemp1(newTargetTemp);
-        sendToUnity(`tempControl${sensorNum}`, { value: newTargetTemp });
-        console.log(`자동 모드: 센서${sensorNum} 온도 ${newTargetTemp}도로 설정 (현재: ${sensor.temp}도)`);
+        try {
+          // 1. UI 즉시 업데이트
+          if (sensorNum === 1) setTemp1(newTargetTemp);
+          sendToUnity(`tempControl${sensorNum}`, { value: newTargetTemp });
 
           // 2. 백그라운드 API 호출
           await deviceStatusApi.updateTemperature(farmCode, newTargetTemp);
@@ -170,15 +170,13 @@ export const useAutoMode = (sendToUnity) => {
           if (sensorNum === 1) setTemp1(temp1); // 원래 값으로 복원
           sendToUnity(`tempControl${sensorNum}`, { value: temp1 });
         }
-        
-        prevTargetTempsRef.current[index] = newTargetTemp;
       }
     });
 
     // 2. 습도 자동 제어 (센서별 개별 제어)
     sensors.forEach(async (sensor, index) => {
       const sensorNum = index + 1;
-      let newTargetHumid = sensor.humid;
+      let newTargetHumid = null;
       
       if (sensor.humid < 40) {
         newTargetHumid = 50;
@@ -188,9 +186,10 @@ export const useAutoMode = (sendToUnity) => {
       
       // 목표 습도가 변경되었을 때만 처리
       if (newTargetHumid !== null && prevTargetHumidsRef.current[index] !== newTargetHumid) {
-        if (sensorNum === 1) setHumid1(newTargetHumid);
-        sendToUnity(`humidControl${sensorNum}`, { value: newTargetHumid });
-        console.log(`자동 모드: 센서${sensorNum} 습도 ${newTargetHumid}%로 설정 (현재: ${sensor.humid}%)`);
+        try {
+          // 1. UI 즉시 업데이트
+          if (sensorNum === 1) setHumid1(newTargetHumid);
+          sendToUnity(`humidControl${sensorNum}`, { value: newTargetHumid });
 
           // 2. 백그라운드 API 호출
           await deviceStatusApi.updateHumidity(farmCode, newTargetHumid);
@@ -209,8 +208,6 @@ export const useAutoMode = (sendToUnity) => {
           if (sensorNum === 1) setHumid1(humid1); // 원래 값으로 복원
           sendToUnity(`humidControl${sensorNum}`, { value: humid1 });
         }
-        
-        prevTargetHumidsRef.current[index] = newTargetHumid;
       }
     });
 
@@ -218,6 +215,7 @@ export const useAutoMode = (sendToUnity) => {
     const now = new Date();
     const hour = now.getHours();
     const ledLevelByTime = (hour >= 6 && hour < 18) ? 3 : 1;
+
     if (ledLevel !== ledLevelByTime) {
       (async () => {
         try {
@@ -241,9 +239,7 @@ export const useAutoMode = (sendToUnity) => {
         }
       })();
     }
-
-    persistToLocal();
-  }, [autoMode, simulatedData.sensor1.temp, simulatedData.sensor1.humid, sendToUnity, ledLevel, fan]);
+  }, [autoMode, simulatedData.sensor1.temp, simulatedData.sensor1.humid, sendToUnity, ledLevel, fan, temp1, humid1]);
 
   // 자동 급수 주기 타이머
   useEffect(() => {
@@ -274,10 +270,8 @@ export const useAutoMode = (sendToUnity) => {
   useEffect(() => {
     if (!autoMode || !sendToUnity) return;
 
-    const fanToggleInterval = setInterval(() => {
+    const fanToggleInterval = setInterval(async() => {
       const newFan = !fan;
-      console.log('자동 모드: 환기 시스템', newFan ? 'ON' : 'OFF');
-      sendToUnity("fanStatus", { status: newFan });
 
         console.log('자동 모드: 환기 시스템', newFan ? 'ON' : 'OFF');
         // UI 즉시 업데이트

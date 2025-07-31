@@ -323,7 +323,9 @@ export default function RemoteControlPanel({unityContext}) {
     setWater, setFan, setLed, 
     setTemp1,
     setHumid1,
+    persistToLocal,
     autoMode, manualMode,
+    toggleAutoMode, toggleManualMode,
     setState: setControlState // store의 모든 상태를 한 번에 업데이트하는 함수
   } = useControlStore();
   
@@ -342,18 +344,7 @@ export default function RemoteControlPanel({unityContext}) {
     }
   }, [safeSendMessage]);
 
-  // 전역 store 업데이트 및 저장
-  const {
-    water, fan, ledLevel,
-    temp1,
-    humid1,
-    setWater, setFan, setLed, 
-    setTemp1,
-    setHumid1,
-    persistToLocal,
-    autoMode, manualMode,
-    toggleAutoMode, toggleManualMode,
-  } = useControlStore();
+
 
   // 자동 모드 커스텀 훅 사용
   const { simulatedData } = useAutoMode(sendToUnity);
@@ -603,6 +594,24 @@ export default function RemoteControlPanel({unityContext}) {
       }
   };
 
+  // 자동모드 토글 함수
+  const handleAutoModeToggle = () => {
+    try {
+      toggleAutoMode();
+    } catch (error) {
+      console.error("자동모드 변경 실패:", error);
+    }
+  };
+
+  // 수동모드 토글 함수
+  const handleManualModeToggle = () => {
+    try {
+      toggleManualMode();
+    } catch (error) {
+      console.error("수동모드 변경 실패:", error);
+    }
+  };
+
   const controlDisabled = autoMode;
 
   const [aiModalOpen, setAiModalOpen] = useState(false);
@@ -664,26 +673,24 @@ export default function RemoteControlPanel({unityContext}) {
         <div className="section-title">💻 원격제어 상태</div>
         <div className="data-grid">
           <DataCard label="난방" value={temp1 > 20 ? "ON" : "OFF"} unit={temp1 > 20 ? "🟢" : "🔴"} icon={<HeaterIcon isOn={temp1 > 20} />} />
-          <DataCard label="습도" value={humid1 > 40 ? "ON" : "OFF"} unit={humid1 > 40 ? "🟢" : "🔴"} icon={<HeaterIcon isOn={humid1 > 40} />} />
           <DataCard label="배기" value={fan ? "ON" : "OFF"} unit={fan ? "🟢" : "🔴"} icon={<ExhaustFanIcon isOn={fan} />} />
+          <div className="data-grid" style={{ marginTop: "12px" }}></div>
+          <DataCard label="습도" value={humid1 > 40 ? "ON" : "OFF"} unit={humid1 > 40 ? "🟢" : "🔴"} icon={<HeaterIcon isOn={humid1 > 40} />} />
           <DataCard label="급수" value={water ? "ON" : "OFF"} unit={water ? "🟢" : "🔴"} icon={<WateringPlantsIcon isOn={water} />} />
         </div>
-        {/* MQTT 연결 상태 표시 */}
+
+        {/* 백엔드 API 연결 상태 표시 */}
         <div className="realtime-data-section">
-          {/* <div className="section-title">MQTT 연결 상태(확인용)</div> */}
+          <div className="section-title">백엔드 API 연결 상태</div>
           <div className="data-grid">
-            <DataCard 
-              label="백엔드 API" 
-              value={connectionStatus.backend ? "연결됨" : "연결 안됨"} 
-              unit={connectionStatus.backend ? "🟢" : "🔴"} 
-            />
-            <DataCard 
-              label="MQTT" 
-              value={mqttClientRef.current?.isConnected ? "연결됨" : "연결 안됨"} 
-              unit={mqttClientRef.current?.isConnected ? "🟢" : "🔴"} 
+            <DataCard
+              label="백엔드 API"
+              value={connectionStatus.backend ? "연결됨" : "연결 안됨"}
+              unit={connectionStatus.backend ? "🟢" : "🔴"}
             />
           </div>
         </div>
+
         {/* 기기 제어 */}
         <div className="device-control-section">
           <div className="section-title">⚙️ 공조 설비 기기 - 원격제어</div>
