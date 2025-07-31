@@ -3,7 +3,6 @@ import useControlStore from '../store/useControlStore.jsx';
 import { MQTTClient } from '../utils/MQTTClient.jsx';
 import axios from 'axios';
 
-const farmCode = 'ABCD1234'; // 임시 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const DEVICE_STATUS_ENDPOINT = import.meta.env.VITE_DEVICE_STATUS_ENDPOINT;
 const SENSOR_ENDPOINT = import.meta.env.VITE_SENSOR_ENDPOINT;
@@ -59,7 +58,7 @@ const deviceStatusApi = {
 };
 
 // 자동 모드 로직을 담은 커스텀 훅
-export const useAutoMode = (sendToUnity) => {
+export const useAutoMode = (farmCode, sendToUnity) => {
   const mqttClientRef = useRef(null);
 
   const {
