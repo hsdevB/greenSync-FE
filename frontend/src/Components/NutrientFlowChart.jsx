@@ -16,28 +16,39 @@ const NutrientFlowChart = ({ farmId }) => {
       
       let phLevel, ecLevel;
       
-      // pH 값 추출
-      if (res.data && typeof res.data === 'number') {
-        phLevel = res.data;
-      } else if (res.data && res.data.data && res.data.data.phLevel) {
-        phLevel = res.data.data.phLevel;
-      } else if (res.data && res.data.phLevel) {
-        phLevel = res.data.phLevel;
+      // API 응답 구조에 따른 데이터 추출
+      if (res.data) {
+        // pH 값 추출 (다양한 응답 구조 대응)
+        if (res.data.data && res.data.data.phLevel) {
+          phLevel = res.data.data.phLevel;
+        } else if (res.data.phLevel) {
+          phLevel = res.data.phLevel;
+        } else if (typeof res.data === 'number') {
+          phLevel = res.data;
+        } else {
+          phLevel = 6.0; // 기본값
+        }
+
+        // EC 값 추출 (실제 센서 데이터 우선)
+        if (res.data.data && res.data.data.elcDT) {
+          ecLevel = res.data.data.elcDT;
+        } else if (res.data.elcDT) {
+          ecLevel = res.data.elcDT;
+        } else if (res.data.data && res.data.data.ecLevel) {
+          ecLevel = res.data.data.ecLevel;
+        } else if (res.data.ecLevel) {
+          ecLevel = res.data.ecLevel;
+        } else if (typeof res.data === 'number') {
+          ecLevel = res.data;
+        } else {
+          ecLevel = 2.0; // 기본값
+        }
       } else {
-        phLevel = 6.0; // 기본값
+        phLevel = 6.0;
+        ecLevel = 2.0;
       }
 
-      // EC 값 추출
-      if (res.data && typeof res.data === 'number') {
-        ecLevel = res.data;
-      } else if (res.data && res.data.data && res.data.data.elcDT) {
-        ecLevel = res.data.data.elcDT;
-      } else if (res.data && res.data.elcDT) {
-        ecLevel = res.data.elcDT;
-      } else {
-        ecLevel = 2.0; // 기본값
-      }
-
+      console.log(`실제 센서 데이터 - pH: ${phLevel}, EC: ${ecLevel}`);
       return { phLevel, ecLevel };
     } catch (error) {
       console.error('Sensor data fetch error:', error);
@@ -55,20 +66,26 @@ const NutrientFlowChart = ({ farmId }) => {
     const basePhLevel = sensorData.phLevel;
     const baseEcLevel = sensorData.ecLevel;
     
+    console.log(`기준값 설정 - pH: ${basePhLevel}, EC: ${baseEcLevel}`);
+    
     // 24시간 데이터 생성 (실제 센서값 기반)
     for (let i = 23; i >= 0; i--) {
       const time = new Date(now.getTime() - i * 60 * 60 * 1000);
       
-      // 실제 센서값을 기반으로 한 시간별 변동 (시뮬레이션)
-      const hourFactor = Math.sin((i / 24) * 2 * Math.PI) * 0.1; // 시간에 따른 자연스러운 변동
-      const phVariation = hourFactor + (i % 6 === 0 ? 0.05 : 0); // 6시간마다 작은 변동
-      const ecVariation = hourFactor + (i % 4 === 0 ? 0.03 : 0); // 4시간마다 작은 변동
+      // 실제 센서값을 기반으로 한 시간별 변동 (실제 데이터 중심)
+      const hourFactor = Math.sin((i / 24) * 2 * Math.PI) * 0.05; // 시간에 따른 자연스러운 변동 (축소)
+      const phVariation = hourFactor + (i % 6 === 0 ? 0.02 : 0); // 6시간마다 작은 변동 (축소)
+      const ecVariation = hourFactor + (i % 4 === 0 ? 0.01 : 0); // 4시간마다 작은 변동 (축소)
+      
+      // 실제 센서값을 중심으로 한 범위 설정
+      const phRange = [basePhLevel - 0.3, basePhLevel + 0.3]; // 실제 pH ±0.3 범위
+      const ecRange = [baseEcLevel - 0.2, baseEcLevel + 0.2]; // 실제 EC ±0.2 범위
       
       timeSeriesData.push({
         timestamp: time,
         flowRate: 3.2 + (i % 8 === 0 ? 0.3 : 0), // 8시간마다 양액 공급량 변동
-        phLevel: Math.max(5.5, Math.min(6.5, basePhLevel + phVariation)),
-        ecLevel: Math.max(1.5, Math.min(2.5, baseEcLevel + ecVariation)),
+        phLevel: Math.max(phRange[0], Math.min(phRange[1], basePhLevel + phVariation)),
+        ecLevel: Math.max(ecRange[0], Math.min(ecRange[1], baseEcLevel + ecVariation)),
         temperature: 22 + (i % 12 === 0 ? 2 : 0), // 12시간마다 온도 변동
         pressure: 1.3 + (i % 6 === 0 ? 0.1 : 0), // 6시간마다 압력 변동
         totalVolume: 100 + i * 2.5 // 누적량 (시간에 따라 증가)
@@ -365,28 +382,30 @@ const NutrientFlowChart = ({ farmId }) => {
         {/* 데이터 테이블 */}
         <div className="nutrient-data-table">
           <h4>최근 데이터</h4>
-          <table>
-            <thead>
-              <tr>
-                <th>시간</th>
-                {selectedMetrics.map(metric => (
-                  <th key={metric}>{getMetricLabel(metric)}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.slice(-10).reverse().map((item, index) => (
-                <tr key={index}>
-                  <td>{formatTime(item.timestamp)}</td>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>시간</th>
                   {selectedMetrics.map(metric => (
-                    <td key={metric} style={{ color: getMetricColor(metric) }}>
-                      {item[metric].toFixed(2)} {getMetricUnit(metric)}
-                    </td>
+                    <th key={metric}>{getMetricLabel(metric)}</th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {data.slice(-10).reverse().map((item, index) => (
+                  <tr key={index}>
+                    <td>{formatTime(item.timestamp)}</td>
+                    {selectedMetrics.map(metric => (
+                      <td key={metric} style={{ color: getMetricColor(metric) }}>
+                        {item[metric].toFixed(2)} {getMetricUnit(metric)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     );

@@ -127,7 +127,7 @@
 }
 
 .nutrient-data-table {
-  margin-top: 24px;
+  margin-top: 20px;
 }
 
 .nutrient-data-table h4 {
@@ -140,24 +140,74 @@
 .nutrient-data-table table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .nutrient-data-table th,
 .nutrient-data-table td {
-  padding: 8px 12px;
+  padding: 12px 16px;
   text-align: left;
   border-bottom: 1px solid #e0e0e0;
+  font-size: 14px;
 }
 
 .nutrient-data-table th {
-  background: #f5f5f5;
+  background: #f8f9fa;
   font-weight: 600;
   color: #333;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .nutrient-data-table tr:hover {
+  background: #f5f5f5;
+}
+
+/* 스크롤 기능 추가 */
+.nutrient-data-table .table-container {
+  max-height: 300px; /* 5줄 정도의 높이 */
+  overflow-y: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nutrient-data-table .table-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.nutrient-data-table .table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.nutrient-data-table .table-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.nutrient-data-table .table-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 테이블 헤더 고정 */
+.nutrient-data-table .table-container table {
+  box-shadow: none;
+}
+
+.nutrient-data-table .table-container thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background: #f8f9fa;
+}
+
+.nutrient-data-table .table-container thead th {
+  background: #f8f9fa;
+  border-bottom: 2px solid #e0e0e0;
 }
 
 /* 반응형 디자인 */
@@ -174,48 +224,64 @@
   }
   
   .nutrient-chart-metrics {
-    gap: 12px;
+    gap: 8px;
   }
   
   .metric-checkbox {
-    font-size: 13px;
+    font-size: 12px;
   }
   
   .nutrient-data-table {
-    overflow-x: auto;
+    margin-top: 16px;
+  }
+
+  .nutrient-data-table .table-container {
+    max-height: 250px; /* 모바일에서는 더 작은 높이 */
   }
   
   .nutrient-data-table table {
-    min-width: 600px;
+    font-size: 12px;
   }
 }
 
 /* 다크 모드 지원 */
 @media (prefers-color-scheme: dark) {
   .nutrient-flow-chart {
-    background: #2d3748;
-    color: #e2e8f0;
+    background: #1a1a1a;
+    color: #e0e0e0;
   }
   
   .nutrient-chart {
-    background: #4a5568;
-    border-color: #718096;
+    background: #2a2a2a;
   }
   
   .nutrient-svg {
-    background: #2d3748;
+    background: #2a2a2a;
   }
   
   .nutrient-chart-metrics {
-    background: #4a5568;
+    background: #333;
   }
   
   .nutrient-data-table th {
-    background: #4a5568;
-    color: #e2e8f0;
+    background: #333;
+    color: #e0e0e0;
+  }
+
+  .nutrient-data-table .table-container {
+    background: #2a2a2a;
+  }
+
+  .nutrient-data-table .table-container thead {
+    background: #333;
+  }
+
+  .nutrient-data-table .table-container thead th {
+    background: #333;
+    color: #e0e0e0;
   }
   
   .nutrient-data-table tr:hover {
-    background: #4a5568;
+    background: #3a3a3a;
   }
 } 
