@@ -52,9 +52,9 @@ export default defineConfig({
         }
       },
       '/api/ollama': {
-        target: 'http://localhost:11434',
+        target: 'http://localhost:3001', // AI 서버 포트로 수정
         changeOrigin: true,
-        rewrite: path => path.replace(/^\/api\/ollama/, ''),
+        rewrite: path => path.replace(/^\/api\/ollama/, ''), // /api/ollama/ask -> /ask
         secure: false,
         timeout: 120000, // Ollama API는 시간이 오래 걸릴 수 있으므로 타임아웃 2분으로 증가
         configure: (proxy) => {

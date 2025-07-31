@@ -5,7 +5,7 @@ import './NutrientFlowChart.css';
 const NutrientFlowChart = ({ farmId }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMetrics, setSelectedMetrics] = useState(['flowRate', 'phLevel', 'ecLevel']);
+  const [selectedMetrics, setSelectedMetrics] = useState(['phLevel', 'ecLevel']);
   const [timeRange, setTimeRange] = useState('24h');
 
   // 실제 센서 데이터 가져오기
@@ -56,7 +56,7 @@ const NutrientFlowChart = ({ farmId }) => {
     }
   };
 
-  // 실제 데이터 기반 시계열 데이터 생성
+  // 실제 데이터 기반 시계열 데이터 생성 (00시~12시)
   const generateTimeSeriesData = async () => {
     const now = new Date();
     const timeSeriesData = [];
@@ -68,14 +68,19 @@ const NutrientFlowChart = ({ farmId }) => {
     
     console.log(`기준값 설정 - pH: ${basePhLevel}, EC: ${baseEcLevel}`);
     
-    // 24시간 데이터 생성 (실제 센서값 기반)
-    for (let i = 23; i >= 0; i--) {
-      const time = new Date(now.getTime() - i * 60 * 60 * 1000);
+    // 오늘 자정(00:00)부터 12시간 데이터 생성
+    const todayMidnight = new Date(now);
+    todayMidnight.setHours(0, 0, 0, 0); // 00:00:00으로 설정
+    
+    // 12시간 데이터 생성 (00시~12시)
+    for (let i = 0; i <= 12; i++) {
+      const time = new Date(todayMidnight.getTime() + i * 60 * 60 * 1000);
       
-      // 실제 센서값을 기반으로 한 시간별 변동 (실제 데이터 중심)
-      const hourFactor = Math.sin((i / 24) * 2 * Math.PI) * 0.05; // 시간에 따른 자연스러운 변동 (축소)
-      const phVariation = hourFactor + (i % 6 === 0 ? 0.02 : 0); // 6시간마다 작은 변동 (축소)
-      const ecVariation = hourFactor + (i % 4 === 0 ? 0.01 : 0); // 4시간마다 작은 변동 (축소)
+      // 시간대별 자연스러운 변동 패턴
+      const hourOfDay = i; // 0~12
+      const morningFactor = Math.sin((hourOfDay / 12) * Math.PI) * 0.1; // 아침에 점진적 증가
+      const phVariation = morningFactor + (hourOfDay % 3 === 0 ? 0.02 : 0); // 3시간마다 작은 변동
+      const ecVariation = morningFactor + (hourOfDay % 2 === 0 ? 0.01 : 0); // 2시간마다 작은 변동
       
       // 실제 센서값을 중심으로 한 범위 설정
       const phRange = [basePhLevel - 0.3, basePhLevel + 0.3]; // 실제 pH ±0.3 범위
@@ -83,12 +88,8 @@ const NutrientFlowChart = ({ farmId }) => {
       
       timeSeriesData.push({
         timestamp: time,
-        flowRate: 3.2 + (i % 8 === 0 ? 0.3 : 0), // 8시간마다 양액 공급량 변동
         phLevel: Math.max(phRange[0], Math.min(phRange[1], basePhLevel + phVariation)),
-        ecLevel: Math.max(ecRange[0], Math.min(ecRange[1], baseEcLevel + ecVariation)),
-        temperature: 22 + (i % 12 === 0 ? 2 : 0), // 12시간마다 온도 변동
-        pressure: 1.3 + (i % 6 === 0 ? 0.1 : 0), // 6시간마다 압력 변동
-        totalVolume: 100 + i * 2.5 // 누적량 (시간에 따라 증가)
+        ecLevel: Math.max(ecRange[0], Math.min(ecRange[1], baseEcLevel + ecVariation))
       });
     }
     
@@ -103,19 +104,18 @@ const NutrientFlowChart = ({ farmId }) => {
         setData(timeSeriesData);
       } catch (error) {
         console.error('Data loading error:', error);
-        // 에러 시 기본 데이터 생성
+        // 에러 시 기본 데이터 생성 (00시~12시)
         const now = new Date();
+        const todayMidnight = new Date(now);
+        todayMidnight.setHours(0, 0, 0, 0); // 00:00:00으로 설정
+        
         const fallbackData = [];
-        for (let i = 23; i >= 0; i--) {
-          const time = new Date(now.getTime() - i * 60 * 60 * 1000);
+        for (let i = 0; i <= 12; i++) {
+          const time = new Date(todayMidnight.getTime() + i * 60 * 60 * 1000);
           fallbackData.push({
             timestamp: time,
-            flowRate: 3.2,
             phLevel: 6.0,
-            ecLevel: 2.0,
-            temperature: 22,
-            pressure: 1.3,
-            totalVolume: 100 + i * 2.5
+            ecLevel: 2.0
           });
         }
         setData(fallbackData);
@@ -136,48 +136,32 @@ const NutrientFlowChart = ({ farmId }) => {
 
   const getMetricColor = (metric) => {
     const colors = {
-      flowRate: '#2196F3',
       phLevel: '#4CAF50',
-      ecLevel: '#FF9800',
-      temperature: '#F44336',
-      pressure: '#9C27B0',
-      totalVolume: '#607D8B'
+      ecLevel: '#FF9800'
     };
     return colors[metric] || '#666';
   };
 
   const getMetricLabel = (metric) => {
     const labels = {
-      flowRate: '양액 공급량 (L/min)',
       phLevel: '산도 (pH)',
-      ecLevel: '전기전도도 (mS/cm)',
-      temperature: '온도 (°C)',
-      pressure: '압력 (bar)',
-      totalVolume: '누적량 (L)'
+      ecLevel: '전기전도도 (mS/cm)'
     };
     return labels[metric] || metric;
   };
 
   const getMetricUnit = (metric) => {
     const units = {
-      flowRate: 'L/min',
       phLevel: 'pH',
-      ecLevel: 'mS/cm',
-      temperature: '°C',
-      pressure: 'bar',
-      totalVolume: 'L'
+      ecLevel: 'mS/cm'
     };
     return units[metric] || '';
   };
 
   const getYAxisRange = (metric) => {
     const ranges = {
-      flowRate: [0, 5],
       phLevel: [5, 7],
-      ecLevel: [1, 3],
-      temperature: [15, 30],
-      pressure: [0, 2],
-      totalVolume: [0, 200]
+      ecLevel: [1, 3]
     };
     return ranges[metric] || [0, 100];
   };
@@ -208,8 +192,8 @@ const NutrientFlowChart = ({ farmId }) => {
 
     return (
       <div className="nutrient-chart-container">
-        <div className="nutrient-chart-header">
-          <h3>양액 공급량 시계열 데이터</h3>
+                 <div className="nutrient-chart-header">
+           <h3>양액 공급량 시계열 데이터 (00시~12시)</h3>
           <div className="nutrient-chart-controls">
             <select 
               value={timeRange} 
@@ -224,7 +208,7 @@ const NutrientFlowChart = ({ farmId }) => {
         </div>
 
         <div className="nutrient-chart-metrics">
-          {['flowRate', 'phLevel', 'ecLevel', 'temperature', 'pressure', 'totalVolume'].map(metric => (
+          {['phLevel', 'ecLevel'].map(metric => (
             <label key={metric} className="metric-checkbox">
               <input
                 type="checkbox"

@@ -23,9 +23,7 @@ const DashBoardCards = ({ farmData }) => {
   const [refreshTimer, setRefreshTimer] = useState(0); // 새로고침 타이머
   const [indoorTemp, setIndoorTemp] = useState('--'); 
   const [indoorHumi, setIndoorHumi] = useState('--');
-  const [phValue, setPhValue] = useState('--');
   const [carbonDioxide, setCarbonDioxide] = useState('--');
-  const [elcDT, setElcDT] = useState('--');
   const [illuminance, setIlluminance] = useState('--');
   const [insolation, setInsolation] = useState('--');
   const [windDirection, setWindDirection] = useState('--');
@@ -95,12 +93,13 @@ const DashBoardCards = ({ farmData }) => {
   // 농장 정보에 따른 센서 데이터 가져오기 함수들
   useEffect(() => {
     // 첫 번째 데이터로 고정
-    const farmId = 1;
+    // const farmId = 1;
+    const farmCode = 1;
 
     const fetchIndoorTemp = async () => { // 화살표 함수 사용 
       try {
         // 프록시를 사용하지 않고 직접 주소로 요청
-        const res = await axios.get(`/sensor/temperature/${farmId}`);
+        const res = await axios.get(`/temperature/code/${farmCode}`);
         console.log("Temperature response: ", res.data);
         if (res.data && typeof res.data === 'number') {
           setIndoorTemp(res.data);
@@ -123,11 +122,11 @@ const DashBoardCards = ({ farmData }) => {
 //실내습도 데이터 가져오기
 useEffect(() => {
   // 첫 번째 데이터로 고정
-  const farmId = 1;
+  const farmCode = 1;
 
   const fetchIndoorHumi = async () => {
     try {
-      const res = await axios.get(`/sensor/humidity/${farmId}`);
+      const res = await axios.get(`/humidity/code/${farmCode}`);
       console.log("Humidity response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setIndoorHumi(res.data);
@@ -147,55 +146,16 @@ useEffect(() => {
   fetchIndoorHumi();
 }, []);
 
-// 산도(phLevel)와 전기전도도(elcDT) 한 번에 가져오기
-useEffect(() => {
-  // 첫 번째 데이터로 고정
-  const farmId = 1;
 
-  const fetchNutrient = async () => {
-    try {
-      const res = await axios.get(`/sensor/nutrient/${farmId}`);
-      console.log("Nutrient response: ", res.data);
-
-        // pH 값 설정
-        if (res.data && typeof res.data === 'number') {
-          setPhValue(res.data);
-        } else if (res.data && res.data.data && res.data.data.phLevel) {
-          setPhValue(res.data.data.phLevel);
-        } else if (res.data && res.data.phLevel) {
-          setPhValue(res.data.phLevel);
-        } else {
-          setPhValue('--');
-        }
-
-        // EC 값 설정
-        if (res.data && typeof res.data === 'number') {
-          setElcDT(res.data);
-        } else if (res.data && res.data.data && res.data.data.elcDT) {
-          setElcDT(res.data.data.elcDT);
-        } else if (res.data && res.data.elcDT) {
-          setElcDT(res.data.elcDT);
-        } else {
-          setElcDT('--');
-        }
-      } catch (e) {
-        console.error('Nutrient fetch error:', e);
-        console.error('Error response:', e.response?.data);
-        setPhValue('--');
-        setElcDT('--');
-      }
-    };
-    fetchNutrient();
-}, []);
 
 //이산화탄소 데이터 가져오기
 useEffect(() => {
   // 첫 번째 데이터로 고정
-  const farmId = 1;
+  const farmCode = 1;
 
   const fetchCarbonDioxide = async () => {
       try {
-        const res = await axios.get(`/sensor/carbonDioxide/${farmId}`);
+        const res = await axios.get(`/carbonDioxide/code/${farmCode}`);
         console.log("CO2 response: ", res.data);
         if (res.data && typeof res.data === 'number') {
           setCarbonDioxide(res.data);
@@ -218,11 +178,11 @@ useEffect(() => {
 //광량 데이터 가져오기
 useEffect(() => {
   // 첫 번째 데이터로 고정
-  const farmId = 1;
+  const farmCode = 1;
 
   const fetchIlluminance = async () => {
     try {
-      const res = await axios.get(`/sensor/illuminance/${farmId}`);
+      const res = await axios.get(`/illuminance/code/${farmCode}`);
       console.log("Illuminance response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setIlluminance(res.data);
@@ -593,7 +553,11 @@ useEffect(() => {
               <h3 className="dashboard-card-title">강수여부</h3>
             </div>
             <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              {isRain ? "예" : "아니요"}
+            {isRain === true
+              ? "☔ 비"
+              : isRain === false
+              ? "☀️ 맑음"
+              : "--"}
             </div>
             <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
               상태

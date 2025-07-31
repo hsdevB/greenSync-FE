@@ -6,6 +6,59 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [sensorData, setSensorData] = useState({
+    temperature: '--',
+    humidity: '--',
+    light: '--'
+  });
+
+  // 센서 데이터 가져오기
+  const fetchSensorData = async () => {
+    try {
+      console.log('센서 데이터 요청 - Farm ID:', farmId);
+      
+      // 온도 데이터 가져오기
+      const tempResponse = await axios.get(`/temperature/code/${farmId}`);
+      console.log('온도 응답:', tempResponse.data);
+      
+      // 습도 데이터 가져오기
+      const humidityResponse = await axios.get(`/humidity/code/${farmId}`);
+      console.log('습도 응답:', humidityResponse.data);
+      
+      // 조명 데이터 가져오기 (일사량)
+      const lightResponse = await axios.get(`/weather/code/${farmId}`);
+      console.log('조명 응답:', lightResponse.data);
+      
+      // 데이터 파싱
+      const temp = tempResponse.data && typeof tempResponse.data === 'number' 
+        ? tempResponse.data 
+        : tempResponse.data?.data?.temperature || tempResponse.data?.temperature || '--';
+        
+      const humidity = humidityResponse.data && typeof humidityResponse.data === 'number'
+        ? humidityResponse.data
+        : humidityResponse.data?.data?.humidity || humidityResponse.data?.humidity || '--';
+        
+      const light = lightResponse.data && typeof lightResponse.data === 'number'
+        ? lightResponse.data
+        : lightResponse.data?.data?.light || lightResponse.data?.light || '--';
+      
+      setSensorData({
+        temperature: temp !== '--' ? `${temp}°C` : '--',
+        humidity: humidity !== '--' ? `${humidity}%` : '--',
+        light: light !== '--' ? `${light}%` : '--'
+      });
+      
+      console.log('센서 데이터 설정:', { temp, humidity, light });
+      
+    } catch (error) {
+      console.error('센서 데이터 가져오기 오류:', error);
+      setSensorData({
+        temperature: '--',
+        humidity: '--',
+        light: '--'
+      });
+    }
+  };
 
   // AI 분석 요청 함수
   const requestAIAnalysis = async () => {
@@ -15,6 +68,9 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
     console.log('AI 분석 요청 시작 - Farm ID:', farmId);
     
     try {
+      // 먼저 센서 데이터 가져오기
+      await fetchSensorData();
+      
       const requestData = {
         userMessage: `농장 ID ${farmId}의 토마토 AI 분석 결과를 알려줘 예를 들어 작물 상태, 환경최적화, 급수시스템, 예측분석, 권장사항 다음주 수확 수 kg은?`
       };
@@ -65,17 +121,17 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
       
       setError(errorMessage);
       
-      // 에러 발생 시 샘플 데이터로 대체 (선택적)
-      console.log('에러로 인해 샘플 데이터를 사용합니다.');
+      // 에러 발생 시 센서 데이터를 사용한 샘플 데이터 생성
+      console.log('에러로 인해 센서 데이터 기반 샘플 데이터를 사용합니다.');
       const sampleData = {
         farmInfo: {
           farmId: farmId,
           analysisDate: new Date().toLocaleDateString()
         },
-        aiResponse: 'AI 서버 연결 오류로 인해 샘플 데이터를 제공합니다.',
+        aiResponse: 'AI 서버 연결 오류로 인해 센서 데이터 기반 분석을 제공합니다.',
         extractedData: {
-          temperature: '22°C',
-          humidity: '65%',
+          temperature: sensorData.temperature,
+          humidity: sensorData.humidity,
           harvest: '15kg',
           cropStatus: '건강한 상태',
           waterSystem: '정상 작동',
@@ -90,11 +146,14 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
 
   // AI 응답을 파싱하는 함수
   const parseAIResponse = (response, farmId) => {
+    console.log('AI 응답 파싱 시작:', response);
+    console.log('현재 센서 데이터:', sensorData);
+    
     // AI 응답에서 수치 추출
     const extractData = (text) => {
       const data = {
-        temperature: '분석 중',
-        humidity: '분석 중',
+        temperature: sensorData.temperature, // 센서 데이터 우선 사용
+        humidity: sensorData.humidity,      // 센서 데이터 우선 사용
         harvest: '분석 중',
         cropStatus: '분석 중',
         waterSystem: '분석 중',
@@ -102,50 +161,92 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
       };
 
       try {
-        // 온도 추출 (숫자°C 패턴)
-        const tempMatch = text.match(/(\d+)°C/);
-        if (tempMatch) {
-          data.temperature = `${tempMatch[1]}°C`;
+        console.log('텍스트 파싱:', text);
+        
+        // 온도 추출 (AI 응답에서 더 정확한 값이 있으면 사용)
+        const tempPatterns = [
+          /(\d+)°C/,           // 22°C
+          /(\d+)\s*도/,        // 22도
+          /온도[:\s]*(\d+)/,   // 온도: 22
+          /(\d+)\s*C/,         // 22C
+          /온도\s*(\d+)/,      // 온도 22
+          /(\d+)\s*섭씨/       // 22섭씨
+        ];
+        
+        for (const pattern of tempPatterns) {
+          const match = text.match(pattern);
+          if (match) {
+            data.temperature = `${match[1]}°C`;
+            console.log('AI에서 온도 추출 성공:', data.temperature);
+            break;
+          }
         }
 
-        // 습도 추출 (숫자% 패턴)
-        const humidityMatch = text.match(/(\d+)%/);
-        if (humidityMatch) {
-          data.humidity = `${humidityMatch[1]}%`;
+        // 습도 추출 (AI 응답에서 더 정확한 값이 있으면 사용)
+        const humidityPatterns = [
+          /(\d+)%/,            // 65%
+          /습도[:\s]*(\d+)/,   // 습도: 65
+          /(\d+)\s*퍼센트/,    // 65퍼센트
+          /습도\s*(\d+)/,      // 습도 65
+          /(\d+)\s*%/          // 65 %
+        ];
+        
+        for (const pattern of humidityPatterns) {
+          const match = text.match(pattern);
+          if (match) {
+            data.humidity = `${match[1]}%`;
+            console.log('AI에서 습도 추출 성공:', data.humidity);
+            break;
+          }
         }
 
-        // 수확량 추출 (숫자kg 패턴)
-        const harvestMatch = text.match(/(\d+)\s*kg/);
-        if (harvestMatch) {
-          data.harvest = `${harvestMatch[1]}kg`;
+        // 수확량 추출 (다양한 패턴 지원)
+        const harvestPatterns = [
+          /(\d+)\s*kg/,        // 15kg
+          /(\d+)\s*킬로그램/,  // 15킬로그램
+          /수확[:\s]*(\d+)/,   // 수확: 15
+          /다음주[:\s]*(\d+)/, // 다음주: 15
+          /(\d+)\s*kg/,        // 15 kg
+          /수확량[:\s]*(\d+)/  // 수확량: 15
+        ];
+        
+        for (const pattern of harvestPatterns) {
+          const match = text.match(pattern);
+          if (match) {
+            data.harvest = `${match[1]}kg`;
+            console.log('수확량 추출 성공:', data.harvest);
+            break;
+          }
         }
 
         // 작물 상태 키워드 분석
-        if (text.includes('건강') || text.includes('양호') || text.includes('좋음')) {
+        if (text.includes('건강') || text.includes('양호') || text.includes('좋음') || text.includes('정상')) {
           data.cropStatus = '건강한 상태';
-        } else if (text.includes('주의') || text.includes('문제')) {
+        } else if (text.includes('주의') || text.includes('문제') || text.includes('불량')) {
           data.cropStatus = '주의 필요';
         } else {
           data.cropStatus = '정상 상태';
         }
 
         // 급수 시스템 키워드 분석
-        if (text.includes('정상') || text.includes('적절')) {
+        if (text.includes('정상') || text.includes('적절') || text.includes('양호')) {
           data.waterSystem = '정상 작동';
-        } else if (text.includes('조절') || text.includes('조정')) {
+        } else if (text.includes('조절') || text.includes('조정') || text.includes('문제')) {
           data.waterSystem = '조절 필요';
         } else {
           data.waterSystem = '정상 작동';
         }
 
         // 예측 분석 키워드
-        if (text.includes('안정') || text.includes('양호')) {
+        if (text.includes('안정') || text.includes('양호') || text.includes('좋음')) {
           data.prediction = '안정적 성장 예상';
-        } else if (text.includes('주의') || text.includes('관리')) {
+        } else if (text.includes('주의') || text.includes('관리') || text.includes('문제')) {
           data.prediction = '관리 주의 필요';
         } else {
           data.prediction = '정상 성장 예상';
         }
+
+        console.log('파싱 결과:', data);
 
       } catch (error) {
         console.warn('AI 응답 파싱 오류:', error);
@@ -251,7 +352,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
                       </div>
                       <div className="env-item">
                         <span className="env-label">조명:</span>
-                        <span className="env-value">적절한 수준 유지 중</span>
+                        <span className="env-value">{sensorData.light}</span>
                       </div>
                     </div>
                   </div>
@@ -310,7 +411,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
         
         <div className="ai-modal-footer">
           <button className="ai-modal-btn" onClick={onClose}>
-            확인ㄹ
+            확인
           </button>
         </div>
       </div>
