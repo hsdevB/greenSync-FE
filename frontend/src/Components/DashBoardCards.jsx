@@ -10,6 +10,9 @@ import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
 import DailyTempHumidityChart from './DailyTempHumidityChart.jsx';
+import EnvironmentMonitoringChart from './EnvironmentMonitoringChart.jsx';
+import NutrientMonitoringChart from './NutrientMonitoringChart.jsx';
+import WeatherComparisonChart from './WeatherComparisonChart.jsx';
 
 // import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 
@@ -697,7 +700,7 @@ const transformTemperatureData = (rawData) => {
               <h3 className="dashboard-card-title">강수여부</h3>
             </div>
             <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              {isRain ? "true" : "false"}
+              {isRain ? "예" : "아니요"}
             </div>
             <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
               상태
@@ -706,12 +709,27 @@ const transformTemperatureData = (rawData) => {
         </div>
       </div>
 
+      {/* 환경 조건 통합 모니터링 그래프 */}
+      <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
+        <EnvironmentMonitoringChart farmId={1} />
+      </div>
+
+      {/* 영양분 관리 모니터링 그래프 */}
+      <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
+        <NutrientMonitoringChart farmId={1} />
+      </div>
+
+      {/* 기상 조건 분석 그래프 */}
+      <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
+        <WeatherComparisonChart farmId={1} />
+      </div>
+
       {/* 일일 온/습도 모니터링 그래프 */}
       <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
         <DailyTempHumidityChart farmId={1} />
       </div>
       
-      {/* 일일 총 급수량 그래프 */}
+      {/* 일일 급수량 그래프 */}
       <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
         <div className="dashboard-graph-card">
           <div className="dashboard-graph-title">일일 총 급수량</div>

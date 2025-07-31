@@ -256,11 +256,29 @@
   background: transparent;
   font-size: 14px;
   line-height: 1.4;
-  resize: none;
   outline: none;
   font-family: inherit;
-  min-height: 20px;
-  max-height: 120px;
+  height: 20px;
+  padding: 0;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  caret-color: #007bff;
+}
+
+/* 커서 깜박임 효과 */
+.cb-input-field:focus {
+  caret-color: #007bff;
+  animation: cursor-pulse 1s infinite;
+}
+
+@keyframes cursor-pulse {
+  0%, 50% {
+    caret-color: #007bff;
+  }
+  51%, 100% {
+    caret-color: transparent;
+  }
 }
 
 .cb-input-field::placeholder {

@@ -21,10 +21,12 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
       
       console.log('AI 서버 요청 데이터:', requestData);
       
-      // AI 서버 호출 (타임아웃 60초로 설정)
-      const response = await axios.post('http://localhost:3001/ask', requestData, {
+      // AI 서버 호출 (프록시 사용)
+      const response = await axios.post('/api/ollama/ask', requestData, {
         timeout: 60000, // 60초 타임아웃 설정
-        withCredentials: false // credentials 비활성화
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
       console.log('AI 서버 응답:', response.data);
@@ -44,18 +46,43 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
       let errorMessage = 'AI 분석 중 오류가 발생했습니다.';
       
       if (err.code === 'ECONNREFUSED') {
-        errorMessage = 'AI 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.';
+        errorMessage = 'AI 서버에 연결할 수 없습니다. Ollama 서버가 실행 중인지 확인해주세요.';
       } else if (err.code === 'ERR_NETWORK') {
         errorMessage = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.';
+      } else if (err.code === 'ECONNABORTED') {
+        errorMessage = '요청 시간이 초과되었습니다. 다시 시도해주세요.';
       } else if (err.response) {
         // 서버에서 응답이 왔지만 에러인 경우
-        errorMessage = `서버 오류: ${err.response.status} - ${err.response.statusText}`;
+        if (err.response.status === 404) {
+          errorMessage = 'AI 서비스 엔드포인트를 찾을 수 없습니다. 서버 설정을 확인해주세요.';
+        } else {
+          errorMessage = `서버 오류: ${err.response.status} - ${err.response.statusText}`;
+        }
       } else if (err.request) {
         // 요청은 보냈지만 응답이 없는 경우
         errorMessage = 'AI 서버로부터 응답을 받지 못했습니다. 서버 상태를 확인해주세요.';
       }
       
       setError(errorMessage);
+      
+      // 에러 발생 시 샘플 데이터로 대체 (선택적)
+      console.log('에러로 인해 샘플 데이터를 사용합니다.');
+      const sampleData = {
+        farmInfo: {
+          farmId: farmId,
+          analysisDate: new Date().toLocaleDateString()
+        },
+        aiResponse: 'AI 서버 연결 오류로 인해 샘플 데이터를 제공합니다.',
+        extractedData: {
+          temperature: '22°C',
+          humidity: '65%',
+          harvest: '15kg',
+          cropStatus: '건강한 상태',
+          waterSystem: '정상 작동',
+          prediction: '안정적 성장 예상'
+        }
+      };
+      setAnalysisData(sampleData);
     } finally {
       setLoading(false);
     }

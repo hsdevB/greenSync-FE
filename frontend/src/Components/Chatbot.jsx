@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './Chatbot.css';
 import botAvatar from '../assets/4712035.png';
 import userAvatar from '../assets/4712036.png';
@@ -16,7 +16,8 @@ export default function Chatbot({ isOpen, onClose, sidebar }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([]); // {role, text, time}
-  const [isComposing, setIsComposing] = useState(false); // IME 조합 상태
+  const [isComposing, setIsComposing] = useState(false); // IME 조합 상태 추적
+
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -33,9 +34,10 @@ export default function Chatbot({ isOpen, onClose, sidebar }) {
   // 채팅이 열릴 때 입력창에 자동 포커스
   useEffect(() => {
     if (isChatbotOpen && inputRef.current) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         inputRef.current.focus();
       }, 100);
+      return () => clearTimeout(timer);
     }
   }, [isChatbotOpen]);
 
@@ -110,12 +112,12 @@ Always answer in natural, fluent Korean.
     }
   };
 
-  const send = async () => {
-    if (!input.trim() || isComposing) return;
-    const userMsg = { role: 'user', text: input, time: getTime() };
+  const send = useCallback(async () => {
+    if (!input.trim() || loading) return;
+    
+    const userMsg = { role: 'user', text: input.trim(), time: getTime() };
     setMessages(msgs => [...msgs, userMsg]);
     setInput('');
-    setIsComposing(false);
     setLoading(true);
     
     try {
@@ -133,42 +135,61 @@ Always answer in natural, fluent Korean.
       ]);
     } finally {
       setLoading(false);
-      // AI 응답 후 input에 포커스 복원
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-      }, 100);
+      // AI 응답 후 input에 포커스 복원 - IME 상태 초기화를 위해 blur 후 focus
+      if (inputRef.current) {
+        requestAnimationFrame(() => {
+          if (inputRef.current) {
+            inputRef.current.blur();
+            requestAnimationFrame(() => {
+              if (inputRef.current) {
+                inputRef.current.focus();
+              }
+            });
+          }
+        });
+      }
     }
-  };
+  }, [input, loading]);
 
-  const handleKeyDown = e => {
-    // Enter 키로 전송 (Shift+Enter는 줄바꿈)
+  // 키보드 이벤트 핸들러 수정 - IME 상태를 정확히 추적
+  const handleKeyDown = useCallback((e) => {
+    // Enter 키이고 한글 조합 중이 아닐 때만 전송
     if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
       e.preventDefault();
       send();
     }
-    // Ctrl+Enter로도 전송 가능
-    if (e.key === 'Enter' && e.ctrlKey && !isComposing) {
-      e.preventDefault();
-      send();
-    }
-  };
+  }, [send, isComposing]);
 
-  const handleInputChange = (e) => {
-    setInput(e.target.value);
-  };
+  // IME 조합 시작
+  const handleCompositionStart = useCallback(() => {
+    setIsComposing(true);
+  }, []);
 
-  const handleCompositionEnd = (e) => {
+  // IME 조합 종료
+  const handleCompositionEnd = useCallback(() => {
     setIsComposing(false);
-    setInput(e.target.value);
-  };
+  }, []);
+
+  // input 변경 핸들러
+  const handleInputChange = useCallback((e) => {
+    const value = e.target.value;
+    setInput(value);
+  }, []);
+
+  // 전송 버튼 클릭 핸들러
+  const handleSendClick = useCallback(() => {
+    send();
+  }, [send]);
 
   return (
     <>
       {/* 외부에서 제어되지 않을 때만 FAB 버튼 표시 */}
       {isOpen === undefined && (
-        <button className="cb-fab" onClick={() => setOpen(true)} aria-label="스마트팜 AI 챗봇 열기">
+        <button 
+          className="cb-fab" 
+          onClick={() => setOpen(true)} 
+          aria-label="스마트팜 AI 챗봇 열기"
+        >
           <img src={BOT_AVATAR} alt="스마트팜 AI" style={{width: 38, height: 38}} />
         </button>
       )}
@@ -239,24 +260,31 @@ Always answer in natural, fluent Korean.
               {/* 입력 영역 */}
               <div className="cb-input-container">
                 <div className="cb-input-wrapper">
-                  <textarea
+                  <input
                     ref={inputRef}
                     className="cb-input-field"
+                    type="text"
                     placeholder="무엇이든 물어보세요"
                     value={input}
                     onChange={handleInputChange}
-                    onCompositionStart={() => setIsComposing(true)}
-                    onCompositionEnd={handleCompositionEnd}
                     onKeyDown={handleKeyDown}
-                    rows={1}
+                    onCompositionStart={handleCompositionStart}
+                    onCompositionEnd={handleCompositionEnd}
                     disabled={loading}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                    inputMode="text"
+                    lang="ko"
                   />
                   <div className="cb-input-actions">
                     <button 
                       className="cb-send-btn"
-                      onClick={send}
+                      onClick={handleSendClick}
                       disabled={loading || !input.trim()}
                       title="전송"
+                      type="button"
                     >
                       <span>➤</span>
                     </button>
@@ -269,4 +297,4 @@ Always answer in natural, fluent Korean.
       )}
     </>
   );
-} 
+}

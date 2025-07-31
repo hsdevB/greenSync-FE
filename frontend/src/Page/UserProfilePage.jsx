@@ -277,15 +277,7 @@ const UserProfilePage = () => {
               }}
               title="프로필 이미지 변경"
             >
-              <img 
-                src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICA8Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSI4Ii8+CiAgPHBhdGggZD0iTTIxIDIxLTE2LjU5LTE2LjU5Ii8+CiAgPHBhdGggZD0iTTExIDhhMyAzIDAgMSAwIDAgNiAzIDMgMCAxIDAgMC02eiIvPgo8L3N2Zz4K" 
-                alt="돋보기"
-                style={{
-                  width: "14px",
-                  height: "14px",
-                  filter: "invert(1)"
-                }}
-              />
+             
             </button>
           </div>
           
@@ -312,11 +304,6 @@ const UserProfilePage = () => {
                   boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
                 }}
               >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                  <polyline points="17,21 17,13 7,13 7,21"/>
-                  <polyline points="7,3 7,8 15,8"/>
-                </svg>
                 저장
               </button>
               <button
@@ -335,10 +322,6 @@ const UserProfilePage = () => {
                   boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
                 }}
               >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
                 취소
               </button>
             </div>

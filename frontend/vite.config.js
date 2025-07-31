@@ -63,6 +63,8 @@ export default defineConfig({
           });
           proxy.on('proxyReq', (proxyReq, req) => {
             console.log('Ollama Proxy request:', req.method, req.url);
+            // Content-Type 헤더 추가
+            proxyReq.setHeader('Content-Type', 'application/json');
           });
           proxy.on('proxyRes', (proxyRes) => {
             console.log('Ollama Proxy response:', proxyRes.statusCode);

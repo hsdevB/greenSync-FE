@@ -11,6 +11,7 @@ import CropControlUI from './Components/CropControlUI';
 import AIAnalysisModal from './Components/AIAnalysisModal';
 import UserProfilePage from './Page/UserProfilePage';
 import Chatbot from './Components/Chatbot';
+import RemoteControlPanel from './Components/RemoteControlPanel';
 import { IotDataProvider } from './api/IotDataProvider.jsx';
 import { UserProvider } from './store/useUserStore.jsx';
 import { MQTTProvider } from './hooks/MQTTProvider';
@@ -458,6 +459,8 @@ function App() {
             {/* <Route path="/login" element={<LoginPageWrapper onLogin={setFarmInfo} />} /> */}
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/user-profile" element={<UserProfilePage />} />
+            <Route path="/chatbot" element={<Chatbot />} />
+            <Route path="/remote" element={<RemoteControlPanel unityContext={unityContext} />} />
             <Route path="/dashboard" 
               element={
                 // isLoggedIn && farmData ? (
