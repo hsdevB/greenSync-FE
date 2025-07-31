@@ -1,15 +1,29 @@
-using UnityEngine;
-using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Runtime.InteropServices;
 using TMPro;
+//using UnityEditor.VersionControl;
+using UnityEngine;
 
 [System.Serializable]
 public class UnityDataMessage
 {
     public string name;
-    public string data; // JObject 대신 string으로 변경
+    // JObject를 사용하여 다른 데이터 타입에도 유연하게 대처
+    public JObject data;
+}
+
+// 농장 초기화 데이터 구조 추가
+[System.Serializable]
+public class FarmInitData
+{
+    //public string farmId;
+    public string farmName;
+    public string owner;
+    public string farmType;    // "수경", "고형배지"
+    public string houseType;   // "유리", "플라스틱"
+    public string cropType;    // "방울토마토"
 }
 
 public class MessageManager : MonoBehaviour
@@ -22,6 +36,12 @@ public class MessageManager : MonoBehaviour
     public Material daySkybox;
     public Material nightSkybox;
 
+    [Header("Farm Information UI")]
+    public GameObject farmNameUI;      // 농장명 UI
+    public GameObject ownerUI;         // 농장주 UI  
+    public GameObject farmTypeUI;      // 농장타입 UI
+    //public GameObject debugUI;         // 디버그 정보 UI
+
     private bool isFanOn = false;
     private bool isWatering = false;
     private float wateringTimer = 0f;
@@ -32,6 +52,9 @@ public class MessageManager : MonoBehaviour
     // 센서별 온도/습도 값 저장 (인덱스 0: main, 1-4: 센서1-4)
     private float[] temperatures = { 0f, 25f, 25f, 25f, 25f };
     private float[] humidities = { 0f, 50f, 50f, 50f, 50f };
+
+    // 농장 데이터 저장
+    private FarmInitData currentFarmData;
 
     [DllImport("__Internal")]
     private static extern void SendMessageToReact(string msg);
@@ -82,6 +105,20 @@ public class MessageManager : MonoBehaviour
         // 초기 상태 설정
         isWatering = false;
         wateringTimer = 0f;
+
+        // 초기 농장 UI 설정
+        UpdateTextComponent(farmNameUI, "농장 로딩 중...", "농장 로딩 중...");
+        UpdateTextComponent(ownerUI, "농장주: 대기중", "농장주: 대기중");
+        UpdateTextComponent(farmTypeUI, "타입: 대기중", "타입: 대기중");
+    }
+
+    private void CheckUIComponents()
+    {
+        // 농장 정보 UI 체크
+        Debug.Log($"Farm Name UI: {(farmNameUI != null ? "OK" : "NULL")}");
+        Debug.Log($"Owner UI: {(ownerUI != null ? "OK" : "NULL")}");
+        Debug.Log($"Farm Type UI: {(farmTypeUI != null ? "OK" : "NULL")}");
+        //Debug.Log($"Debug UI: {(debugUI != null ? "OK" : "NULL")}");
     }
 
     public void ReceiveMessage(string json)
@@ -93,7 +130,7 @@ public class MessageManager : MonoBehaviour
             // JSON 파싱 시도
             UnityDataMessage jsonData = JsonConvert.DeserializeObject<UnityDataMessage>(json);
 
-            if (jsonData == null)
+            if (jsonData == null || jsonData.data == null)
             {
                 Debug.LogError("Failed to deserialize JSON message");
                 return;
@@ -101,26 +138,82 @@ public class MessageManager : MonoBehaviour
 
             Debug.Log($"Event name: {jsonData.name}");
 
-            // data가 null이 아닌 경우에만 JObject로 파싱
-            JObject jobj = null;
-            if (!string.IsNullOrEmpty(jsonData.data))
+            // 이벤트 이름에 따라 data 객체 처리
+            if (jsonData.name == "INITIALIZE_FARM")
             {
-                try
-                {
-                    jobj = JObject.Parse(jsonData.data);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"Failed to parse data as JObject: {e.Message}");
-                    return;
-                }
+                // JObject를 FarmInitData로 변환
+                FarmInitData farmData = jsonData.data.ToObject<FarmInitData>();
+                InitializeFarmData(farmData);
             }
-
-            ProcessMessage(jsonData.name, jobj);
+            else
+            {
+                // 다른 모든 이벤트는 ProcessMessage로 전달
+                ProcessMessage(jsonData.name, jsonData.data);
+            }
         }
         catch (Exception e)
         {
             Debug.LogError($"Error in ReceiveMessage: {e.Message}");
+        }
+    }
+
+    // 농장 초기화 메서드 추가 (React에서 직접 호출 가능)
+    public void InitializeFarmData(FarmInitData farmData)
+    {
+        try
+        {
+            currentFarmData = farmData;
+            // 농장 UI 업데이트
+            UpdateFarmUI(farmData);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"농장 초기화 실패: {e.Message}");
+            //UpdateTextComponent(debugUI, $"초기화 실패: {e.Message}", $"초기화 실패: {e.Message}");
+        }
+    }
+
+    private void UpdateFarmUI(FarmInitData farmData)
+    {
+        try
+        {
+            Debug.Log("농장 UI 업데이트 시작...");
+
+            if (farmNameUI != null)
+            {
+                UpdateTextComponent(farmNameUI, farmData.farmName, farmData.farmName);
+            }
+            else
+            {
+                Debug.LogWarning("farmNameUI가 할당되지 않음");
+            }
+
+            if (ownerUI != null)
+            {
+                string ownerText = $"{farmData.owner}";
+                UpdateTextComponent(ownerUI, ownerText, ownerText);
+            }
+            else
+            {
+                Debug.LogWarning("ownerUI가 할당되지 않음");
+            }
+
+            if (farmTypeUI != null)
+            {
+                string typeText = $"{farmData.farmType} ({farmData.houseType})";
+                UpdateTextComponent(farmTypeUI, typeText, typeText);
+                Debug.Log($"{typeText}");
+            }
+            else
+            {
+                Debug.LogWarning("farmTypeUI가 할당되지 않음");
+            }
+
+            Debug.Log("모든 농장 UI 업데이트 완료");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"농장 UI 업데이트 실패: {e.Message}");
         }
     }
 

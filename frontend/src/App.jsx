@@ -18,10 +18,10 @@ import './App.css';
 // 목업 농장 데이터
 const MOCK_FARM_DATA = {
   farmId: "farm001",
-  farmName: "GreenSync 스마트팜",
+  farmName: "GreenSync1",
   farmType: "수경",
   houseType: "유리",
-  owner: "김농부",
+  owner: "Kim",
   location: "서울특별시 강남구",
   establishedDate: "2024-01-15",
   totalArea: "100평",
@@ -53,10 +53,10 @@ const MOCK_USERS = [
     farmData: {
       ...MOCK_FARM_DATA,
       farmId: "farm002",
-      farmName: "스마트 그린하우스",
-      farmType: "토양",
-      houseType: "유리",
-      owner: "이농부"
+      farmName: "GreenSync2",
+      farmType: "고형배지",
+      houseType: "플라스틱",
+      owner: "Lee"
     }
   },
   {
@@ -67,7 +67,7 @@ const MOCK_USERS = [
       farmId: "farm003",
       farmName: "테스트 농장",
       farmType: "수경",
-      houseType: "비닐",
+      houseType: "플라스틱",
       owner: "테스트농부"
     }
   }
@@ -88,8 +88,9 @@ function getCurrentTimeString() {
   return `${year}년 ${month}월 ${date}일 ${days[day]}요일 ${ampm} ${hour}:${min}`;
 }
 
-function DashboardLayout({ farmData, unityContext }) {
+function DashboardLayout({ farmData }) {
   // 기존 대시보드 레이아웃을 별도 컴포넌트로 분리
+  const unityContext = useSharedUnityContext(farmData);
   const [selectedMenu, setSelectedMenu] = React.useState('dashboard');
   const [showAIModal, setShowAIModal] = React.useState(false);
   const handleLogout = () => { /* 로그아웃 처리 */ 
@@ -161,10 +162,13 @@ function DashboardLayout({ farmData, unityContext }) {
                   }}
                 />
                 {/* Unity 로딩 오버레이 */}
-                {!unityContext.isLoaded && (
+                {!unityContext.isLoaded && !unityContext.error && (
                   <div className="unity-loading-overlay">
                     <div className="unity-loading-text">
                       Unity 로딩 중... {Math.round(unityContext.loadingProgression * 100)}%
+                    </div>
+                    <div style={{ fontSize: '12px', marginTop: '8px', opacity: 0.7 }}>
+                      빌드: {unityContext.folderName || '대기 중'} ({farmData?.farmType} + {farmData?.houseType})
                     </div>
                     <div className="unity-loading-bar-bg">
                       <div
@@ -364,13 +368,6 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // 임의
   const [loading, setLoading] = useState(true); // 임의
 
-  // Unity Context 생성 (농장 데이터가 있을 때만)
-  const unityContext = useSharedUnityContext(
-    farmData?.farmId,
-    farmData?.farmType,
-    farmData?.houseType
-  );
-
   // 로그인 상태 및 농장 정보 복원
   useEffect(() => {
     const checkLoginStatus = () => {
@@ -398,7 +395,7 @@ function App() {
   // 농장 정보 설정 함수 (로그인 시 호출)
   const setFarmInfo = (farmInfo) => {
     setFarmData(farmInfo);
-    // setIsLoggedIn(true);
+    setIsLoggedIn(true);
     localStorage.setItem('farmData', JSON.stringify(farmInfo));
     localStorage.setItem('isLoggedIn', 'true');
   };
@@ -433,8 +430,7 @@ function App() {
               element={
                 isLoggedIn && farmData ? (
                   <DashboardLayout 
-                    farmData={farmData} 
-                    unityContext={unityContext} 
+                    farmData={farmData}
                   />
                 ) : (
                   // 로그인하지 않았거나 농장 정보가 없으면 로그인 페이지로 리다이렉트
