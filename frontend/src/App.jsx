@@ -10,6 +10,8 @@ import SignupPage from './Page/SignupPage';
 import CropControlUI from './Components/CropControlUI';
 import AIAnalysisModal from './Components/AIAnalysisModal';
 import UserProfilePage from './Page/UserProfilePage';
+import Chatbot from './Components/Chatbot';
+import RemoteControlPanel from './Components/RemoteControlPanel';
 import { IotDataProvider } from './api/IotDataProvider.jsx';
 import { UserProvider } from './store/useUserStore.jsx';
 import { MQTTProvider } from './hooks/MQTTProvider';
@@ -92,6 +94,7 @@ function DashboardLayout({ farmData, unityContext }) {
   // 기존 대시보드 레이아웃을 별도 컴포넌트로 분리
   const [selectedMenu, setSelectedMenu] = React.useState('dashboard');
   const [showAIModal, setShowAIModal] = React.useState(false);
+  const [showChatbot, setShowChatbot] = React.useState(false);
   const handleLogout = () => { /* 로그아웃 처리 */ 
     // 로그아웃 시 농장 정보 초기화
     localStorage.removeItem('farmData');
@@ -100,8 +103,9 @@ function DashboardLayout({ farmData, unityContext }) {
   };
   const handleMenuSelect = (menu) => {
     setSelectedMenu(menu);
+    // AI 분석 버튼 클릭 시 채팅봇 열기
     if (menu === 'ai-analysis') {
-      setShowAIModal(true);
+      setShowChatbot(true);
     }
   };
 
@@ -109,6 +113,11 @@ function DashboardLayout({ farmData, unityContext }) {
     setShowAIModal(false);
     // AI 분석 모달이 닫혀도 selectedMenu는 'ai-analysis'로 유지
     setSelectedMenu('ai-analysis');
+  };
+
+  const handleChatbotClose = () => {
+    setShowChatbot(false);
+    setSelectedMenu('dashboard'); // 채팅봇 닫을 때 대시보드로 돌아가기
   };
   return (
     // Dashboard에서만 MQTTContext 사용
@@ -131,55 +140,67 @@ function DashboardLayout({ farmData, unityContext }) {
         {/* 좌우 분할 레이아웃 */}
         <div className="split-layout">
           {/* 왼쪽: Unity 3D 화면 */}
-          <div className="unity-section">
+          <div className="unity-section" style={{ 
+            display: selectedMenu === 'ai-analysis' ? 'none' : 'block',
+            width: selectedMenu === 'ai-analysis' ? '0%' : '50%'
+          }}>
             <div className="unity-container">
               <div className="unity-content">
-                <Unity
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    background: '#222',
-                    borderRadius: '0px',
-                    opacity: unityContext.isLoaded ? 1 : 0.3,
-                    transition: 'opacity 0.3s'
-                  }}
-                  unityProvider={unityContext.unityProvider}
-                  devicePixelRatio={window.devicePixelRatio}
-                  config={{
-                    companyName: "GreenSync",
-                    productName: "SmartFarm",
-                    productVersion: "1.0.0"
-                  }}
-                  onError={(error) => {
-                    console.error('Unity 에러:', error);
-                  }}
-                  onProgress={(progress) => {
-                    console.log('Unity 로딩 진행률:', progress);
-                  }}
-                  onInitialized={() => {
-                    console.log('Unity 초기화 완료!');
-                  }}
-                />
-                {/* Unity 로딩 오버레이 */}
-                {!unityContext.isLoaded && (
-                  <div className="unity-loading-overlay">
-                    <div className="unity-loading-text">
-                      Unity 로딩 중... {Math.round(unityContext.loadingProgression * 100)}%
-                    </div>
-                    <div className="unity-loading-bar-bg">
-                      <div
-                        className="unity-loading-bar-fill"
-                        style={{ width: `${Math.round(unityContext.loadingProgression * 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
+                {unityContext.unityProvider && (
+                  <Unity
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      background: '#222',
+                      borderRadius: '0px',
+                      opacity: unityContext.isLoaded ? 1 : 0.3,
+                      transition: 'opacity 0.3s'
+                    }}
+                    unityProvider={unityContext.unityProvider}
+                    devicePixelRatio={window.devicePixelRatio}
+                    config={{
+                      companyName: "GreenSync",
+                      productName: "SmartFarm",
+                      productVersion: "1.0.0"
+                    }}
+                    onError={(error) => {
+                      console.error('Unity 에러:', error);
+                    }}
+                    onProgress={(progress) => {
+                      console.log('Unity 로딩 진행률:', progress);
+                    }}
+                    onInitialized={() => {
+                      console.log('Unity 초기화 완료!');
+                    }}
+                  />
                 )}
+                                  {/* Unity 로딩 오버레이 */}
+                  {unityContext.unityProvider && !unityContext.isLoaded && (
+                    <div className="unity-loading-overlay">
+                      <div className="unity-loading-text">
+                        Unity 로딩 중... {Math.round(unityContext.loadingProgression * 100)}%
+                      </div>
+                      <div className="unity-loading-bar-bg">
+                        <div
+                          className="unity-loading-bar-fill"
+                          style={{ width: `${Math.round(unityContext.loadingProgression * 100)}%` }}
+                        ></div>
+                      </div>
+                      {unityContext.error && (
+                        <div className="unity-error-text">
+                          오류: {unityContext.error}
+                        </div>
+                      )}
+                    </div>
+                  )}
               </div>
             </div>
           </div>
               
           {/* 오른쪽: UI 콘텐츠 */}
-          <div className="ui-section">
+          <div className="ui-section" style={{ 
+            width: selectedMenu === 'ai-analysis' ? '100%' : '60%'
+          }}>
             <main className="dashboard-area">
             <Dashboard 
                 selectedMenu={selectedMenu} 
@@ -195,6 +216,19 @@ function DashboardLayout({ farmData, unityContext }) {
           isOpen={showAIModal}
           onClose={handleAIModalClose}
           farmId="farm001"
+        />
+
+        {/* AI 분석 채팅봇 */}
+        <Chatbot 
+          isOpen={showChatbot}
+          onClose={handleChatbotClose}
+          sidebar={
+            <Sidebar
+              selected={selectedMenu}
+              onSelect={handleMenuSelect}
+              onLogout={handleLogout}
+            />
+          }
         />
       </div>
     </MQTTProvider>
@@ -429,6 +463,8 @@ function App() {
             <Route path="/login" element={<LoginPageWrapper onLogin={setFarmInfo} />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/user-profile" element={<UserProfilePage />} />
+            <Route path="/chatbot" element={<Chatbot />} />
+            <Route path="/remote" element={<RemoteControlPanel unityContext={unityContext} />} />
             <Route path="/dashboard" 
               element={
                 isLoggedIn && farmData ? (

@@ -53,7 +53,7 @@ export default function OpenWeather() {
   return (
     <div className="dashboard-card">
       <div className="dashboard-card-section">
-        <div style={{ display: 'flex', alignItems: 'center', marginRight: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center'}}>
           {weather?.icon ? (
             <img
               src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
@@ -75,7 +75,6 @@ export default function OpenWeather() {
             style={{ 
               fontSize: 24, 
               color: "#3b82f6", 
-              marginRight: 8,
               display: weather?.icon ? 'none' : 'block'
             }}
           >
@@ -88,7 +87,7 @@ export default function OpenWeather() {
         {weather?.main || "--"}
       </div>
       <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
-        {weather?.temp !== undefined ? `${weather.temp} ℃` : ''}
+        {weather?.temp !== undefined ? `${weather.temp.toFixed(1)} ℃` : ''}
       </div>
       <div className="dashboard-card-desc">
         {weather?.desc || "기상청 API 연동 필요"}

@@ -81,7 +81,7 @@ body, * {
   min-height: 160px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  /* justify-content: space-between; */
 }
 
 .main-layout {
@@ -139,6 +139,7 @@ body, * {
   height: calc(100vh - 80px);
   margin-top: 80px;
   margin-left: 256px;
+  overflow-y: auto;
 }
 
 /* 왼쪽: Unity 3D 화면 섹션 */
@@ -158,6 +159,12 @@ body, * {
   box-sizing: border-box;
   background: #fff;
   overflow-y: auto;
+}
+
+/* AI 분석 페이지에서 UI 섹션이 전체 화면을 차지 */
+.ui-section.full-width {
+  width: 100%;
+  margin-left: 0;
 }
 
 /* Unity 3D 화면 컨테이너 */
@@ -249,6 +256,17 @@ body, * {
   height: 100%;
   background: linear-gradient(90deg, #10b981, #3b82f6);
   transition: width 0.3s ease;
+}
+
+.unity-loading-overlay .unity-error-text {
+  color: #f44336;
+  font-size: 14px;
+  margin-top: 8px;
+  text-align: center;
+  background: rgba(244, 67, 54, 0.1);
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(244, 67, 54, 0.3);
 }
 
 .dashboard-cards-container {

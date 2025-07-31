@@ -4,11 +4,12 @@
   justify-content: center;
   align-items: flex-start;
   width: 100%;
-  gap: 20px; /* 좌우 간격, 필요시 조절 */
+  gap: 40px; /* 좌우 간격 줄임 */
   color: #bfdbfe;
   margin: 0 auto;
   overflow-x: auto;
-  box-sizing: border-box; /* 추가 */
+  box-sizing: border-box;
+  padding: 0 8px;
 }
 
 .remote-panel-root * {
@@ -17,25 +18,25 @@
 
 .left-panel {
   flex: 1 1 0;
-  min-width: 320px;
-  max-width: 400px;
+  min-width: 250px;
+  max-width: 250px;
 }
 
 .right-panel {
   flex: 1 1 0;
-  min-width: 320px;
-  max-width: 400px;
+  min-width: 300px;
+  max-width: 350px;
 }
 
 .panel-header {
   text-align: center;
-  margin-bottom: 18px;
+  margin-bottom: 15px;
 }
 
 .panel-title {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #FFBB00;
+  color: #163C26;
   margin-bottom: 2px;
 }
 
@@ -46,15 +47,15 @@
 }
 
 .section-title {
-  background: #FFBB00;/* 연한 녹색 */
-  color: #fff;
+  background: #fff;/* 연한 녹색 */
+  color: #08160E;
   font-weight: 600;
-  padding: 7px 0;
+  padding: 6px 0;
   border-radius: 8px;
-  margin-top: 12px;
-  margin-bottom: 12px;
+  margin-top: 10px;
+  margin-bottom: 30px;
   text-align: center;
-  font-size: 1.05rem;
+  font-size: 1rem;
 }
 
 .realtime-data-section {
@@ -73,7 +74,7 @@
   box-shadow: 0 1px 4px rgba(33,150,83,0.08);
   padding: 12px 0 8px 0;
   text-align: center;
-  min-width: 80px;
+  min-width: 120px;
 }
 
 .data-icon {
@@ -86,7 +87,7 @@
 
 .data-label {
   font-size: 0.95rem;
-  color: #FFBB00;
+  color: #163C26;
   font-weight: 500;
   margin-bottom: 2px;
 }
@@ -111,6 +112,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: 20px;
   margin-bottom: 10px;
   padding: 0 6px;
 }
@@ -134,7 +136,7 @@
 
 /* ON 상태 */
 .btn-on {
-  background-color: #FFBB00; /* 초록 */
+  background-color: #163C26; /* 초록 */
   opacity: 1;
 }
 
@@ -157,7 +159,7 @@
   font-size: 1.1rem;
   font-weight: 700;
   margin: 24px 0 10px 0;
-  color: #FFBB00;
+  color: #163C26;
   gap: 6px;
 }
 
@@ -168,6 +170,25 @@
   margin-bottom: 24px;
 }
 
+/* LED 조명 카드를 오른쪽에 배치하기 위한 특별 스타일 */
+.control-card-led {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+/* MQTT 카드를 왼쪽에 배치하기 위한 특별 스타일 */
+.mqtt-card {
+  grid-column: 1;
+  grid-row: 2;
+  padding: 12px 16px;
+}
+
+/* 온습도 제어1 카드를 3번째 줄에 배치하기 위한 특별 스타일 */
+.temp-humid-control-card {
+  grid-column: 1;
+  grid-row: 3;
+}
+
 .control-card {
   background: #fff;
   border: 1.5px solid #d0e6d6;
@@ -175,6 +196,53 @@
   padding: 18px 16px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   min-width: 0;
+  width: 170px;
+}
+
+.control-card-temp-humid {
+  background: #fff;
+  border: 1.5px solid #d0e6d6;
+  border-radius: 12px;
+  padding: 18px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  min-width: 0;
+  width: 100%;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  align-items: center;
+}
+
+/* 온습도 제어1 내부 컨트롤 스타일 */
+.temp-humid-control-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.temp-humid-control-section .temp-control-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+}
+
+.temp-humid-control-section .control-card-desc {
+  text-align: center;
+  margin-top: 4px;
+}
+
+.control-card-led {
+  background: #fff;
+  border: 1.5px solid #d0e6d6;
+  border-radius: 12px;
+  padding: 18px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  min-width: 0;
+  width: 170px;
+  height: 150px;
 }
 
 .control-card-header {
@@ -193,6 +261,7 @@
 .control-card-body {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
 }
 
@@ -241,18 +310,7 @@ input[type="range"] {
   transform: translateX(16px);
 }
 
-.refresh-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  outline: none;
-  /* 필요시 width, height 조정 */
-}
-.refresh-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+
 
 @media (max-width: 600px) {
   .data-grid {
