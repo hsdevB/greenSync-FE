@@ -1,0 +1,221 @@
+.nutrient-flow-chart {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  margin: 16px;
+}
+
+.nutrient-chart-loading,
+.nutrient-chart-error,
+.nutrient-chart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: #666;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #388e3c;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.nutrient-chart-error button {
+  background: #388e3c;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.nutrient-chart-container {
+  width: 100%;
+}
+
+.nutrient-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.nutrient-chart-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.nutrient-chart-controls {
+  display: flex;
+  gap: 12px;
+}
+
+.time-range-select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.nutrient-chart-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.metric-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.metric-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.nutrient-chart {
+  position: relative;
+  margin-bottom: 24px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.nutrient-svg {
+  width: 100%;
+  height: 400px;
+  background: white;
+  border-radius: 4px;
+}
+
+.data-point {
+  cursor: pointer;
+  transition: r 0.2s ease;
+}
+
+.data-point:hover {
+  r: 5;
+  stroke: #333;
+  stroke-width: 2;
+}
+
+.nutrient-data-table {
+  margin-top: 24px;
+}
+
+.nutrient-data-table h4 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.nutrient-data-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.nutrient-data-table th,
+.nutrient-data-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.nutrient-data-table th {
+  background: #f5f5f5;
+  font-weight: 600;
+  color: #333;
+}
+
+.nutrient-data-table tr:hover {
+  background: #f8f9fa;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .nutrient-flow-chart {
+    margin: 8px;
+    padding: 16px;
+  }
+  
+  .nutrient-chart-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .nutrient-chart-metrics {
+    gap: 12px;
+  }
+  
+  .metric-checkbox {
+    font-size: 13px;
+  }
+  
+  .nutrient-data-table {
+    overflow-x: auto;
+  }
+  
+  .nutrient-data-table table {
+    min-width: 600px;
+  }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .nutrient-flow-chart {
+    background: #2d3748;
+    color: #e2e8f0;
+  }
+  
+  .nutrient-chart {
+    background: #4a5568;
+    border-color: #718096;
+  }
+  
+  .nutrient-svg {
+    background: #2d3748;
+  }
+  
+  .nutrient-chart-metrics {
+    background: #4a5568;
+  }
+  
+  .nutrient-data-table th {
+    background: #4a5568;
+    color: #e2e8f0;
+  }
+  
+  .nutrient-data-table tr:hover {
+    background: #4a5568;
+  }
+} 

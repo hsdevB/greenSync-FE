@@ -10,9 +10,7 @@ import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
 import DailyTempHumidityChart from './DailyTempHumidityChart.jsx';
-import EnvironmentMonitoringChart from './EnvironmentMonitoringChart.jsx';
-import NutrientMonitoringChart from './NutrientMonitoringChart.jsx';
-import WeatherComparisonChart from './WeatherComparisonChart.jsx';
+import NutrientFlowChart from './NutrientFlowChart.jsx';
 
 // import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 
@@ -20,12 +18,9 @@ const DashBoardCards = ({ farmData }) => {
   // 디버깅을 위한 콘솔 로그
   console.log('DashBoardCards rendered with farmData:', farmData);
 
-
-
   // 상태 관리 초기화
   const [refreshDisabled, setRefreshDisabled] = useState(false); // 새로고침 비활성화 상태
   const [refreshTimer, setRefreshTimer] = useState(0); // 새로고침 타이머
-  const iotData = useIotData(); // 온실 내 IoT 데이터
   const [indoorTemp, setIndoorTemp] = useState('--'); 
   const [indoorHumi, setIndoorHumi] = useState('--');
   const [phValue, setPhValue] = useState('--');
@@ -37,7 +32,6 @@ const DashBoardCards = ({ farmData }) => {
   const [windSpeed, setWindSpeed] = useState('--');
   const [dewPoint, setDewPoint] = useState('--');
   const [isRain, setIsRain] = useState('--');
-  const [temperatureChartData, setTemperatureChartData] = useState([]);
 
   const {
     // water, fan, ledLevel,
@@ -369,45 +363,6 @@ useEffect(() => {
   fetchIsRain();
 }, []);
 
-// 온도 차트 데이터 가져오기
-useEffect(() => {
-  const fetchTemperatureChartData = async () => {
-    try {
-      const res = await axios.get(`/chart/temperature/daily/ABCD1234`); // 실제 API 엔드포인트로 수정
-      console.log("Temperature Chart response: ", res.data);
-      if (res.data && res.data.success) {
-        const transformedData = transformTemperatureData(res.data);
-        setTemperatureChartData(transformedData);
-      } else {
-        setTemperatureChartData([]);
-      }
-    } catch (e) {
-      console.error('Temperature Chart fetch error:', e);
-      console.error('Error response:', e.response?.data);
-      setTemperatureChartData([]);
-    }
-  };
-  fetchTemperatureChartData();
-}, []);
-
-// 대시보드 데이터 (임시)
-const dashboardData = DashBoardData;
-
-// 온도 차트 데이터 변환 함수
-const transformTemperatureData = (rawData) => {
-  if (!rawData || !rawData.data || !rawData.data.datasets || !rawData.data.datasets[0]) {
-    return [];
-  }
-  
-  const temperatures = rawData.data.datasets[0].data;
-  const timeLabels = ['10시', '12시', '14시', '16시', '18시', '20시', '22시', '24시', '02시', '04시', '06시', '08시'];
-  
-  return temperatures.map((temp, index) => ({
-    time: timeLabels[index],
-    temperature: temp
-  }));
-};
-
   return (
     <div className="dashboard-cards-container">
       {/* 새로고침 버튼 */}
@@ -709,28 +664,18 @@ const transformTemperatureData = (rawData) => {
         </div>
       </div>
 
-      {/* 환경 조건 통합 모니터링 그래프 */}
-      <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
-        <EnvironmentMonitoringChart farmId={1} />
-      </div>
-
-      {/* 영양분 관리 모니터링 그래프 */}
-      <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
-        <NutrientMonitoringChart farmId={1} />
-      </div>
-
-      {/* 기상 조건 분석 그래프 */}
-      <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
-        <WeatherComparisonChart farmId={1} />
-      </div>
-
       {/* 일일 온/습도 모니터링 그래프 */}
       <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
         <DailyTempHumidityChart farmId={1} />
       </div>
       
-      {/* 일일 급수량 그래프 */}
+      {/* 양액량 시계열 그래프 */}
       <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
+        <NutrientFlowChart farmId={1} />
+      </div>
+
+      {/* 일일 급수량 그래프 */}
+      {/* <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
         <div className="dashboard-graph-card">
           <div className="dashboard-graph-title">일일 총 급수량</div>
           <ResponsiveContainer width="100%" height={120}>
@@ -743,7 +688,7 @@ const transformTemperatureData = (rawData) => {
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </div> */}
 
       {/* 온도 차트 그래프 */}
       {/* <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>

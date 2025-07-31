@@ -310,7 +310,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
         
         <div className="ai-modal-footer">
           <button className="ai-modal-btn" onClick={onClose}>
-            확인
+            확인ㄹ
           </button>
         </div>
       </div>
