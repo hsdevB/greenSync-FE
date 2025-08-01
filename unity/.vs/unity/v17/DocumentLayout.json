@@ -3,7 +3,7 @@
   "WorkspaceRootPath": "C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\assets\\01.scripts\\messagemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|c:\\users\\uvc\\desktop\\greensync-fe\\unity\\assets\\01.scripts\\messagemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{C3DA89E1-70C6-7D6C-993E-C8F831D35880}|Assembly-CSharp.csproj|solutionrelative:assets\\01.scripts\\messagemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -50,8 +50,7 @@
               "RelativeToolTip": "Library\\PackageCache\\com.unity.textmeshpro@3.0.7\\Scripts\\Runtime\\TMP_MaterialManager.cs",
               "ViewState": "AgIAAGQBAAAAAAAAAAAawKIBAACNAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-31T09:52:18.674Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-31T09:52:18.674Z"
             },
             {
               "$type": "Document",
@@ -63,8 +62,7 @@
               "RelativeToolTip": "Assets\\01.Scripts\\FarmModelManager.cs",
               "ViewState": "AgIAAOEAAAAAAAAAAAAmwPwAAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-29T04:43:13.616Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-29T04:43:13.616Z"
             },
             {
               "$type": "Document",
@@ -74,7 +72,7 @@
               "RelativeDocumentMoniker": "Assets\\01.Scripts\\MessageManager.cs",
               "ToolTip": "C:\\Users\\UVC\\Desktop\\greenSync-FE\\unity\\Assets\\01.Scripts\\MessageManager.cs",
               "RelativeToolTip": "Assets\\01.Scripts\\MessageManager.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAjAAAAAAAAAA==",
+              "ViewState": "AgIAAKIBAAAAAAAAAAAUwNkAAAAwAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-08T05:38:19.93Z",
               "EditorCaption": ""

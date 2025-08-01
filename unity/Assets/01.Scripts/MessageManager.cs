@@ -19,11 +19,11 @@ public class UnityDataMessage
 public class FarmInitData
 {
     //public string farmId;
-    public string farmName;
-    public string owner;
+    //public string farmName;
+    //public string owner;
     public string farmType;    // "수경", "고형배지"
     public string houseType;   // "유리", "플라스틱"
-    public string cropType;    // "방울토마토"
+    //public string cropType;    // "방울토마토"
 }
 
 public class MessageManager : MonoBehaviour
@@ -37,9 +37,10 @@ public class MessageManager : MonoBehaviour
     public Material nightSkybox;
 
     [Header("Farm Information UI")]
-    public GameObject farmNameUI;      // 농장명 UI
-    public GameObject ownerUI;         // 농장주 UI  
-    public GameObject farmTypeUI;      // 농장타입 UI
+    //public GameObject farmNameUI;      // 농장명 UI
+    //public GameObject ownerUI;         // 농장주 UI  
+    public GameObject farmTypeUI;      // 재배타입 UI
+    public GameObject houseTypeUI;      // 온실타입 UI
     //public GameObject debugUI;         // 디버그 정보 UI
 
     private bool isFanOn = false;
@@ -107,17 +108,19 @@ public class MessageManager : MonoBehaviour
         wateringTimer = 0f;
 
         // 초기 농장 UI 설정
-        UpdateTextComponent(farmNameUI, "농장 로딩 중...", "농장 로딩 중...");
-        UpdateTextComponent(ownerUI, "농장주: 대기중", "농장주: 대기중");
-        UpdateTextComponent(farmTypeUI, "타입: 대기중", "타입: 대기중");
+        //UpdateTextComponent(farmNameUI, "농장 로딩 중...", "농장 로딩 중...");
+        //UpdateTextComponent(ownerUI, "농장주: 대기중", "농장주: 대기중");
+        UpdateTextComponent(farmTypeUI, "Type: loading...", "Type: loading...");
+        UpdateTextComponent(houseTypeUI, "Type: loading...", "Type: loading...");
     }
 
     private void CheckUIComponents()
     {
         // 농장 정보 UI 체크
-        Debug.Log($"Farm Name UI: {(farmNameUI != null ? "OK" : "NULL")}");
-        Debug.Log($"Owner UI: {(ownerUI != null ? "OK" : "NULL")}");
+        //Debug.Log($"Farm Name UI: {(farmNameUI != null ? "OK" : "NULL")}");
+        //Debug.Log($"Owner UI: {(ownerUI != null ? "OK" : "NULL")}");
         Debug.Log($"Farm Type UI: {(farmTypeUI != null ? "OK" : "NULL")}");
+        Debug.Log($"Farm Type UI: {(houseTypeUI != null ? "OK" : "NULL")}");
         //Debug.Log($"Debug UI: {(debugUI != null ? "OK" : "NULL")}");
     }
 
@@ -179,29 +182,40 @@ public class MessageManager : MonoBehaviour
         {
             Debug.Log("농장 UI 업데이트 시작...");
 
-            if (farmNameUI != null)
-            {
-                UpdateTextComponent(farmNameUI, farmData.farmName, farmData.farmName);
-            }
-            else
-            {
-                Debug.LogWarning("farmNameUI가 할당되지 않음");
-            }
+            //if (farmNameUI != null)
+            //{
+            //    UpdateTextComponent(farmNameUI, farmData.farmName, farmData.farmName);
+            //}
+            //else
+            //{
+            //    Debug.LogWarning("farmNameUI가 할당되지 않음");
+            //}
 
-            if (ownerUI != null)
-            {
-                string ownerText = $"{farmData.owner}";
-                UpdateTextComponent(ownerUI, ownerText, ownerText);
-            }
-            else
-            {
-                Debug.LogWarning("ownerUI가 할당되지 않음");
-            }
+            //if (ownerUI != null)
+            //{
+            //    string ownerText = $"{farmData.owner}";
+            //    UpdateTextComponent(ownerUI, ownerText, ownerText);
+            //}
+            //else
+            //{
+            //    Debug.LogWarning("ownerUI가 할당되지 않음");
+            //}
 
             if (farmTypeUI != null)
             {
-                string typeText = $"{farmData.farmType} ({farmData.houseType})";
+                string typeText = $"{farmData.farmType}";
                 UpdateTextComponent(farmTypeUI, typeText, typeText);
+                Debug.Log($"{typeText}");
+            }
+            else
+            {
+                Debug.LogWarning("farmTypeUI가 할당되지 않음");
+            }
+
+            if (houseTypeUI != null)
+            {
+                string typeText = $"({farmData.houseType})";
+                UpdateTextComponent(houseTypeUI, typeText, typeText);
                 Debug.Log($"{typeText}");
             }
             else
