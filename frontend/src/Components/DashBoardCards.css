@@ -38,8 +38,8 @@
 .dashboard-single-card-row > .dashboard-card,
 .dashboard-single-card-row > .dashboard-graph-card {
   flex: 1 1 0;
-  width: 100%;
-  max-width: 100%;
+  width: 70%;
+  max-width: 80%;
   /* 필요시 padding, background, border-radius 등 추가 */
 }
 

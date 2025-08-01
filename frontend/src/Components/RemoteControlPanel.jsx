@@ -521,18 +521,16 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
 
   // 관개 시스템
   const handleWaterClick = async () => {
-    if(water) return; // 이미 급수 중이면 무시
-
-    sendToUnity("startWater", { status: true });
+    const newWaterState = !water; // 현재 상태의 반대값으로 토글
+    
+    setWater(newWaterState); // 급수 상태를 토글
+    sendToUnity("startWater", { status: newWaterState });
 
     if (mqttClientRef.current?.isConnected) {
       await mqttClientRef.current.blinkLed(0, fan);
     }
-    // 5초 후 자동 종료
-    setTimeout(async () => {
-        setWater(false);
-        sendToUnity("startWater", { status: false });
-    }, 5000);
+    
+    persistToLocal();
   };
 
   // 환기 시스템 토글
@@ -673,7 +671,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
         </div>
 
         {/* 백엔드 API 연결 상태 표시 */}
-        <div className="realtime-data-section">
+        {/* <div className="realtime-data-section">
           <div className="section-title">백엔드 API 연결 상태</div>
           <div className="data-grid">
             <DataCard
@@ -682,7 +680,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
               unit={connectionStatus.backend ? "🟢" : "🔴"}
             />
           </div>
-        </div>
+        </div> */}
 
         {/* 기기 제어 */}
         <div className="device-control-section">
