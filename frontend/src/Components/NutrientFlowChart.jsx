@@ -6,14 +6,12 @@ const NutrientFlowChart = ({ farmId }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMetrics, setSelectedMetrics] = useState(['phLevel', 'ecLevel']);
-  const [timeRange, setTimeRange] = useState('24h');
 
   // 실제 센서 데이터 가져오기
 
-  const farmCode = 'ABCD1234';
   const fetchSensorData = async () => {
     try {
-      const res = await axios.get(`/chart/nutrient/daily/${farmCode}`);
+      const res = await axios.get(`http://192.168.0.33:3000/chart/nutrient/daily/ABCD1234`);
       console.log("Nutrient sensor response: ", res.data);
       
       let phLevel, ecLevel;

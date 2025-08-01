@@ -54,7 +54,8 @@ const SignupPage = () => {
       passwordCheck: "",
       name: "",
       email: "",
-      phone: ""
+      phone: "",
+      farmCode: ""
     };
     
     let isValid = true;
@@ -75,7 +76,25 @@ const SignupPage = () => {
       newFieldErrors.name = "이름은 2자 이상 50자 이하여야 합니다.";
       isValid = false;
     }
-    // 소속농장코드는 관리자와 직원 모두 자동 생성되므로 검증 불필요
+    
+    // 소속농장코드 검증
+    if (role === "admin") {
+      // 관리자는 새로운 농장코드 생성
+      if (!farmCode) {
+        newFieldErrors.farmCode = "농장코드를 생성해주세요.";
+        isValid = false;
+      }
+    } else {
+      // 직원은 기존 농장코드 입력
+      if (!farmCode) {
+        newFieldErrors.farmCode = "소속 농장코드를 입력해주세요.";
+        isValid = false;
+      } else if (farmCode.length < 4) {
+        newFieldErrors.farmCode = "올바른 농장코드를 입력해주세요.";
+        isValid = false;
+      }
+    }
+    
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       newFieldErrors.email = "올바른 이메일 형식을 입력해주세요. (예: example@email.com)";
       isValid = false;
@@ -121,12 +140,13 @@ const SignupPage = () => {
 
     try {
       const response = await axios.post('http://localhost:3000/signup', {
-        farmCode: FarmCode.createFarmCode(),
+        farmCode: farmCode.trim(),
         userId: userId.trim(),
         password: password,
         name: name.trim(),
         email: email.trim() || null,
         phoneNumber: phone.trim() || null,
+        role: role
       });
 
       if (response.data.success) {
@@ -562,22 +582,58 @@ const SignupPage = () => {
           <div style={{ width: 110, fontWeight: "bold" }}>소속농장코드</div>
           <input
             type="text"
-            placeholder="자동으로 생성됩니다"
-            value={FarmCode.createFarmCode()}
+            placeholder={role === "admin" ? "생성 버튼을 눌러주세요" : "소속 농장코드를 입력하세요"}
+            value={farmCode}
             onChange={e => setFarmCode(e.target.value)}
-            required={false}
-            disabled={loading || true}
+            required={true}
+            disabled={loading}
             style={{
               flex: 1,
               padding: "12px 16px",
-              border: "1px solid #bdbdbd",
-              borderRadius: 6,
+              border: fieldErrors.farmCode ? "1px solid #c62828" : "1px solid #bdbdbd",
+              borderRadius: role === "admin" ? "6px 0 0 6px" : "6px",
               fontSize: 16,
-              opacity: 0.6,
-              backgroundColor: "#f5f5f5"
+              opacity: loading ? 0.6 : 1,
+              backgroundColor: loading ? "#f5f5f5" : "white"
             }}
           />
+          {role === "admin" && (
+            <button
+              type="button"
+              onClick={() => setFarmCode(FarmCode.createFarmCode())}
+              disabled={loading}
+              style={{
+                padding: "12px 16px",
+                background: loading ? "#ccc" : "#388e3c",
+                color: "white",
+                border: "none",
+                borderRadius: "0 6px 6px 0",
+                fontWeight: "bold",
+                cursor: loading ? "not-allowed" : "pointer",
+                fontSize: 14,
+                opacity: loading ? 0.6 : 1
+              }}
+            >
+              생성
+            </button>
+          )}
         </div>
+        
+        {/* 소속농장코드 에러 메시지 */}
+        {fieldErrors.farmCode && (
+          <div style={{
+            width: "100%",
+            padding: "8px 12px",
+            background: "#ffebee",
+            color: "#c62828",
+            borderRadius: 4,
+            marginBottom: 16,
+            fontSize: 12,
+            textAlign: "left"
+          }}>
+            {fieldErrors.farmCode}
+          </div>
+        )}
         {/* 회원가입/취소 버튼 */}
         <div style={{ display: "flex", width: "100%", gap: 8, marginBottom: 0 }}>
           <button 

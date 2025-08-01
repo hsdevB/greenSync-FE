@@ -94,12 +94,12 @@ const DashBoardCards = ({ farmData }) => {
   useEffect(() => {
     // 첫 번째 데이터로 고정
     // const farmId = 1;
-    const farmCode = 1;
+    const farmId = 4;
 
     const fetchIndoorTemp = async () => { // 화살표 함수 사용 
       try {
         // 프록시를 사용하지 않고 직접 주소로 요청
-        const res = await axios.get(`/temperature/code/${farmCode}`);
+        const res = await axios.get(`/sensor/temperature/${farmId}`);
         console.log("Temperature response: ", res.data);
         if (res.data && typeof res.data === 'number') {
           setIndoorTemp(res.data);
@@ -361,7 +361,8 @@ useEffect(() => {
                 <h3 className="dashboard-card-title">자동 제어 기준 온도</h3>
               </div>
               <div className="dashboard-card-value red" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-                {temp1}
+              {temp1}
+                {/* {temp1} */}
               </div>
               <div className="dashboard-card-unit" style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '4px' }}>
                 ℃
@@ -553,11 +554,7 @@ useEffect(() => {
               <h3 className="dashboard-card-title">강수여부</h3>
             </div>
             <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-            {isRain === true
-              ? "☔ 비"
-              : isRain === false
-              ? "☀️ 맑음"
-              : "--"}
+            { isRain }
             </div>
             <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
               상태
