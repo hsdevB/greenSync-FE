@@ -1,120 +1,241 @@
 import React, { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import FarmCode from "../utils/FarmCode";
+import { validateUserId, validatePassword, validateEmail, validateName, validatePhoneNumber } from '../utils/validation';
+import axios from 'axios';
 
-const SignupPage = () => {
-  const navigate = useNavigate();
+const API_BASE_URL = import.meta.VITE_API_BASE_URL || 'http://192.168.0.33:3000';
+const API_SIGNUP = import.meta.VITE_SIGNUP_API || '/api/signup';
+const SEND_EMAIL_ENDPOINT = import.meta.VITE_SIGNUP_SEND_EMAIL_ENDPOINT || '/send-email';
+const VERIFY_EMAIL_ENDPOINT = import.meta.VITE_SIGNUP_VERIFY_EMAIL_ENDPOINT || '/verify-email';
+const FARM_CODE_API = import.meta.VITE_FARM_CODE_API || '/api/farm';
+const FARM_CODE_ENDPOINT = import.meta.VITE_FARM_CODE_ENDPOINT || '/generate';
+
+// Axios 인스턴스 생성
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 15000, // 15초 타임아웃으로 증가
+});
+
+// 요청 인터셉터 추가
+api.interceptors.request.use(
+  (config) => {
+    console.log('API Request:', config.method?.toUpperCase(), config.url);
+    console.log('Request data:', config.data);
+    return config;
+  },
+  (error) => {
+    console.error('Request error:', error);
+    return Promise.reject(error);
+  }
+);
+
+const SignupPage = ({ onNavigate }) => {
   const [role, setRole] = useState("employee"); // 'admin' 또는 'employee'
-  const [userId, setUserId] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordCheck, setPasswordCheck] = useState("");
-  const [email, setEmail] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [farmCode, setFarmCode] = useState("");
-  
-  // 상태 관리
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    userId: '',
+    password: '',
+    passwordCheck: '',
+    email: '',
+    verificationCode: '',
+    name: '',
+    phoneNumber: '',
+    farmCode: '',
+    farmName: '',
+    cultivationMethod: ''
+  });
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  // const [codeVerified, setCodeVerified] = useState(false);
 
-  // 유효성 검사
+  const cultivationOptions = [
+    { value: 'SG', label: '고형배지+유리온실' },
+    { value: 'SP', label: '고형배지+플라스틱온실' },
+    { value: 'WG', label: '수경재배+유리온실' },
+    { value: 'WP', label: '수경재배+플라스틱온실' }
+  ];
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // 실시간 유효성 검사
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const generateFarmCode = async () => {
+    try {
+      const response = await api.get(`${FARM_CODE_API}/${FARM_CODE_ENDPOINT}`);
+      
+      if (response.farmCode) {
+        setFormData(prev => ({
+          ...prev,
+          farmCode: response.farmCode
+        }));
+        alert('농장코드가 자동 생성되었습니다.');
+      }
+    } catch (error) {
+      alert('농장코드 생성에 실패했습니다.');
+      console.error('Farm code generation failed:', error);
+    }
+  };
+
+  const handleEmailVerify = async () => {
+    const emailError = validateEmail(formData.email);
+    if (emailError) {
+      setErrors(prev => ({ ...prev, email: emailError }));
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log('Sending email verification request to:', `${API_SIGNUP}/${SEND_EMAIL_ENDPOINT}`);
+      console.log('Email data:', { email: formData.email });
+      
+      const response = await api.post(`${API_SIGNUP}/${SEND_EMAIL_ENDPOINT}`, {
+        email: formData.email
+      });
+      
+      console.log('Email verification response:', response);
+      setEmailSent(true);
+      alert('인증번호가 이메일로 발송되었습니다.');
+    } catch (error) {
+      alert('이메일 발송에 실패했습니다.');
+      console.error('Email verification failed:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      let errorMessage = '이메일 발송에 실패했습니다.';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCodeVerify = async () => {
+    if (!formData.verificationCode) {
+      setErrors(prev => ({ ...prev, verificationCode: '인증번호를 입력해주세요.' }));
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await api.post(`${API_SIGNUP}/${VERIFY_EMAIL_ENDPOINT}`, {
+        email: formData.email,
+        code: formData.verificationCode
+      });
+      
+      // setCodeVerified(true);
+      setEmailVerified(true);
+      alert('이메일 인증이 완료되었습니다.');
+    } catch (error) {
+      alert('인증번호가 올바르지 않습니다.');
+      console.error('Code verification failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const validateForm = () => {
-    if (!userId || userId.length < 3 || userId.length > 50) {
-      setError("아이디는 3자 이상 50자 이하여야 합니다.");
-      return false;
+    const newErrors = {};
+    
+    newErrors.userId = validateUserId(formData.userId);
+    newErrors.password = validatePassword(formData.password);
+    newErrors.name = validateName(formData.name);
+    newErrors.email = validateEmail(formData.email);
+    newErrors.phoneNumber = validatePhoneNumber(formData.phoneNumber);
+    
+    if (formData.password !== formData.passwordCheck) {
+      newErrors.passwordCheck = '비밀번호가 일치하지 않습니다.';
     }
-    if (!password || password.length < 8) {
-      setError("비밀번호는 8자 이상이어야 합니다.");
-      return false;
+    
+    // 이메일 인증이 실패하는 경우 임시로 우회 (개발 중)
+    // if (!emailVerified) {
+    //   newErrors.email = '이메일 인증을 완료해주세요.';
+    // }
+    
+    if (!formData.farmCode) {
+      newErrors.farmCode = '농장코드를 입력해주세요.';
     }
-    if (password !== passwordCheck) {
-      setError("비밀번호가 일치하지 않습니다.");
-      return false;
+    
+    if (role === 'admin') {
+      if (!formData.farmName) {
+        newErrors.farmName = '농장명을 입력해주세요.';
+      }
+      if (!formData.cultivationMethod) {
+        newErrors.cultivationMethod = '재배방식을 선택해주세요.';
+      }
     }
-    if (!name || name.length < 2 || name.length > 50) {
-      setError("이름은 2자 이상 50자 이하여야 합니다.");
-      return false;
-    }
-    // 소속농장코드는 관리자와 직원 모두 자동 생성되므로 검증 불필요
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("유효한 이메일 형식이 아닙니다.");
-      return false;
-    }
-    if (phone && !/^[0-9-+\s()]+$/.test(phone) || phone.length < 10) {
-      setError("유효한 전화번호 형식이 아닙니다.");
-      return false;
-    }
-    return true;
-  };
-
-  // 이메일 인증 관련 (실제 구현은 백엔드 필요)
-  const handleEmailVerify = (e) => {
-    e.preventDefault();
-    if (!email) {
-      setError("이메일을 먼저 입력해주세요.");
-      return;
-    }
-    alert("이메일 인증 기능은 아직 구현되지 않았습니다.");
-  };
-
-  const handleCodeVerify = (e) => {
-    e.preventDefault();
-    if (!verificationCode) {
-      setError("인증번호를 입력해주세요.");
-      return;
-    }
-    alert("인증번호 확인 기능은 아직 구현되지 않았습니다.");
+    
+    // 빈 문자열인 에러 제거
+    Object.keys(newErrors).forEach(key => {
+      if (!newErrors[key]) delete newErrors[key];
+    });
+    
+    return newErrors;
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (!validateForm()) {
+    
+    const newErrors = validateForm();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
-    setLoading(true);
-
+    setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/signup', {
-        farmCode: FarmCode.createFarmCode(),
-        userId: userId.trim(),
-        password: password,
-        name: name.trim(),
-        email: email.trim() || null,
-        phoneNumber: phone.trim() || null,
-      });
+      const signupData = {
+        farmCode: formData.farmCode,
+        userId: formData.userId,
+        password: formData.password,
+        name: formData.name,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber
+      };
 
-      if (response.data.success) {
-        setSuccess("회원가입이 성공적으로 완료되었습니다!");
-        setTimeout(() => {
-          navigate('/login');
-        }, 2000);
-      } else {
-        setError(response.data.message || "회원가입에 실패했습니다.");
+      // 관리자인 경우 추가 정보 포함
+      if (role === 'admin') {
+        signupData.farmName = formData.farmName;
+        signupData.cultivationMethod = formData.cultivationMethod;
       }
-    } catch (err) {
-      console.error('회원가입 오류:', err);
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (err.code === 'ECONNREFUSED') {
-        setError("서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.");
-      } else {
-        setError("회원가입 중 오류가 발생했습니다.");
-      }
+
+      await api.post(`${API_SIGNUP}`, signupData);
+      
+      alert('회원가입이 완료되었습니다.');
+      onNavigate('login');
+    } catch (error) {
+      alert('회원가입에 실패했습니다.');
+      console.error('Signup failed:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleCancel = (e) => {
-    e.preventDefault();
-    navigate('/login');
+  const handleCancel = () => {
+    onNavigate('login');
   };
 
   return (
@@ -124,7 +245,8 @@ const SignupPage = () => {
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      background: "linear-gradient(135deg, #e0f7fa 0%, #a5d6a7 100%)"
+      background: "linear-gradient(135deg, #e0f7fa 0%, #a5d6a7 100%)",
+      padding: "20px 0"
     }}>
       <div style={{
         fontSize: 36,
@@ -157,11 +279,13 @@ const SignupPage = () => {
          </div>
        )}
 
+      
       <form onSubmit={handleSignup} style={{
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        width: 450,
+        width: 500,
+        maxWidth: "90vw",
         background: "white",
         padding: 32,
         borderRadius: 12,
@@ -169,7 +293,7 @@ const SignupPage = () => {
         marginBottom: 16
       }}>
         {/* 관리자/직원 토글 */}
-        <div style={{ display: "flex", width: "100%", marginBottom: 16, justifyContent: "center", gap: "40px" }}>
+        <div style={{ display: "flex", width: "100%", marginBottom: 24, justifyContent: "center", gap: "40px" }}>
           <span
             onClick={() => setRole("admin")}
             style={{
@@ -180,18 +304,6 @@ const SignupPage = () => {
               padding: "8px 16px",
               transition: "all 0.2s ease",
               borderBottom: role === "admin" ? "2px solid #388e3c" : "2px solid transparent"
-            }}
-            onMouseEnter={(e) => {
-              if (role !== "admin") {
-                e.target.style.color = "#388e3c";
-                e.target.style.fontWeight = "500";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (role !== "admin") {
-                e.target.style.color = "#666";
-                e.target.style.fontWeight = "normal";
-              }
             }}
           >
             관리자
@@ -207,307 +319,373 @@ const SignupPage = () => {
               transition: "all 0.2s ease",
               borderBottom: role === "employee" ? "2px solid #388e3c" : "2px solid transparent"
             }}
-            onMouseEnter={(e) => {
-              if (role !== "employee") {
-                e.target.style.color = "#388e3c";
-                e.target.style.fontWeight = "500";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (role !== "employee") {
-                e.target.style.color = "#666";
-                e.target.style.fontWeight = "normal";
-              }
-            }}
           >
             직원
           </span>
         </div>
-                 {/* 아이디 */}
-         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-           <div style={{ width: 110, fontWeight: "bold" }}>아이디</div>
-           <input
-             type="text"
-             placeholder="아이디를 입력하세요"
-             value={userId}
-             onChange={e => setUserId(e.target.value)}
-             required
-             disabled={loading}
-             style={{
-               flex: 1,
-               padding: "12px 16px",
-               border: "1px solid #bdbdbd",
-               borderRadius: 6,
-               fontSize: 16,
-               opacity: loading ? 0.6 : 1
-             }}
-           />
-         </div>
-         
-         {/* 아이디 관련 에러 메시지 */}
-         {error && (error.includes("아이디") || error.includes("아이디는")) && (
-           <div style={{
-             width: "100%",
-             padding: "8px 12px",
-             background: "#ffebee",
-             color: "#c62828",
-             borderRadius: 4,
-             marginBottom: 16,
-             fontSize: 12,
-             textAlign: "center"
-           }}>
-             {error}
-           </div>
-         )}
-         
-         {/* 비밀번호 */}
+
+        {/* 아이디 */}
         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-          <div style={{ width: 110, fontWeight: "bold" }}>비밀번호</div>
-          <input
-            type="password"
-            placeholder="비밀번호를 입력하세요"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: "12px 16px",
-              border: "1px solid #bdbdbd",
-              borderRadius: 6,
-              fontSize: 16,
-              opacity: loading ? 0.6 : 1
-            }}
-          />
+          <div style={{ width: 120, fontWeight: "bold", fontSize: 14 }}>아이디</div>
+          <div style={{ flex: 1 }}>
+            <input
+              type="text"
+              name="userId"
+              placeholder="아이디를 입력하세요 (3-50글자)"
+              value={formData.userId}
+              onChange={handleInputChange}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                border: errors.userId ? "2px solid #f44336" : "1px solid #bdbdbd",
+                borderRadius: 6,
+                fontSize: 16
+              }}
+            />
+            {errors.userId && (
+              <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
+                {errors.userId}
+              </div>
+            )}
+          </div>
         </div>
-                 {/* 비밀번호 확인 */}
-         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-           <div style={{ width: 110, fontWeight: "bold" }}>비밀번호 확인</div>
-           <input
-             type="password"
-             placeholder="비밀번호를 다시 입력하세요"
-             value={passwordCheck}
-             onChange={e => setPasswordCheck(e.target.value)}
-             required
-             disabled={loading}
-             style={{
-               flex: 1,
-               padding: "12px 16px",
-               border: "1px solid #bdbdbd",
-               borderRadius: 6,
-               fontSize: 16,
-               opacity: loading ? 0.6 : 1
-             }}
-           />
-         </div>
-         
-         {/* 비밀번호 관련 에러 메시지 */}
-         {error && (error.includes("비밀번호") || error.includes("비밀번호가")) && (
-           <div style={{
-             width: "100%",
-             padding: "8px 12px",
-             background: "#ffebee",
-             color: "#c62828",
-             borderRadius: 4,
-             marginBottom: 16,
-             fontSize: 12,
-             textAlign: "center"
-           }}>
-             {error}
-           </div>
-         )}
-        {/* 이메일 + 이메일 확인 버튼 */}
+
+        {/* 비밀번호 */}
         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-          <div style={{ width: 110, fontWeight: "bold" }}>이메일</div>
-          <input
-            type="email"
-            placeholder="이메일을 입력하세요 (선택)"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: "12px 16px",
-              border: "1px solid #bdbdbd",
-              borderRadius: "5px 5px 5px 5px",
-              fontSize: 16,
-              opacity: loading ? 0.6 : 1
-            }}
-          />
-          <button
-            type="button"
-            onClick={handleEmailVerify}
-            disabled={loading}
-            style={{
-              padding: "0 18px",
-              background: loading ? "#ccc" : "#388e3c",
-              color: "white",
-              border: "none",
-              borderRadius: "5px 5px 5px 5px",
-              fontWeight: "bold",
-              cursor: loading ? "not-allowed" : "pointer",
-              height: 44,
-              marginLeft: 8,
-              opacity: loading ? 0.6 : 1
-            }}
-          >
-            확인
-          </button>
+          <div style={{ width: 120, fontWeight: "bold", fontSize: 14 }}>비밀번호</div>
+          <div style={{ flex: 1 }}>
+            <input
+              type="password"
+              name="password"
+              placeholder="비밀번호를 입력하세요 (8글자 이상)"
+              value={formData.password}
+              onChange={handleInputChange}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                border: errors.password ? "2px solid #f44336" : "1px solid #bdbdbd",
+                borderRadius: 6,
+                fontSize: 16
+              }}
+            />
+            {errors.password && (
+              <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
+                {errors.password}
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* 비밀번호 확인 */}
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
+          <div style={{ width: 120, fontWeight: "bold", fontSize: 14 }}>비밀번호 확인</div>
+          <div style={{ flex: 1 }}>
+            <input
+              type="password"
+              name="passwordCheck"
+              placeholder="비밀번호를 다시 입력하세요"
+              value={formData.passwordCheck}
+              onChange={handleInputChange}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                border: errors.passwordCheck ? "2px solid #f44336" : "1px solid #bdbdbd",
+                borderRadius: 6,
+                fontSize: 16
+              }}
+            />
+            {errors.passwordCheck && (
+              <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
+                {errors.passwordCheck}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 이메일 + 인증 버튼 */}
+        <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
+          <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>이메일</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                type="email"
+                name="email"
+                placeholder="이메일을 입력하세요"
+                value={formData.email}
+                onChange={handleInputChange}
+                disabled={emailVerified}
+                style={{
+                  flex: 1,
+                  padding: "12px 16px",
+                  border: errors.email ? "2px solid #f44336" : emailVerified ? "2px solid #4caf50" : "1px solid #bdbdbd",
+                  borderRadius: 6,
+                  fontSize: 16,
+                  backgroundColor: emailVerified ? "#f0f8f0" : "white"
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleEmailVerify}
+                disabled={isLoading || emailVerified}
+                style={{
+                  padding: "12px 18px",
+                  background: emailVerified ? "#4caf50" : "#388e3c",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 6,
+                  fontWeight: "bold",
+                  cursor: emailVerified ? "not-allowed" : "pointer",
+                  fontSize: 14
+                }}
+              >
+                {emailVerified ? "인증완료" : "인증발송"}
+              </button>
+            </div>
+            {errors.email && (
+              <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
+                {errors.email}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* 인증번호 + 확인 버튼 */}
+        {emailSent && !emailVerified && (
+          <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
+            <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>인증번호</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  type="text"
+                  name="verificationCode"
+                  placeholder="인증번호를 입력하세요"
+                  value={formData.verificationCode}
+                  onChange={handleInputChange}
+                  style={{
+                    flex: 1,
+                    padding: "12px 16px",
+                    border: errors.verificationCode ? "2px solid #f44336" : "1px solid #bdbdbd",
+                    borderRadius: 6,
+                    fontSize: 16
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleCodeVerify}
+                  disabled={isLoading}
+                  style={{
+                    padding: "12px 18px",
+                    background: "#388e3c",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 6,
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                    fontSize: 14
+                  }}
+                >
+                  확인
+                </button>
+              </div>
+              {errors.verificationCode && (
+                <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
+                  {errors.verificationCode}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        {/* 이름 */}
         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-          <div style={{ width: 110, fontWeight: "bold" }}>인증번호</div>
-          <input
-            type="text"
-            placeholder="인증번호를 입력하세요"
-            value={verificationCode}
-            onChange={e => setVerificationCode(e.target.value)}
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: "12px 16px",
-              border: "1px solid #bdbdbd",
-              borderRadius: "5px 5px 5px 5px",
-              fontSize: 16,
-              opacity: loading ? 0.6 : 1
-            }}
-          />
-          <button
-            type="button"
-            onClick={handleCodeVerify}
-            disabled={loading}
-            style={{
-              padding: "0 18px",
-              background: loading ? "#ccc" : "#388e3c",
-              color: "white",
-              border: "none",
-              borderRadius: "5px 5px 5px 5px",
-              fontWeight: "bold",
-              cursor: loading ? "not-allowed" : "pointer",
-              height: 44,
-              marginLeft: 8,
-              opacity: loading ? 0.6 : 1
-            }}
-          >
-            확인
-          </button>
+          <div style={{ width: 120, fontWeight: "bold", fontSize: 14 }}>이름</div>
+          <div style={{ flex: 1 }}>
+            <input
+              type="text"
+              name="name"
+              placeholder="이름을 입력하세요 (2-50글자)"
+              value={formData.name}
+              onChange={handleInputChange}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                border: errors.name ? "2px solid #f44336" : "1px solid #bdbdbd",
+                borderRadius: 6,
+                fontSize: 16
+              }}
+            />
+            {errors.name && (
+              <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
+                {errors.name}
+              </div>
+            )}
+          </div>
         </div>
-                 {/* 이름 */}
-         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-           <div style={{ width: 110, fontWeight: "bold" }}>이름</div>
-           <input
-             type="text"
-             placeholder="이름을 입력하세요"
-             value={name}
-             onChange={e => setName(e.target.value)}
-             required
-             disabled={loading}
-             style={{
-               flex: 1,
-               padding: "12px 16px",
-               border: "1px solid #bdbdbd",
-               borderRadius: 6,
-               fontSize: 16,
-               opacity: loading ? 0.6 : 1
-             }}
-           />
-         </div>
-         
-         {/* 이름 관련 에러 메시지 */}
-         {error && error.includes("이름") && (
-           <div style={{
-             width: "100%",
-             padding: "8px 12px",
-             background: "#ffebee",
-             color: "#c62828",
-             borderRadius: 4,
-             marginBottom: 16,
-             fontSize: 12,
-             textAlign: "center"
-           }}>
-             {error}
-           </div>
-         )}
-                 {/* 휴대전화 */}
-         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-           <div style={{ width: 110, fontWeight: "bold" }}>휴대전화</div>
-           <input
-             type="tel"
-             placeholder="휴대전화번호를 입력하세요 (선택)"
-             value={phone}
-             onChange={e => setPhone(e.target.value)}
-             disabled={loading}
-             style={{
-               flex: 1,
-               padding: "12px 16px",
-               border: "1px solid #bdbdbd",
-               borderRadius: 6,
-               fontSize: 16,
-               opacity: loading ? 0.6 : 1
-             }}
-           />
-         </div>
-         
-         {/* 이메일/전화번호 관련 에러 메시지 */}
-         {error && (error.includes("이메일") || error.includes("전화번호") || error.includes("휴대전화")) && (
-           <div style={{
-             width: "100%",
-             padding: "8px 12px",
-             background: "#ffebee",
-             color: "#c62828",
-             borderRadius: 4,
-             marginBottom: 16,
-             fontSize: 12,
-             textAlign: "center"
-           }}>
-             {error}
-           </div>
-         )}
-        {/* 소속농장코드 */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 24, width: "100%" }}>
-          <div style={{ width: 110, fontWeight: "bold" }}>소속농장코드</div>
-          <input
-            type="text"
-            placeholder="자동으로 생성됩니다"
-            value={FarmCode.createFarmCode()}
-            onChange={e => setFarmCode(e.target.value)}
-            required={false}
-            disabled={loading || true}
-            style={{
-              flex: 1,
-              padding: "12px 16px",
-              border: "1px solid #bdbdbd",
-              borderRadius: 6,
-              fontSize: 16,
-              opacity: 0.6,
-              backgroundColor: "#f5f5f5"
-            }}
-          />
+
+        {/* 휴대전화 */}
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
+          <div style={{ width: 120, fontWeight: "bold", fontSize: 14 }}>휴대전화</div>
+          <div style={{ flex: 1 }}>
+            <input
+              type="tel"
+              name="phoneNumber"
+              placeholder="휴대전화번호를 입력하세요 (010-1234-5678)"
+              value={formData.phoneNumber}
+              onChange={handleInputChange}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                border: errors.phoneNumber ? "2px solid #f44336" : "1px solid #bdbdbd",
+                borderRadius: 6,
+                fontSize: 16
+              }}
+            />
+            {errors.phoneNumber && (
+              <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
+                {errors.phoneNumber}
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* 농장명 (관리자만) */}
+        {role === 'admin' && (
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
+            <div style={{ width: 120, fontWeight: "bold", fontSize: 14 }}>농장명</div>
+            <div style={{ flex: 1 }}>
+              <input
+                type="text"
+                name="farmName"
+                placeholder="농장명을 입력하세요"
+                value={formData.farmName}
+                onChange={handleInputChange}
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  border: errors.farmName ? "2px solid #f44336" : "1px solid #bdbdbd",
+                  borderRadius: 6,
+                  fontSize: 16
+                }}
+              />
+              {errors.farmName && (
+                <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
+                  {errors.farmName}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 재배방식 (관리자만) */}
+        {role === 'admin' && (
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
+            <div style={{ width: 120, fontWeight: "bold", fontSize: 14 }}>재배방식</div>
+            <div style={{ flex: 1 }}>
+              <select
+                name="cultivationMethod"
+                value={formData.cultivationMethod}
+                onChange={handleInputChange}
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  border: errors.cultivationMethod ? "2px solid #f44336" : "1px solid #bdbdbd",
+                  borderRadius: 6,
+                  fontSize: 16,
+                  backgroundColor: "white"
+                }}
+              >
+                <option value="">재배방식을 선택하세요</option>
+                {cultivationOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {errors.cultivationMethod && (
+                <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
+                  {errors.cultivationMethod}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 농장코드 */}
+        <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 24, width: "100%" }}>
+          <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>농장코드</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                type="text"
+                name="farmCode"
+                placeholder={role === 'admin' ? '코드 자동 생성' : '농장코드를 입력하세요'}
+                value={formData.farmCode}
+                onChange={handleInputChange}
+                readOnly={role === 'admin'}
+                style={{
+                  flex: 1,
+                  padding: "12px 16px",
+                  border: errors.farmCode ? "2px solid #f44336" : "1px solid #bdbdbd",
+                  borderRadius: 6,
+                  fontSize: 16,
+                  backgroundColor: role === 'admin' ? "#f5f5f5" : "white"
+                }}
+              />
+                            {role === 'admin' && (
+                <button
+                  type="button"
+                  onClick={generateFarmCode}
+                  disabled={isLoading}
+                  style={{
+                    padding: "12px 18px",
+                    background: "#388e3c",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 6,
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                    fontSize: 14
+                  }}
+                >
+                  생성
+                </button>
+              )}
+            </div>
+            {errors.farmCode && (
+              <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
+                {errors.farmCode}
+              </div>
+            )}
+            {role === 'admin' && formData.farmCode && (
+              <div style={{ color: '#666', fontSize: 12, marginTop: 4 }}>
+                생성된 농장코드를 복사하여 직원들에게 공유하세요.
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* 회원가입/취소 버튼 */}
-        <div style={{ display: "flex", width: "100%", gap: 8, marginBottom: 0 }}>
+        <div style={{ display: "flex", width: "100%", gap: 12 }}>
           <button 
             type="submit" 
-            disabled={loading}
+            disabled={isLoading}
             style={{
               flex: 1,
               padding: "14px 0",
               fontSize: 18,
-              background: loading ? "#ccc" : "#388e3c",
+              background: isLoading ? "#cccccc" : "#388e3c",
               color: "white",
               border: "none",
               borderRadius: 8,
-              cursor: loading ? "not-allowed" : "pointer",
-              fontWeight: "bold",
-              opacity: loading ? 0.6 : 1
+              cursor: isLoading ? "not-allowed" : "pointer",
+              fontWeight: "bold"
             }}
           >
-            {loading ? "처리중..." : "회원가입"}
+            {isLoading ? "처리 중..." : "회원가입"}
           </button>
           <button 
             type="button" 
             onClick={handleCancel}
-            disabled={loading}
+            disabled={isLoading}
             style={{
               flex: 1,
               padding: "14px 0",
@@ -516,35 +694,24 @@ const SignupPage = () => {
               color: "#444",
               border: "none",
               borderRadius: 8,
-              cursor: loading ? "not-allowed" : "pointer",
-              fontWeight: "bold",
-              opacity: loading ? 0.6 : 1
+              cursor: isLoading ? "not-allowed" : "pointer",
+              fontWeight: "bold"
             }}
           >
             취소
           </button>
-                 </div>
-       </form>
-       
-               {/* 일반적인 에러 메시지 - 폼 아래에 배치 */}
-        {error && !error.includes("아이디") && !error.includes("비밀번호") && !error.includes("이름") && !error.includes("이메일") && !error.includes("전화번호") && !error.includes("휴대전화") && (
-          <div style={{
-            width: 450,
-            padding: "12px 16px",
-            background: "#ffebee",
-            color: "#c62828",
-            borderRadius: 6,
-            marginBottom: 16,
-            fontSize: 14,
-            textAlign: "center"
-          }}>
-            {error}
-          </div>
-        )}
-       
-       <div style={{ fontSize: 15, color: "#666" }}>
-         이미 계정이 있으신가요? <a href="/login" style={{ color: "#388e3c", textDecoration: "underline" }}>로그인</a>
-       </div>
+        </div>
+      </form>
+      
+      <div style={{ fontSize: 15, color: "#666" }}>
+        이미 계정이 있으신가요? 
+        <span 
+          onClick={() => onNavigate('login')} 
+          style={{ color: "#388e3c", textDecoration: "underline", cursor: "pointer", marginLeft: 4 }}
+        >
+          로그인
+        </span>
+      </div>
     </div>
   );
 };

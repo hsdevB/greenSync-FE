@@ -7,9 +7,9 @@ import { MQTTClient } from "../utils/MQTTClient.jsx";
 import AIAnalysisModal from "./AIAnalysisModal";
 import axios from 'axios'
 
-const farmCode = 'ABCD1234'; // 임시 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const DEVICE_STATUS_ENDPOINT = import.meta.env.VITE_DEVICE_STATUS_ENDPOINT;
+const CONTROL_SETTINGS_ENDPOINT = import.meta.env.VITE_CONTROL_SETTINGS_ENDPOINT;
 const SENSOR_ENDPOINT = import.meta.env.VITE_SENSOR_ENDPOINT;
 
 // axios 인스턴스 생성
@@ -21,17 +21,14 @@ const apiClient = axios.create({
   },
 });
 
-
-
 const deviceStatusApi = {
   // 초기 데이터 설정
   setInitData: async (farmCode) => {
     try {
-      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${DEVICE_STATUS_ENDPOINT}/${farmCode}`, {
-        fan: false,
+      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${CONTROL_SETTINGS_ENDPOINT}/${farmCode}`, {
+        ledStage: 3,
         controlTemperature: 25,
         controlHumidity: 50,
-        led: 3
       });
       return response.data;
 
@@ -55,7 +52,7 @@ const deviceStatusApi = {
   // 온도 업데이트 
   updateTemperature: async (farmCode, newValue) => {
     try {
-      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${DEVICE_STATUS_ENDPOINT}/${farmCode}`, {
+      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${CONTROL_SETTINGS_ENDPOINT}/${farmCode}`, {
         controlTemperature: newValue
       });
       return response.data;
@@ -68,7 +65,7 @@ const deviceStatusApi = {
   // 습도 업데이트
   updateHumidity: async (farmCode, newValue) => {
     try {
-      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${DEVICE_STATUS_ENDPOINT}/${farmCode}`, {
+      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${CONTROL_SETTINGS_ENDPOINT}/${farmCode}`, {
         controlHumidity: newValue
       });
       return response.data;
@@ -81,8 +78,8 @@ const deviceStatusApi = {
   // LED 레벨 업데이트 
   updateLed: async (farmCode, newLevel) => {
     try {
-      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${DEVICE_STATUS_ENDPOINT}/${farmCode}`, {
-        led: newLevel
+      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${CONTROL_SETTINGS_ENDPOINT}/${farmCode}`, {
+        ledStage: newLevel
       });
       return response.data;
     } catch (error) {
@@ -95,7 +92,7 @@ const deviceStatusApi = {
 class UnityMessage {
   constructor(name, data) {
     this.name = name;
-    this.data = JSON.stringify(data);
+    this.data = data;
   }
 }
 
@@ -292,7 +289,7 @@ const WateringPlantsIcon = ({ isOn }) => (
   </svg>
 );
 
-export default function RemoteControlPanel({unityContext}) {
+export default function RemoteControlPanel({unityContext, farmCode}) {
   // const iotData = useIotData();
   const { sendMessage } = unityContext || {};
 
@@ -335,7 +332,8 @@ export default function RemoteControlPanel({unityContext}) {
   });
 
   const sendToUnity = useCallback((eventName, payload) => {
-    const message = new UnityMessage(eventName, payload);
+    // const message = new UnityMessage(eventName, payload);
+    const message = { name: eventName, data: payload };
     console.log("Sending to Unity:", JSON.stringify(message));
     try {
       safeSendMessage("MessageManager", "ReceiveMessage", JSON.stringify(message));
@@ -347,12 +345,7 @@ export default function RemoteControlPanel({unityContext}) {
 
 
   // 자동 모드 커스텀 훅 사용
-  const { simulatedData } = useAutoMode(sendToUnity);
-  
-  // 마운트 시 store 초기화
-  useEffect(() => {
-    useControlStore.getState().restoreFromLocal();
-  }, []);
+  const { simulatedData } = useAutoMode(farmCode, sendToUnity);
 
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
@@ -371,7 +364,7 @@ export default function RemoteControlPanel({unityContext}) {
             humid1: currentState.controlHumidity || 50,
             // water: currentState.water || false,
             fan: currentState.fan || false,
-            ledLevel: currentState.led || 3,
+            ledLevel: currentState.ledStage || 3,
             // autoMode: currentState.autoMode !== undefined ? currentState.autoMode : true,
             // manualMode: currentState.manualMode !== undefined ? currentState.manualMode : false
           };
@@ -389,7 +382,7 @@ export default function RemoteControlPanel({unityContext}) {
             humid1: initialData.controlHumidity || 50,
             // water: initialData.water || false,
             fan: initialData.fan || false,
-            ledLevel: initialData.led || 3,
+            ledLevel: initialData.ledStage || 3,
             // autoMode: initialData.autoMode !== undefined ? initialData.autoMode : true,
             // manualMode: initialData.manualMode !== undefined ? initialData.manualMode : false
           };

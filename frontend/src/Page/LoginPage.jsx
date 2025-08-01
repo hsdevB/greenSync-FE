@@ -1,52 +1,71 @@
 import React, { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { validateUserId, validatePassword } from '../utils/validation';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
 
-const LoginPage = () => {
-  const navigate = useNavigate();
-  const [userId, setUserId] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+const API_BASE_URL = import.meta.VITE_API_BASE_URL;
+const API_LOGIN_API = import.meta.VITE_LOGIN_API;
 
-  const handleLogin = async (e) => {
+// Axios 인스턴스 생성
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000, // 10초 타임아웃
+});
+
+// 응답 인터셉터 (에러 처리)
+api.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    console.error('API request failed:', error);
+    if (error.response) {
+      // 서버 응답이 있는 경우
+      throw new Error(error.response.data.message || `HTTP error! status: ${error.response.status}`);
+    } else if (error.request) {
+      // 요청이 전송되었지만 응답이 없는 경우
+      throw new Error('서버에 연결할 수 없습니다.');
+    } else {
+      // 요청 설정 중 오류가 발생한 경우
+      throw new Error('요청 처리 중 오류가 발생했습니다.');
+    }
+  }
+);
+
+// 로그인 컴포넌트
+const LoginPage = ({ onLogin }) => {
+  const [formData, setFormData] = useState({ userId: '', password: '' });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError(''); // 입력 시 에러 메시지 초기화
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    
-    if (!userId.trim() || !password.trim()) {
-      setError("아이디와 비밀번호를 모두 입력해주세요.");
+    setError('');
+
+    // 프론트엔드 기본 유효성 검사
+    const userIdError = validateUserId(formData.userId);
+    const passwordError = validatePassword(formData.password);
+    if (userIdError || passwordError) {
+      setError(userIdError || passwordError);
       return;
     }
 
-    setLoading(true);
-
+    setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/login', {
-        userId: userId.trim(),
-        password: password
-      });
-
-      if (response.data.success) {
-        // 로그인 성공 시 토큰과 사용자 정보 저장
-        localStorage.setItem('token', response.data.data.token);
-        localStorage.setItem('userInfo', JSON.stringify(response.data.data.user));
-        
-        // 대시보드로 이동
-        navigate('/dashboard');
-      } else {
-        setError(response.data.message || "로그인에 실패했습니다.");
-      }
+      // 👍 App.jsx에 로그인 처리를 위임합니다.
+      await onLogin(formData.userId, formData.password);
+      // 성공 시 App.jsx에서 페이지 이동을 처리하므로 여기서는 별도 처리가 필요 없습니다.
     } catch (err) {
-      console.error('로그인 오류:', err);
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (err.code === 'ECONNREFUSED') {
-        setError("서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.");
-      } else {
-        setError("로그인 중 오류가 발생했습니다.");
-      }
+      // App.jsx의 handleLogin에서 발생한 에러를 여기서 표시합니다.
+      setError(err.message || '로그인에 실패했습니다. 다시 시도해주세요.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -59,8 +78,6 @@ const LoginPage = () => {
       justifyContent: "center",
       background: "linear-gradient(135deg, #e0f7fa 0%, #a5d6a7 100%)"
     }}>
-      {/* 로고 */}
-      {/* <img src={logo} alt="GreenSync Logo" style={{ width: 100, marginBottom: 24 }} /> */}
       <div style={{
         fontSize: 36,
         fontWeight: "bold",
@@ -77,22 +94,7 @@ const LoginPage = () => {
         로그인
       </div>
       
-      {/* 에러 메시지 */}
-      {error && (
-        <div style={{
-          width: 320,
-          padding: "12px 16px",
-          background: "#ffebee",
-          color: "#c62828",
-          borderRadius: 6,
-          marginBottom: 16,
-          fontSize: 14
-        }}>
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleLogin} style={{
+      <form onSubmit={handleSubmit} style={{
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -105,59 +107,76 @@ const LoginPage = () => {
       }}>
         <input
           type="text"
+          name="userId"
           placeholder="아이디"
-          value={userId}
-          onChange={e => setUserId(e.target.value)}
-          required
-          disabled={loading}
+          value={formData.userId}
+          onChange={handleInputChange}
           style={{
             width: "100%",
             padding: "12px 16px",
-            marginBottom: 16,
-            border: "1px solid #bdbdbd",
+            marginBottom: 4,
+            border: error.userId ? "2px solid #f44336" : "1px solid #bdbdbd",
             borderRadius: 6,
             fontSize: 16,
-            opacity: loading ? 0.6 : 1
+            opacity: isLoading ? 0.6 : 1
           }}
         />
+        {error.userId && (
+          <div style={{ color: '#f44336', fontSize: 12, marginBottom: 12, alignSelf: 'flex-start' }}>
+            {error.userId}
+          </div>
+        )}
+        
         <input
           type="password"
+          name="password"
           placeholder="비밀번호"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-          disabled={loading}
+          value={formData.password}
+          onChange={handleInputChange}
           style={{
             width: "100%",
             padding: "12px 16px",
-            marginBottom: 24,
-            border: "1px solid #bdbdbd",
+            marginBottom: 4,
+            border: error.password ? "2px solid #f44336" : "1px solid #bdbdbd",
             borderRadius: 6,
             fontSize: 16,
-            opacity: loading ? 0.6 : 1
+            opacity: isLoading ? 0.6 : 1
           }}
         />
+        {error.password && (
+          <div style={{ color: '#f44336', fontSize: 12, marginBottom: 12, alignSelf: 'flex-start' }}>
+            {error.password}
+          </div>
+        )}
+        
         <button 
           type="submit" 
-          disabled={loading}
+          disabled={isLoading}
           style={{
             width: "100%",
             padding: "14px 0",
             fontSize: 18,
-            background: loading ? "#ccc" : "#388e3c",
+            background: isLoading ? "#cccccc" : "#388e3c",
             color: "white",
             border: "none",
             borderRadius: 8,
-            cursor: loading ? "not-allowed" : "pointer",
+            cursor: isLoading ? "not-allowed" : "pointer",
             fontWeight: "bold",
-            opacity: loading ? 0.6 : 1
+            marginTop: 12
           }}
         >
-          {loading ? "로그인 중..." : "로그인"}
+          {isLoading ? "로그인 중..." : "로그인"}
         </button>
       </form>
+      
       <div style={{ fontSize: 15, color: "#666" }}>
-        계정이 없으신가요? <a href="/signup" style={{ color: "#388e3c", textDecoration: "underline" }}>회원가입</a>
+        계정이 없으신가요? 
+        <Link
+          to="/signup"
+          style={{ color: "#388e3c", textDecoration: "underline", cursor: "pointer", marginLeft: 4 }}
+        >
+          회원가입
+        </Link>
       </div>
     </div>
   );
