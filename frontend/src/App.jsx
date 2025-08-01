@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { Unity } from 'react-unity-webgl';
 import useSharedUnityContext from "./UnityWrapper";
 import Sidebar from './Components/Sidebar';
@@ -10,68 +10,52 @@ import SignupPage from './Page/SignupPage';
 import CropControlUI from './Components/CropControlUI';
 import AIAnalysisModal from './Components/AIAnalysisModal';
 import UserProfilePage from './Page/UserProfilePage';
+import Chatbot from './Components/Chatbot';
+import RemoteControlPanel from './Components/RemoteControlPanel';
 import { IotDataProvider } from './api/IotDataProvider.jsx';
 import { UserProvider } from './store/useUserStore.jsx';
 import { MQTTProvider } from './hooks/MQTTProvider';
+import axios from 'axios';
 import './App.css';
+import DashBoardCards from './Components/DashBoardCards.jsx';
 
-// 목업 농장 데이터
-const MOCK_FARM_DATA = {
-  farmId: "farm001",
-  farmName: "GreenSync1",
-  farmType: "수경",
-  houseType: "유리",
-  owner: "Kim",
-  location: "서울특별시 강남구",
-  establishedDate: "2024-01-15",
-  totalArea: "100평",
-  cropType: "방울토마토",
-  sensors: {
-    temperature: 4,
-    humidity: 4,
-    ph: 2,
-    light: 2
-  },
-  devices: {
-    waterPump: 1,
-    fan: 2,
-    heater: 1,
-    led: 4
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_LOGIN_API = import.meta.env.VITE_LOGIN_API;
+const FARM_CODE_API = import.meta.env.VITE_FARM_CODE_API;
+const FARM_CODE_ENDPOINT = import.meta.env.VITE_FARM_CODE_ENDPOINT;
+
+// --- API 호출 함수 분리 ---
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 15000, // 타임아웃 증가
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
   }
+});
+
+// 1. 로그인 API
+const loginUser = async (userId, password) => {
+  const response = await apiClient.post(`${API_LOGIN_API}`, { userId, password });
+  if (!response.data.data || !response.data.data.token) {
+    throw new Error('인증 토큰이 없습니다.');
+  }
+  return response.data.data;
 };
 
-// 목업 사용자 데이터 (이메일/비밀번호 기반)
-const MOCK_USERS = [
-  {
-    email: 'admin@greensync.com',
-    password: '1234',
-    farmData: MOCK_FARM_DATA
-  },
-  {
-    email: 'farmer@greensync.com',
-    password: 'farm123',
-    farmData: {
-      ...MOCK_FARM_DATA,
-      farmId: "farm002",
-      farmName: "GreenSync2",
-      farmType: "고형배지",
-      houseType: "플라스틱",
-      owner: "Lee"
-    }
-  },
-  {
-    email: 'test@test.com',
-    password: 'test123',
-    farmData: {
-      ...MOCK_FARM_DATA,
-      farmId: "farm003",
-      farmName: "테스트 농장",
-      farmType: "수경",
-      houseType: "플라스틱",
-      owner: "테스트농부"
-    }
-  }
-];
+// 2. farmCode API 호출
+// const getFarmCode = async () => {
+//   const response = await apiClient.get(`${FARM_CODE_API}/${FARM_CODE_ENDPOINT}`);
+//   return response.data; 
+// };
+
+// 3. farmCode로 농장 데이터 조회 API 호출 (아직 없는듯)
+// const getFarmDataByCode = async (farmCode) => {
+//   const response = await apiClient.get(`/farm/${farmCode}/farmData`);
+//   // 성공 시, 농장 상세 데이터가 반환되는 API 필요 
+//   // 예: { farmId: "...", farmName: "...", farmType: "고형배지", ... }
+//   return response.data;
+// };
 
 function getCurrentTimeString() {
   const now = new Date();
@@ -88,21 +72,18 @@ function getCurrentTimeString() {
   return `${year}년 ${month}월 ${date}일 ${days[day]}요일 ${ampm} ${hour}:${min}`;
 }
 
-function DashboardLayout({ farmData }) {
+function DashboardLayout({ farmData, farmCode, onLogout }) {
   // 기존 대시보드 레이아웃을 별도 컴포넌트로 분리
   const unityContext = useSharedUnityContext(farmData);
   const [selectedMenu, setSelectedMenu] = React.useState('dashboard');
   const [showAIModal, setShowAIModal] = React.useState(false);
-  const handleLogout = () => { /* 로그아웃 처리 */ 
-    // 로그아웃 시 농장 정보 초기화
-    localStorage.removeItem('farmData');
-    localStorage.removeItem('isLoggedIn'); // 임의
-    window.location.href = '/login'; // 임의
-  };
+  const [showChatbot, setShowChatbot] = React.useState(false);
+  
   const handleMenuSelect = (menu) => {
     setSelectedMenu(menu);
+    // AI 분석 버튼 클릭 시 채팅봇 열기
     if (menu === 'ai-analysis') {
-      setShowAIModal(true);
+      setShowChatbot(true);
     }
   };
 
@@ -111,6 +92,12 @@ function DashboardLayout({ farmData }) {
     // AI 분석 모달이 닫혀도 selectedMenu는 'ai-analysis'로 유지
     setSelectedMenu('ai-analysis');
   };
+
+  const handleChatbotClose = () => {
+    setShowChatbot(false);
+    setSelectedMenu('dashboard'); // 채팅봇 닫을 때 대시보드로 돌아가기
+  };
+  
   return (
     // Dashboard에서만 MQTTContext 사용
     <MQTTProvider> 
@@ -118,7 +105,7 @@ function DashboardLayout({ farmData }) {
         <Sidebar
           selected={selectedMenu}
           onSelect={handleMenuSelect}
-          onLogout={handleLogout}
+          onLogout={onLogout}
           farmData={farmData}
         />
         {/* 상단 고정된 대시보드 헤더 */}
@@ -132,7 +119,10 @@ function DashboardLayout({ farmData }) {
         {/* 좌우 분할 레이아웃 */}
         <div className="split-layout">
           {/* 왼쪽: Unity 3D 화면 */}
-          <div className="unity-section">
+          <div className="unity-section" style={{ 
+            display: selectedMenu === 'ai-analysis' ? 'none' : 'block',
+            width: selectedMenu === 'ai-analysis' ? '0%' : '50%'
+          }}>
             <div className="unity-container">
               <div className="unity-content">
                 <Unity
@@ -178,17 +168,38 @@ function DashboardLayout({ farmData }) {
                     </div>
                   </div>
                 )}
+                                  {/* Unity 로딩 오버레이 */}
+                  {unityContext.unityProvider && !unityContext.isLoaded && (
+                    <div className="unity-loading-overlay">
+                      <div className="unity-loading-text">
+                        Unity 로딩 중... {Math.round(unityContext.loadingProgression * 100)}%
+                      </div>
+                      <div className="unity-loading-bar-bg">
+                        <div
+                          className="unity-loading-bar-fill"
+                          style={{ width: `${Math.round(unityContext.loadingProgression * 100)}%` }}
+                        ></div>
+                      </div>
+                      {unityContext.error && (
+                        <div className="unity-error-text">
+                          오류: {unityContext.error}
+                        </div>
+                      )}
+                    </div>
+                  )}
               </div>
             </div>
           </div>
               
           {/* 오른쪽: UI 콘텐츠 */}
-          <div className="ui-section">
+          <div className="ui-section" style={{ 
+            width: selectedMenu === 'ai-analysis' ? '100%' : '60%'
+          }}>
             <main className="dashboard-area">
             <Dashboard 
                 selectedMenu={selectedMenu} 
                 unityContext={unityContext} 
-                farmData={farmData}
+                farmCode={farmCode}
               />
             </main>
           </div>
@@ -200,248 +211,174 @@ function DashboardLayout({ farmData }) {
           onClose={handleAIModalClose}
           farmId="farm001"
         />
+
+        {/* AI 분석 채팅봇 */}
+        <Chatbot 
+          isOpen={showChatbot}
+          onClose={handleChatbotClose}
+          sidebar={
+            <Sidebar
+              selected={selectedMenu}
+              onSelect={handleMenuSelect}
+              onLogout={onLogout}
+              farmData={farmData}
+            />
+          }
+        />
       </div>
     </MQTTProvider>
   );
 }
 
-// LoginPage를 감싸는 컴포넌트 (목업 로그인 기능 추가)
-function LoginPageWrapper({ onLogin }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+function AppContent() {
+  const [farmCode, setFarmCode] = useState(null);
+  const [farmData, setFarmData] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    // 목업 로그인 처리
-    setTimeout(() => {
-      const user = MOCK_USERS.find(u => u.email === email && u.password === password);
-      
-      if (user) {
-        onLogin(user.farmData);
-        localStorage.setItem('currentUser', JSON.stringify({
-          email: user.email,
-          loginTime: new Date().toISOString()
-        }));
-        // 대시보드로 리다이렉트
-        window.location.href = '/dashboard';
-      } else {
-        setError('이메일 또는 비밀번호가 틀렸습니다.');
+  // 로그인 상태 및 농장 정보 복원
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const savedToken = localStorage.getItem('authToken');
+        const savedFarmData = localStorage.getItem('farmData');
+        const savedFarmCode = localStorage.getItem('farmCode');
+        
+        if (savedToken && savedFarmData && savedFarmCode) {
+          // 앱 시작 시 토큰이 있으면 바로 apiClient 기본 헤더에 설정
+          apiClient.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+          setFarmData(JSON.parse(savedFarmData));
+          setFarmCode(savedFarmCode);
+          setIsLoggedIn(true);
+        }
+      } catch (error) {
+        console.error('세션 복원 실패:', error);
+        localStorage.clear();
+      } finally {
+        setIsLoading(false);
       }
-      setLoading(false);
-    }, 1000); // 실제 API 호출을 시뮬레이션
+    };
+    checkSession();
+  }, []); // 빈 의존성 배열로 한 번만 실행
+
+  //  4. API 호출 처리하는 로그인 핸들러
+  const handleLogin = async (userId, password) => {
+    try {
+      // 1단계: 로그인하여 인증 토큰을 받음
+      const result = await loginUser(userId, password);
+      const token = result.token;
+      const farmCode = result.farmCode;
+      const farmType = result.farmType;
+      const houseType = result.houseType;
+      
+      // 2단계: 받은 토큰을 apiClient 기본 헤더에 설정
+      // 이제부터 모든 요청에 이 토큰이 포함
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      localStorage.setItem('authToken', token);
+
+       // 3단계: farmCode와 농장 정보 설정
+       setFarmCode(farmCode);
+       
+       // 4단계: 농장 데이터 구성 (farmType, houseType 포함)
+       const farmData = {
+         farmId: farmCode,
+         farmCode: farmCode,
+         farmType: farmType || '수경',
+         houseType: houseType || '유리',
+         farmName: `${farmType || '수경'} ${houseType || '유리'} 농장`,
+         owner: '사용자',
+         location: '서울특별시',
+         establishedDate: new Date().toISOString().split('T')[0],
+         totalArea: '100평',
+         cropType: '방울토마토',
+         sensors: {
+           temperature: 4,
+           humidity: 4,
+           ph: 2,
+           light: 2
+         },
+         devices: {
+           waterPump: 1,
+           fan: 2,
+           heater: 1,
+           led: 4
+         }
+       };
+       
+       setFarmData(farmData);
+       localStorage.setItem('farmData', JSON.stringify(farmData));
+       localStorage.setItem('farmCode', farmCode);
+       setIsLoggedIn(true);
+      
+      // 로그인 성공 시 대시보드로 이동
+      navigate('/dashboard', { replace: true });
+    } catch (error) {
+      console.error('로그인 프로세스 실패:', error);
+      localStorage.clear(); // 실패 시 저장된 모든 정보 삭제
+      throw error;
+    }
   };
 
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setFarmData(null);
+    setFarmCode(null);
+    localStorage.removeItem('farmData');
+    localStorage.removeItem('farmCode');
+    localStorage.removeItem('authToken');
+    // 로그아웃 시 apiClient 헤더에서도 토큰 제거
+    delete apiClient.defaults.headers.common['Authorization'];
+    // 로그아웃 시 로그인 페이지로 이동
+    navigate('/login', { replace: true });
+  };
+
+  if (isLoading) {
+    return <div>로딩 중...</div>;
+  }
+
+  // 조건부 렌더링으로 라우팅 처리
+  if (!isLoggedIn) {
+    return (
+      <Routes>
+        <Route path="/" element={<MainPage />} />
+        <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+        <Route path="/signup" element={<SignupPage onNavigate={navigate}/>} />
+        <Route path="*" element={<LoginPage onLogin={handleLogin} />} />
+      </Routes>
+    );
+  }
+
+  // 로그인된 상태에서의 라우팅
+  if (isLoggedIn ) {
+    return (
+      <Routes>
+        <Route path="/dashboard" element={<DashboardLayout farmData={farmData} farmCode={farmCode} onLogout={handleLogout} />} />
+        <Route path="/user-profile" element={<UserProfilePage />} />
+        <Route path="/crop-control" element={<CropControlUI />} />
+        <Route path="*" element={<DashboardLayout farmData={farmData} farmCode={farmCode} onLogout={handleLogout} />} />
+        <Route path="*" element={<DashBoardCards farmCode={farmCode}/>} />
+      </Routes>
+    );
+  }
+
+  // 로그인은 되었지만 농장 데이터가 없는 경우
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "linear-gradient(135deg, #e0f7fa 0%, #a5d6a7 100%)"
-    }}>
-      <div style={{
-        fontSize: 36,
-        fontWeight: "bold",
-        color: "#388e3c",
-        marginBottom: 8
-      }}>
-        GreenSync
-      </div>
-      <div style={{
-        fontSize: 18,
-        color: "#555",
-        marginBottom: 32
-      }}>
-        로그인
-      </div>
-
-      {/* 목업 계정 안내 */}
-      <div style={{
-        background: "rgba(255, 255, 255, 0.9)",
-        padding: "16px",
-        borderRadius: "8px",
-        marginBottom: "16px",
-        fontSize: "14px",
-        color: "#555",
-        textAlign: "center",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
-      }}>
-        <div style={{ fontWeight: "bold", marginBottom: "8px", color: "#388e3c" }}>테스트 계정</div>
-        <div>관리자: admin@greensync.com / 1234</div>
-        <div>농부: farmer@greensync.com / farm123</div>
-        <div>테스트: test@test.com / test123</div>
-      </div>
-
-      <form onSubmit={handleLogin} style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        width: 320,
-        background: "white",
-        padding: 32,
-        borderRadius: 12,
-        boxShadow: "0 2px 16px rgba(56,142,60,0.10)",
-        marginBottom: 16
-      }}>
-        {error && (
-          <div style={{
-            width: "100%",
-            padding: "12px",
-            marginBottom: "16px",
-            background: "#ffebee",
-            color: "#c62828",
-            borderRadius: "6px",
-            fontSize: "14px",
-            textAlign: "center"
-          }}>
-            {error}
-          </div>
-        )}
-        
-        <input
-          type="email"
-          placeholder="이메일"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "12px 16px",
-            marginBottom: 16,
-            border: "1px solid #bdbdbd",
-            borderRadius: 6,
-            fontSize: 16,
-            opacity: loading ? 0.6 : 1
-          }}
-        />
-        <input
-          type="password"
-          placeholder="비밀번호"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "12px 16px",
-            marginBottom: 24,
-            border: "1px solid #bdbdbd",
-            borderRadius: 6,
-            fontSize: 16,
-            opacity: loading ? 0.6 : 1
-          }}
-        />
-        <button 
-          type="submit" 
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "14px 0",
-            fontSize: 18,
-            background: loading ? "#ccc" : "#388e3c",
-            color: "white",
-            border: "none",
-            borderRadius: 8,
-            cursor: loading ? "not-allowed" : "pointer",
-            fontWeight: "bold"
-          }}
-        >
-          {loading ? "로그인 중..." : "로그인"}
-        </button>
-      </form>
-      <div style={{ fontSize: 15, color: "#666" }}>
-        계정이 없으신가요? <a href="/signup" style={{ color: "#388e3c", textDecoration: "underline" }}>회원가입</a>
-      </div>
-    </div>
+    <Routes>
+      <Route path="/" element={<MainPage />} />
+      <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+      <Route path="/signup" element={<SignupPage onNavigate={navigate}/>} />
+      <Route path="*" element={<LoginPage onLogin={handleLogin} />} />
+    </Routes>
   );
 }
 
 function App() {
-  const [farmData, setFarmData] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // 임의
-  const [loading, setLoading] = useState(true); // 임의
-
-  // 로그인 상태 및 농장 정보 복원
-  useEffect(() => {
-    const checkLoginStatus = () => {
-      try {
-        const savedLoginStatus = localStorage.getItem('isLoggedIn'); // 임의
-        const savedFarmData = localStorage.getItem('farmData');
-
-        if (savedLoginStatus === 'true' && savedFarmData) {
-          const parsedFarmData = JSON.parse(savedFarmData);
-          setFarmData(parsedFarmData);
-          setIsLoggedIn(true);
-        }
-      } catch (error) {
-        console.error('로그인 상태 복원 중 오류:', error); 
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('farmData');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkLoginStatus();
-  }, []);
-
-  // 농장 정보 설정 함수 (로그인 시 호출)
-  const setFarmInfo = (farmInfo) => {
-    setFarmData(farmInfo);
-    setIsLoggedIn(true);
-    localStorage.setItem('farmData', JSON.stringify(farmInfo));
-    localStorage.setItem('isLoggedIn', 'true');
-  };
-
-  // 로딩 중일 때 // 임의
-  if (loading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        flexDirection: 'column'
-      }}>
-        <div>로딩 중...</div>
-      </div>
-    );
-  }
-
   return (
     <UserProvider>
       <IotDataProvider>
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<MainPage />} />
-            {/* <Route path="/login" element={<LoginPage />} /> */}
-            {/* 목업데이터용 (하단) */}
-            <Route path="/login" element={<LoginPageWrapper onLogin={setFarmInfo} />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/user-profile" element={<UserProfilePage />} />
-            <Route path="/dashboard" 
-              element={
-                isLoggedIn && farmData ? (
-                  <DashboardLayout 
-                    farmData={farmData}
-                  />
-                ) : (
-                  // 로그인하지 않았거나 농장 정보가 없으면 로그인 페이지로 리다이렉트
-                  // <LoginPage onLogin={setFarmInfo} />
-                  // 목업 데이터용 (하단)
-                  <LoginPageWrapper onLogin={setFarmInfo} />
-                )
-              } 
-            />
-            <Route path="/crop-control" element={<CropControlUI />} />
-          </Routes>
+          <AppContent />
         </BrowserRouter>
       </IotDataProvider>
     </UserProvider>

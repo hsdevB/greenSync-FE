@@ -72,7 +72,7 @@ const Sidebar = ({ selected, onSelect, onLogout }) => {
               data-menu="ai-analysis"
               onClick={() => onSelect && onSelect('ai-analysis')}
             >
-              <Brain className="sidebar-menu-icon" /> AI 분석
+              <Brain className="sidebar-menu-icon" /> 챗봇
             </button>
           </li>
         </ul>
