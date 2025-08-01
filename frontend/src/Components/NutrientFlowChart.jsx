@@ -9,9 +9,11 @@ const NutrientFlowChart = ({ farmId }) => {
   const [timeRange, setTimeRange] = useState('24h');
 
   // 실제 센서 데이터 가져오기
+
+  const farmCode = 'ABCD1234';
   const fetchSensorData = async () => {
     try {
-      const res = await axios.get(`/sensor/nutrient/${farmId}`);
+      const res = await axios.get(`/chart/nutrient/daily/${farmCode}`);
       console.log("Nutrient sensor response: ", res.data);
       
       let phLevel, ecLevel;
@@ -159,11 +161,25 @@ const NutrientFlowChart = ({ farmId }) => {
   };
 
   const getYAxisRange = (metric) => {
-    const ranges = {
-      phLevel: [5, 7],
-      ecLevel: [1, 3]
-    };
-    return ranges[metric] || [0, 100];
+    // 실제 데이터 기반으로 동적 범위 계산
+    if (data.length === 0) {
+      const ranges = {
+        phLevel: [5, 7],
+        ecLevel: [1, 3]
+      };
+      return ranges[metric] || [0, 100];
+    }
+    
+    const values = data.map(item => item[metric]);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min;
+    
+    // 최소 범위 보장 (너무 작은 변동도 보이도록)
+    const minRange = metric === 'phLevel' ? 0.5 : 0.3;
+    const padding = Math.max(range * 0.2, minRange * 0.1);
+    
+    return [min - padding, max + padding];
   };
 
   const renderChart = () => {
@@ -195,13 +211,13 @@ const NutrientFlowChart = ({ farmId }) => {
                  <div className="nutrient-chart-header">
            <h3>양액 공급량 시계열 데이터 (00시~10시)</h3>
           <div className="nutrient-chart-controls">
-            <select 
+            {/* <select 
               value={timeRange} 
               onChange={(e) => setTimeRange(e.target.value)}
               className="time-range-select"
             >
               <option value="24h">24시간</option>
-            </select>
+            </select> */}
           </div>
         </div>
 

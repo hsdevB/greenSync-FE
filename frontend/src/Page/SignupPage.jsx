@@ -19,35 +19,74 @@ const SignupPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  
+  // 각 필드별 에러 메시지
+  const [fieldErrors, setFieldErrors] = useState({
+    userId: "",
+    password: "",
+    passwordCheck: "",
+    name: "",
+    email: "",
+    phone: ""
+  });
+
+  // 실시간 비밀번호 유효성 검사
+  const validatePassword = (password) => {
+    if (!password) return "";
+    if (password.length < 8) return "비밀번호는 8자 이상이어야 합니다.";
+    if (/^(\d)\1+$/.test(password)) return "동일한 숫자로만 구성된 비밀번호는 사용할 수 없습니다.";
+    if (!/^(?=.*[a-zA-Z])(?=.*\d)/.test(password)) return "영문자와 숫자를 포함해야 합니다.";
+    return "";
+  };
+
+  // 실시간 비밀번호 확인 검사
+  const validatePasswordCheck = (password, passwordCheck) => {
+    if (!passwordCheck) return "";
+    if (password !== passwordCheck) return "비밀번호가 일치하지 않습니다.";
+    return "";
+  };
 
   // 유효성 검사
   const validateForm = () => {
+    const newFieldErrors = {
+      userId: "",
+      password: "",
+      passwordCheck: "",
+      name: "",
+      email: "",
+      phone: ""
+    };
+    
+    let isValid = true;
+    
     if (!userId || userId.length < 3 || userId.length > 50) {
-      setError("아이디는 3자 이상 50자 이하여야 합니다.");
-      return false;
+      newFieldErrors.userId = "아이디는 3자 이상 50자 이하여야 합니다.";
+      isValid = false;
     }
     if (!password || password.length < 8) {
-      setError("비밀번호는 8자 이상이어야 합니다.");
-      return false;
+      newFieldErrors.password = "비밀번호는 8자 이상이어야 합니다.";
+      isValid = false;
     }
     if (password !== passwordCheck) {
-      setError("비밀번호가 일치하지 않습니다.");
-      return false;
+      newFieldErrors.passwordCheck = "비밀번호가 일치하지 않습니다. 다시 확인해주세요.";
+      isValid = false;
     }
     if (!name || name.length < 2 || name.length > 50) {
-      setError("이름은 2자 이상 50자 이하여야 합니다.");
-      return false;
+      newFieldErrors.name = "이름은 2자 이상 50자 이하여야 합니다.";
+      isValid = false;
     }
     // 소속농장코드는 관리자와 직원 모두 자동 생성되므로 검증 불필요
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("유효한 이메일 형식이 아닙니다.");
-      return false;
+      newFieldErrors.email = "올바른 이메일 형식을 입력해주세요. (예: example@email.com)";
+      isValid = false;
     }
     if (phone && !/^[0-9-+\s()]+$/.test(phone) || phone.length < 10) {
-      setError("유효한 전화번호 형식이 아닙니다.");
-      return false;
+      newFieldErrors.phone = "올바른 전화번호 형식을 입력해주세요. (예: 010-1234-5678)";
+      isValid = false;
     }
-    return true;
+    
+    setFieldErrors(newFieldErrors);
+    return isValid;
   };
 
   // 이메일 인증 관련 (실제 구현은 백엔드 필요)
@@ -91,12 +130,12 @@ const SignupPage = () => {
       });
 
       if (response.data.success) {
-        setSuccess("회원가입이 성공적으로 완료되었습니다!");
+        setSuccess("회원가입이 성공적으로 완료되었습니다! 로그인 페이지로 이동합니다.");
         setTimeout(() => {
           navigate('/login');
         }, 2000);
       } else {
-        setError(response.data.message || "회원가입에 실패했습니다.");
+        setError(response.data.message || "회원가입에 실패했습니다. 다시 시도해주세요.");
       }
     } catch (err) {
       console.error('회원가입 오류:', err);
@@ -105,7 +144,7 @@ const SignupPage = () => {
       } else if (err.code === 'ECONNREFUSED') {
         setError("서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.");
       } else {
-        setError("회원가입 중 오류가 발생했습니다.");
+        setError("회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
       }
     } finally {
       setLoading(false);
@@ -223,29 +262,80 @@ const SignupPage = () => {
             직원
           </span>
         </div>
-                 {/* 아이디 */}
-         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-           <div style={{ width: 110, fontWeight: "bold" }}>아이디</div>
-           <input
-             type="text"
-             placeholder="아이디를 입력하세요"
-             value={userId}
-             onChange={e => setUserId(e.target.value)}
-             required
-             disabled={loading}
-             style={{
-               flex: 1,
-               padding: "12px 16px",
-               border: "1px solid #bdbdbd",
-               borderRadius: 6,
-               fontSize: 16,
-               opacity: loading ? 0.6 : 1
-             }}
-           />
-         </div>
+                          {/* 아이디 */}
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
+            <div style={{ width: 110, fontWeight: "bold" }}>아이디</div>
+            <input
+              type="text"
+              placeholder="아이디를 입력하세요"
+              value={userId}
+              onChange={e => setUserId(e.target.value)}
+              required
+              disabled={loading}
+              style={{
+                flex: 1,
+                padding: "12px 16px",
+                border: fieldErrors.userId ? "1px solid #c62828" : "1px solid #bdbdbd",
+                borderRadius: 6,
+                fontSize: 16,
+                opacity: loading ? 0.6 : 1
+              }}
+            />
+          </div>
+          
+          {/* 아이디 에러 메시지 */}
+          {fieldErrors.userId && (
+            <div style={{
+              width: "100%",
+              padding: "8px 12px",
+              background: "#ffebee",
+              color: "#c62828",
+              borderRadius: 4,
+              marginBottom: 16,
+              fontSize: 12,
+              textAlign: "left"
+            }}>
+              {fieldErrors.userId}
+            </div>
+          )}
          
-         {/* 아이디 관련 에러 메시지 */}
-         {error && (error.includes("아이디") || error.includes("아이디는")) && (
+                                     {/* 비밀번호 */}
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
+            <div style={{ width: 110, fontWeight: "bold" }}>비밀번호</div>
+            <input
+              type="password"
+              placeholder="비밀번호를 입력하세요"
+              value={password}
+              onChange={e => {
+                const newPassword = e.target.value;
+                setPassword(newPassword);
+                const passwordError = validatePassword(newPassword);
+                setFieldErrors(prev => ({
+                  ...prev,
+                  password: passwordError
+                }));
+                // 비밀번호 확인도 다시 검사
+                const passwordCheckError = validatePasswordCheck(newPassword, passwordCheck);
+                setFieldErrors(prev => ({
+                  ...prev,
+                  passwordCheck: passwordCheckError
+                }));
+              }}
+              required
+              disabled={loading}
+              style={{
+                flex: 1,
+                padding: "12px 16px",
+                border: fieldErrors.password ? "1px solid #c62828" : "1px solid #bdbdbd",
+                borderRadius: 6,
+                fontSize: 16,
+                opacity: loading ? 0.6 : 1
+              }}
+            />
+          </div>
+         
+         {/* 비밀번호 에러 메시지 */}
+         {fieldErrors.password && (
            <div style={{
              width: "100%",
              padding: "8px 12px",
@@ -254,55 +344,97 @@ const SignupPage = () => {
              borderRadius: 4,
              marginBottom: 16,
              fontSize: 12,
-             textAlign: "center"
+             textAlign: "left"
            }}>
-             {error}
+             {fieldErrors.password}
            </div>
          )}
          
-         {/* 비밀번호 */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-          <div style={{ width: 110, fontWeight: "bold" }}>비밀번호</div>
-          <input
-            type="password"
-            placeholder="비밀번호를 입력하세요"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: "12px 16px",
-              border: "1px solid #bdbdbd",
-              borderRadius: 6,
-              fontSize: 16,
-              opacity: loading ? 0.6 : 1
-            }}
-          />
-        </div>
-                 {/* 비밀번호 확인 */}
+                   {/* 비밀번호 확인 */}
+           <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
+             <div style={{ width: 110, fontWeight: "bold" }}>비밀번호 확인</div>
+             <input
+               type="password"
+               placeholder="비밀번호를 다시 입력하세요"
+               value={passwordCheck}
+               onChange={e => {
+                 const newPasswordCheck = e.target.value;
+                 setPasswordCheck(newPasswordCheck);
+                 const passwordCheckError = validatePasswordCheck(password, newPasswordCheck);
+                 setFieldErrors(prev => ({
+                   ...prev,
+                   passwordCheck: passwordCheckError
+                 }));
+               }}
+               required
+               disabled={loading}
+               style={{
+                 flex: 1,
+                 padding: "12px 16px",
+                 border: fieldErrors.passwordCheck ? "1px solid #c62828" : "1px solid #bdbdbd",
+                 borderRadius: 6,
+                 fontSize: 16,
+                 opacity: loading ? 0.6 : 1
+               }}
+             />
+           </div>
+          
+          {/* 비밀번호 확인 에러 메시지 */}
+          {fieldErrors.passwordCheck && (
+            <div style={{
+              width: "100%",
+              padding: "8px 12px",
+              background: "#ffebee",
+              color: "#c62828",
+              borderRadius: 4,
+              marginBottom: 16,
+              fontSize: 12,
+              textAlign: "left"
+            }}>
+              {fieldErrors.passwordCheck}
+            </div>
+          )}
+                 {/* 이메일 + 이메일 확인 버튼 */}
          <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-           <div style={{ width: 110, fontWeight: "bold" }}>비밀번호 확인</div>
+           <div style={{ width: 110, fontWeight: "bold" }}>이메일</div>
            <input
-             type="password"
-             placeholder="비밀번호를 다시 입력하세요"
-             value={passwordCheck}
-             onChange={e => setPasswordCheck(e.target.value)}
-             required
+             type="email"
+             placeholder="이메일을 입력하세요 (선택)"
+             value={email}
+             onChange={e => setEmail(e.target.value)}
              disabled={loading}
              style={{
                flex: 1,
                padding: "12px 16px",
-               border: "1px solid #bdbdbd",
-               borderRadius: 6,
+               border: fieldErrors.email ? "1px solid #c62828" : "1px solid #bdbdbd",
+               borderRadius: "5px 5px 5px 5px",
                fontSize: 16,
                opacity: loading ? 0.6 : 1
              }}
            />
+           <button
+             type="button"
+             onClick={handleEmailVerify}
+             disabled={loading}
+             style={{
+               padding: "0 18px",
+               background: loading ? "#ccc" : "#388e3c",
+               color: "white",
+               border: "none",
+               borderRadius: "5px 5px 5px 5px",
+               fontWeight: "bold",
+               cursor: loading ? "not-allowed" : "pointer",
+               height: 44,
+               marginLeft: 8,
+               opacity: loading ? 0.6 : 1
+             }}
+           >
+             확인
+           </button>
          </div>
          
-         {/* 비밀번호 관련 에러 메시지 */}
-         {error && (error.includes("비밀번호") || error.includes("비밀번호가")) && (
+         {/* 이메일 에러 메시지 */}
+         {fieldErrors.email && (
            <div style={{
              width: "100%",
              padding: "8px 12px",
@@ -311,49 +443,11 @@ const SignupPage = () => {
              borderRadius: 4,
              marginBottom: 16,
              fontSize: 12,
-             textAlign: "center"
+             textAlign: "left"
            }}>
-             {error}
+             {fieldErrors.email}
            </div>
          )}
-        {/* 이메일 + 이메일 확인 버튼 */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-          <div style={{ width: 110, fontWeight: "bold" }}>이메일</div>
-          <input
-            type="email"
-            placeholder="이메일을 입력하세요 (선택)"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: "12px 16px",
-              border: "1px solid #bdbdbd",
-              borderRadius: "5px 5px 5px 5px",
-              fontSize: 16,
-              opacity: loading ? 0.6 : 1
-            }}
-          />
-          <button
-            type="button"
-            onClick={handleEmailVerify}
-            disabled={loading}
-            style={{
-              padding: "0 18px",
-              background: loading ? "#ccc" : "#388e3c",
-              color: "white",
-              border: "none",
-              borderRadius: "5px 5px 5px 5px",
-              fontWeight: "bold",
-              cursor: loading ? "not-allowed" : "pointer",
-              height: 44,
-              marginLeft: 8,
-              opacity: loading ? 0.6 : 1
-            }}
-          >
-            확인
-          </button>
-        </div>
         {/* 인증번호 + 확인 버튼 */}
         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
           <div style={{ width: 110, fontWeight: "bold" }}>인증번호</div>
@@ -392,77 +486,77 @@ const SignupPage = () => {
             확인
           </button>
         </div>
-                 {/* 이름 */}
-         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-           <div style={{ width: 110, fontWeight: "bold" }}>이름</div>
-           <input
-             type="text"
-             placeholder="이름을 입력하세요"
-             value={name}
-             onChange={e => setName(e.target.value)}
-             required
-             disabled={loading}
-             style={{
-               flex: 1,
-               padding: "12px 16px",
-               border: "1px solid #bdbdbd",
-               borderRadius: 6,
-               fontSize: 16,
-               opacity: loading ? 0.6 : 1
-             }}
-           />
-         </div>
-         
-         {/* 이름 관련 에러 메시지 */}
-         {error && error.includes("이름") && (
-           <div style={{
-             width: "100%",
-             padding: "8px 12px",
-             background: "#ffebee",
-             color: "#c62828",
-             borderRadius: 4,
-             marginBottom: 16,
-             fontSize: 12,
-             textAlign: "center"
-           }}>
-             {error}
-           </div>
-         )}
-                 {/* 휴대전화 */}
-         <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-           <div style={{ width: 110, fontWeight: "bold" }}>휴대전화</div>
-           <input
-             type="tel"
-             placeholder="휴대전화번호를 입력하세요 (선택)"
-             value={phone}
-             onChange={e => setPhone(e.target.value)}
-             disabled={loading}
-             style={{
-               flex: 1,
-               padding: "12px 16px",
-               border: "1px solid #bdbdbd",
-               borderRadius: 6,
-               fontSize: 16,
-               opacity: loading ? 0.6 : 1
-             }}
-           />
-         </div>
-         
-         {/* 이메일/전화번호 관련 에러 메시지 */}
-         {error && (error.includes("이메일") || error.includes("전화번호") || error.includes("휴대전화")) && (
-           <div style={{
-             width: "100%",
-             padding: "8px 12px",
-             background: "#ffebee",
-             color: "#c62828",
-             borderRadius: 4,
-             marginBottom: 16,
-             fontSize: 12,
-             textAlign: "center"
-           }}>
-             {error}
-           </div>
-         )}
+                                   {/* 이름 */}
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
+            <div style={{ width: 110, fontWeight: "bold" }}>이름</div>
+            <input
+              type="text"
+              placeholder="이름을 입력하세요"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              required
+              disabled={loading}
+              style={{
+                flex: 1,
+                padding: "12px 16px",
+                border: fieldErrors.name ? "1px solid #c62828" : "1px solid #bdbdbd",
+                borderRadius: 6,
+                fontSize: 16,
+                opacity: loading ? 0.6 : 1
+              }}
+            />
+          </div>
+          
+          {/* 이름 에러 메시지 */}
+          {fieldErrors.name && (
+            <div style={{
+              width: "100%",
+              padding: "8px 12px",
+              background: "#ffebee",
+              color: "#c62828",
+              borderRadius: 4,
+              marginBottom: 16,
+              fontSize: 12,
+              textAlign: "left"
+            }}>
+              {fieldErrors.name}
+            </div>
+          )}
+                  {/* 휴대전화 */}
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
+            <div style={{ width: 110, fontWeight: "bold" }}>휴대전화</div>
+            <input
+              type="tel"
+              placeholder="휴대전화번호를 입력하세요 (선택)"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              disabled={loading}
+              style={{
+                flex: 1,
+                padding: "12px 16px",
+                border: fieldErrors.phone ? "1px solid #c62828" : "1px solid #bdbdbd",
+                borderRadius: 6,
+                fontSize: 16,
+                opacity: loading ? 0.6 : 1
+              }}
+            />
+          </div>
+          
+          {/* 휴대전화 에러 메시지 */}
+          {fieldErrors.phone && (
+            <div style={{
+              width: "100%",
+              padding: "8px 12px",
+              background: "#ffebee",
+              color: "#c62828",
+              borderRadius: 4,
+              marginBottom: 16,
+              fontSize: 12,
+              textAlign: "left"
+            }}>
+              {fieldErrors.phone}
+            </div>
+          )}
         {/* 소속농장코드 */}
         <div style={{ display: "flex", alignItems: "center", marginBottom: 24, width: "100%" }}>
           <div style={{ width: 110, fontWeight: "bold" }}>소속농장코드</div>
@@ -524,10 +618,10 @@ const SignupPage = () => {
             취소
           </button>
                  </div>
-       </form>
-       
-               {/* 일반적인 에러 메시지 - 폼 아래에 배치 */}
-        {error && !error.includes("아이디") && !error.includes("비밀번호") && !error.includes("이름") && !error.includes("이메일") && !error.includes("전화번호") && !error.includes("휴대전화") && (
+               </form>
+        
+        {/* 일반적인 에러 메시지 - 폼 아래에 배치 */}
+        {error && (
           <div style={{
             width: 450,
             padding: "12px 16px",

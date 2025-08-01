@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
-    port: 3000,
+    port: 5173,
     proxy: {
       '/sensor': {
         target: 'http://192.168.0.33:3000', // 실제 백엔드 서버 주소로 수정
