@@ -117,7 +117,8 @@ const LoginPage = ({ onLogin }) => {
             marginBottom: 4,
             border: error.userId ? "2px solid #f44336" : "1px solid #bdbdbd",
             borderRadius: 6,
-            fontSize: 16
+            fontSize: 16,
+            opacity: isLoading ? 0.6 : 1
           }}
         />
         {error.userId && (
@@ -138,7 +139,8 @@ const LoginPage = ({ onLogin }) => {
             marginBottom: 4,
             border: error.password ? "2px solid #f44336" : "1px solid #bdbdbd",
             borderRadius: 6,
-            fontSize: 16
+            fontSize: 16,
+            opacity: isLoading ? 0.6 : 1
           }}
         />
         {error.password && (

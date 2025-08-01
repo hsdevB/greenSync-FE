@@ -1,26 +1,45 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './Chatbot.css';
+import botAvatar from '../assets/4712035.png';
+import userAvatar from '../assets/4712036.png';
 
 function getTime() {
   const d = new Date();
   return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
 }
 
-const BOT_AVATAR = 'https://cdn-icons-png.flaticon.com/512/4712/4712035.png';
-const USER_AVATAR = 'https://cdn-icons-png.flaticon.com/512/4712/4712036.png';
+const BOT_AVATAR = botAvatar;
+const USER_AVATAR = userAvatar;
 
-export default function Chatbot() {
+export default function Chatbot({ isOpen, onClose, sidebar }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([]); // {role, text, time}
+  const [isComposing, setIsComposing] = useState(false); // IME 조합 상태 추적
+
   const chatEndRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // 외부에서 전달받은 isOpen prop이 있으면 사용, 없으면 내부 상태 사용
+  const isChatbotOpen = isOpen !== undefined ? isOpen : open;
+  const handleClose = onClose || (() => setOpen(false));
 
   useEffect(() => {
-    if (open && chatEndRef.current) {
+    if (isChatbotOpen && chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, open]);
+  }, [messages, isChatbotOpen]);
+
+  // 채팅이 열릴 때 입력창에 자동 포커스
+  useEffect(() => {
+    if (isChatbotOpen && inputRef.current) {
+      const timer = setTimeout(() => {
+        inputRef.current.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isChatbotOpen]);
 
   // 스마트팜 전문 LLM 호출 함수
   const askSmartFarmBot = async (userMessage) => {
@@ -93,9 +112,10 @@ Always answer in natural, fluent Korean.
     }
   };
 
-  const send = async () => {
-    if (!input.trim()) return;
-    const userMsg = { role: 'user', text: input, time: getTime() };
+  const send = useCallback(async () => {
+    if (!input.trim() || loading) return;
+    
+    const userMsg = { role: 'user', text: input.trim(), time: getTime() };
     setMessages(msgs => [...msgs, userMsg]);
     setInput('');
     setLoading(true);
@@ -115,93 +135,166 @@ Always answer in natural, fluent Korean.
       ]);
     } finally {
       setLoading(false);
+      // AI 응답 후 input에 포커스 복원 - IME 상태 초기화를 위해 blur 후 focus
+      if (inputRef.current) {
+        requestAnimationFrame(() => {
+          if (inputRef.current) {
+            inputRef.current.blur();
+            requestAnimationFrame(() => {
+              if (inputRef.current) {
+                inputRef.current.focus();
+              }
+            });
+          }
+        });
+      }
     }
-  };
+  }, [input, loading]);
 
-  const handleKeyDown = e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  // 키보드 이벤트 핸들러 수정 - IME 상태를 정확히 추적
+  const handleKeyDown = useCallback((e) => {
+    // Enter 키이고 한글 조합 중이 아닐 때만 전송
+    if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
       e.preventDefault();
       send();
     }
-  };
+  }, [send, isComposing]);
+
+  // IME 조합 시작
+  const handleCompositionStart = useCallback(() => {
+    setIsComposing(true);
+  }, []);
+
+  // IME 조합 종료
+  const handleCompositionEnd = useCallback(() => {
+    setIsComposing(false);
+  }, []);
+
+  // input 변경 핸들러
+  const handleInputChange = useCallback((e) => {
+    const value = e.target.value;
+    setInput(value);
+  }, []);
+
+  // 전송 버튼 클릭 핸들러
+  const handleSendClick = useCallback(() => {
+    send();
+  }, [send]);
 
   return (
     <>
-      <button className="cb-fab" onClick={() => setOpen(true)} aria-label="스마트팜 AI 챗봇 열기">
-        <img src={BOT_AVATAR} alt="스마트팜 AI" style={{width: 38, height: 38}} />
-      </button>
-      {open && (
-        <div className="cb-modal-overlay">
-          <div className="cb-modal">
-            <div className="cb-header">
-              <img src={BOT_AVATAR} alt="SmartFarm AI" className="cb-header-avatar" />
-              <div className="cb-header-title">
-                <div className="cb-header-name">스마트팜 AI 어시스턴트</div>
-                <div className="cb-header-status online">● 전문 농업 상담</div>
-              </div>
-              <button className="cb-close" onClick={() => setOpen(false)}>×</button>
-            </div>
-            <div className="cb-body">
-              <div className="cb-messages">
-                {messages.length === 0 && (
-                  <div className="cb-empty">
-                    <div style={{fontSize: '16px', fontWeight: 'bold', marginBottom: '8px'}}>
-                      🌱 스마트팜 AI 어시스턴트
-                    </div>
-                    <div style={{fontSize: '14px', color: '#666'}}>
-                      농작물 재배, 온도 관리, 수확량 예측 등<br/>
-                      스마트팜 운영에 관한 모든 것을 물어보세요!
-                    </div>
+      {/* 외부에서 제어되지 않을 때만 FAB 버튼 표시 */}
+      {isOpen === undefined && (
+        <button 
+          className="cb-fab" 
+          onClick={() => setOpen(true)} 
+          aria-label="스마트팜 AI 챗봇 열기"
+        >
+          <img src={BOT_AVATAR} alt="스마트팜 AI" style={{width: 38, height: 38}} />
+        </button>
+      )}
+      {isChatbotOpen && (
+        <div className="cb-fullscreen-overlay">
+          <div className="cb-fullscreen-layout">
+            {/* 사이드바 */}
+            {sidebar}
+            
+            {/* 메인 콘텐츠 */}
+            <div className="cb-fullscreen-container">
+              {/* 헤더 */}
+              <div className="cb-fullscreen-header">
+                <div className="cb-header-left">
+                  <img src={BOT_AVATAR} alt="SmartFarm AI" className="cb-header-avatar" />
+                  <div className="cb-header-info">
+                    <div className="cb-header-name">스마트팜 AI 어시스턴트</div>
+                    <div className="cb-header-status">● 전문 농업 상담</div>
                   </div>
-                )}
-                {messages.map((msg, idx) => (
-                  <div key={idx} className={`cb-bubble-row ${msg.role}`}>
-                    <img
-                      src={msg.role === 'user' ? USER_AVATAR : BOT_AVATAR}
-                      alt={msg.role}
-                      className="cb-avatar"
-                    />
-                    <div className={`cb-bubble ${msg.role}`}>
-                      <div className="cb-bubble-text">{msg.text}</div>
-                      <div className="cb-bubble-time">{msg.time}</div>
-                    </div>
-                  </div>
-                ))}
-                {loading && (
-                  <div className="cb-bubble-row bot">
-                    <img src={BOT_AVATAR} alt="bot" className="cb-avatar" />
-                    <div className="cb-bubble bot">
-                      <div className="cb-bubble-text cb-typing">
-                        <span>.</span><span>.</span><span>.</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={chatEndRef} />
-              </div>
-              <form className="cb-input-area" onSubmit={e => { e.preventDefault(); send(); }}>
-                <textarea
-                  className="cb-input"
-                  placeholder="스마트팜 관련 질문을 입력하세요 (예: 토마토 최적 온도는?)"
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  rows={1}
-                  disabled={loading}
-                  style={{resize: 'none'}}
-                />
-                <button
-                  className="cb-send-btn"
-                  type="submit"
-                  disabled={loading || !input.trim()}
-                >
-                  <span role="img" aria-label="send">📤</span>
+                </div>
+                <button className="cb-close-btn" onClick={handleClose}>
+                  <span>×</span>
                 </button>
-              </form>
+              </div>
+
+              {/* 메인 콘텐츠 */}
+              <div className="cb-fullscreen-content">
+                {messages.length === 0 ? (
+                  <div className="cb-welcome-screen">
+                    <div className="cb-welcome-title">무엇을 도와드릴까요?</div>
+                    <div className="cb-welcome-subtitle">
+                      스마트팜 운영에 관한 모든 것을 물어보세요
+                    </div>
+                  </div>
+                ) : (
+                  <div className="cb-messages-container">
+                    {messages.map((msg, idx) => (
+                      <div key={idx} className={`cb-message ${msg.role}`}>
+                        <div className="cb-message-avatar">
+                          <img
+                            src={msg.role === 'user' ? USER_AVATAR : BOT_AVATAR}
+                            alt={msg.role}
+                          />
+                        </div>
+                        <div className="cb-message-content">
+                          <div className="cb-message-text">{msg.text}</div>
+                          <div className="cb-message-time">{msg.time}</div>
+                        </div>
+                      </div>
+                    ))}
+                    {loading && (
+                      <div className="cb-message bot">
+                        <div className="cb-message-avatar">
+                          <img src={BOT_AVATAR} alt="bot" />
+                        </div>
+                        <div className="cb-message-content">
+                          <div className="cb-typing-indicator">
+                            <span></span><span></span><span></span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={chatEndRef} />
+                  </div>
+                )}
+              </div>
+
+              {/* 입력 영역 */}
+              <div className="cb-input-container">
+                <div className="cb-input-wrapper">
+                  <input
+                    ref={inputRef}
+                    className="cb-input-field"
+                    type="text"
+                    placeholder="무엇이든 물어보세요"
+                    value={input}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    onCompositionStart={handleCompositionStart}
+                    onCompositionEnd={handleCompositionEnd}
+                    disabled={loading}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                    inputMode="text"
+                    lang="ko"
+                  />
+                  <div className="cb-input-actions">
+                    <button 
+                      className="cb-send-btn"
+                      onClick={handleSendClick}
+                      disabled={loading || !input.trim()}
+                      title="전송"
+                      type="button"
+                    >
+                      <span>➤</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       )}
     </>
   );
-} 
+}

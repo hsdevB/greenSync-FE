@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Mail, Phone, MapPin, Shield, Edit, Eye, EyeOff } from "lucide-react";
 import { useUserStore } from "../store/useUserStore.jsx";
+import FarmCode from "../utils/FarmCode.js";
 
 const UserProfilePage = () => {
   const { userInfo, updateUserInfo, updateProfileImage } = useUserStore();
@@ -36,7 +37,39 @@ const UserProfilePage = () => {
   useEffect(() => {
     // TODO: API에서 사용자 정보 로드
     console.log("사용자 정보 로드");
-  }, []);
+    
+    // 농장 코드가 없으면 생성
+    if (!userInfo.farmCode) {
+      const newFarmCode = userInfo.role === "admin" 
+        ? FarmCode.createAdminFarmCode() 
+        : FarmCode.createFarmCode();
+      
+      updateUserInfo({
+        ...userInfo,
+        farmCode: newFarmCode
+      });
+    }
+  }, [userInfo.role, userInfo.farmCode, updateUserInfo]);
+
+  // 농장 코드 생성 함수
+  const generateFarmCode = () => {
+    const newFarmCode = userInfo.role === "admin" 
+      ? FarmCode.createAdminFarmCode() 
+      : FarmCode.createFarmCode();
+    
+    setEditData({
+      ...editData,
+      farmCode: newFarmCode
+    });
+  };
+
+  // 농장 코드 유효성 검사
+  const validateFarmCode = (code) => {
+    if (userInfo.role === "admin") {
+      return code.startsWith("ADMIN_");
+    }
+    return FarmCode.validateFarmCode(code);
+  };
 
   // 편집 시작
   const handleEditStart = () => {
@@ -52,6 +85,12 @@ const UserProfilePage = () => {
 
   // 편집 저장
   const handleEditSave = () => {
+    // 농장 코드 유효성 검사
+    if (editData.farmCode && !validateFarmCode(editData.farmCode)) {
+      alert("유효하지 않은 농장 코드입니다. 다시 확인해주세요.");
+      return;
+    }
+    
     // TODO: API 호출하여 사용자 정보 업데이트
     updateUserInfo(editData);
     setIsEditing(false);
@@ -185,7 +224,7 @@ const UserProfilePage = () => {
           style={{
             position: "absolute",
             right: 24,
-            top: 24,
+            top: 45,
             color: "#388e3c",
             textDecoration: "none",
             fontSize: "16px",
@@ -255,38 +294,51 @@ const UserProfilePage = () => {
             </div>
             
             {/* 이미지 업로드 버튼 - 4시 방향 바깥쪽 */}
-            <button
+            <div
               onClick={handleImageUploadClick}
               style={{
                 position: "absolute",
                 bottom: -8,
                 right: -8,
-                width: 28,
-                height: 28,
+                width: 32,
+                height: 32,
                 borderRadius: "50%",
-                background: "#666666",
-                border: "2px solid white",
+                background: "linear-gradient(135deg, #4CAF50, #45a049)",
+                border: "3px solid white",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                color: "white",
-                fontSize: "10px",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-                zIndex: 10
+                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                zIndex: 10,
+                transition: "all 0.2s ease",
+                hover: {
+                  transform: "scale(1.1)",
+                  boxShadow: "0 6px 16px rgba(0,0,0,0.4)"
+                }
               }}
               title="프로필 이미지 변경"
+              onMouseEnter={(e) => {
+                e.target.style.transform = "scale(1.1)";
+                e.target.style.boxShadow = "0 6px 16px rgba(0,0,0,0.4)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "scale(1)";
+                e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
+              }}
             >
-              <img 
-                src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICA8Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSI4Ii8+CiAgPHBhdGggZD0iTTIxIDIxLTE2LjU5LTE2LjU5Ii8+CiAgPHBhdGggZD0iTTExIDhhMyAzIDAgMSAwIDAgNiAzIDMgMCAxIDAgMC02eiIvPgo8L3N2Zz4K" 
-                alt="돋보기"
-                style={{
-                  width: "14px",
-                  height: "14px",
-                  filter: "invert(1)"
-                }}
-              />
-            </button>
+              <svg 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="white"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 3H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z" stroke="white" strokeWidth="1" fill="none"/>
+                <path d="M12 17C14.2091 17 16 15.2091 16 13C16 10.7909 14.2091 9 12 9C9.79086 9 8 10.7909 8 13C8 15.2091 9.79086 17 12 17Z" fill="white"/>
+                <circle cx="12" cy="13" r="3" fill="none" stroke="white" strokeWidth="1"/>
+              </svg>
+            </div>
           </div>
           
           {/* 이미지 편집 버튼들 */}
@@ -312,11 +364,6 @@ const UserProfilePage = () => {
                   boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
                 }}
               >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                  <polyline points="17,21 17,13 7,13 7,21"/>
-                  <polyline points="7,3 7,8 15,8"/>
-                </svg>
                 저장
               </button>
               <button
@@ -335,10 +382,6 @@ const UserProfilePage = () => {
                   boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
                 }}
               >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
                 취소
               </button>
             </div>
@@ -360,27 +403,48 @@ const UserProfilePage = () => {
           <div style={{
             display: "flex",
             justifyContent: "flex-end",
+            gap: "8px",
             marginBottom: "24px"
           }}>
             {!isEditing ? (
-              <button
-                onClick={handleEditStart}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "8px 16px",
-                  background: "#388e3c",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "14px"
-                }}
-              >
-                <Edit size={16} />
-                정보 수정
-              </button>
+              <>
+                <button
+                  onClick={handleEditStart}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 16px",
+                    background: "#388e3c",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontSize: "14px"
+                  }}
+                >
+                  <Edit size={16} />
+                  정보 수정
+                </button>
+                <button
+                  onClick={() => setIsPasswordEditing(true)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 16px",
+                    background: "#ff9800",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontSize: "14px"
+                  }}
+                >
+                  <Shield size={16} />
+                  비밀번호 변경
+                </button>
+              </>
             ) : (
               <div style={{ display: "flex", gap: "8px" }}>
                 <button
@@ -569,20 +633,58 @@ const UserProfilePage = () => {
                     <label style={{ fontSize: "12px", color: "#666", marginBottom: "4px", display: "block" }}>
                       농장 코드
                     </label>
-                    <input
-                      type="text"
-                      value={isEditing ? editData.farmCode : userInfo.farmCode}
-                      onChange={(e) => setEditData({...editData, farmCode: e.target.value})}
-                      disabled={true}
-                      style={{
-                        width: "70%",
-                        padding: "8px 12px",
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        fontSize: "14px",
-                        background: "#f5f5f5"
-                      }}
-                    />
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "70%" }}>
+                      <input
+                        type="text"
+                        value={isEditing ? editData.farmCode : userInfo.farmCode}
+                        onChange={(e) => {
+                          const newCode = e.target.value.toUpperCase();
+                          setEditData({...editData, farmCode: newCode});
+                        }}
+                        disabled={!isEditing}
+                        style={{
+                          flex: 1,
+                          padding: "8px 12px",
+                          border: "1px solid #ddd",
+                          borderRadius: "4px",
+                          fontSize: "14px",
+                          background: isEditing ? "white" : "#f5f5f5",
+                          fontFamily: "monospace",
+                          letterSpacing: "1px"
+                        }}
+                        placeholder={isEditing ? "농장 코드를 입력하세요" : ""}
+                      />
+                      {isEditing && (
+                        <button
+                          onClick={generateFarmCode}
+                          style={{
+                            padding: "8px 12px",
+                            background: "#4CAF50",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            whiteSpace: "nowrap"
+                          }}
+                          title="새 농장 코드 생성"
+                        >
+                          생성
+                        </button>
+                      )}
+                    </div>
+                    {isEditing && editData.farmCode && (
+                      <div style={{
+                        fontSize: "11px",
+                        color: validateFarmCode(editData.farmCode) ? "#4CAF50" : "#f44336",
+                        marginTop: "4px"
+                      }}>
+                        {validateFarmCode(editData.farmCode) 
+                          ? "✓ 유효한 농장 코드입니다" 
+                          : "✗ 유효하지 않은 농장 코드입니다"
+                        }
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -637,39 +739,12 @@ const UserProfilePage = () => {
             borderTop: "1px solid #e0e0e0",
             paddingTop: "24px"
           }}>
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "16px"
-            }}>
-              <h3 style={{
-                margin: 0,
-                fontSize: "18px",
-                color: "#333"
+            {isPasswordEditing && (
+              <div style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginBottom: "16px"
               }}>
-                {/* 비밀번호 변경 */}
-              </h3>
-              {!isPasswordEditing ? (
-                <button
-                  onClick={() => setIsPasswordEditing(true)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "8px 16px",
-                    background: "#ff9800",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    fontSize: "14px"
-                  }}
-                >
-                  <Shield size={16} />
-                  비밀번호 변경
-                </button>
-              ) : (
                 <div style={{ display: "flex", gap: "8px" }}>
                   <button
                     onClick={handlePasswordChange}
@@ -722,8 +797,8 @@ const UserProfilePage = () => {
                     취소
                   </button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {isPasswordEditing && (
               <div style={{
