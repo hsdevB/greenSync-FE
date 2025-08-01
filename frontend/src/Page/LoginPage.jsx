@@ -36,7 +36,7 @@ api.interceptors.response.use(
 // 로그인 컴포넌트
 const LoginPage = ({ onLogin }) => {
   const [formData, setFormData] = useState({ userId: '', password: '' });
-  const [error, setError] = useState('');
+  const [error, setError] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e) => {
@@ -46,24 +46,37 @@ const LoginPage = ({ onLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-
-    // 프론트엔드 기본 유효성 검사
-    const userIdError = validateUserId(formData.userId);
-    const passwordError = validatePassword(formData.password);
-    if (userIdError || passwordError) {
-      setError(userIdError || passwordError);
+    
+    // 입력 유효성 검사
+    const newErrors = {};
+    if (!formData.userId.trim()) {
+      newErrors.userId = '아이디를 입력해주세요.';
+    }
+    if (!formData.password.trim()) {
+      newErrors.password = '비밀번호를 입력해주세요.';
+    }
+    
+    if (Object.keys(newErrors).length > 0) {
+      setError(newErrors);
       return;
     }
-
+    
     setIsLoading(true);
+    setError({}); // 이전 에러 초기화
+    
     try {
       // 👍 App.jsx에 로그인 처리를 위임합니다.
       await onLogin(formData.userId, formData.password);
       // 성공 시 App.jsx에서 페이지 이동을 처리하므로 여기서는 별도 처리가 필요 없습니다.
     } catch (err) {
       // App.jsx의 handleLogin에서 발생한 에러를 여기서 표시합니다.
-      setError(err.message || '로그인에 실패했습니다. 다시 시도해주세요.');
+      const errorMessage = err.message || '로그인에 실패했습니다. 다시 시도해주세요.';
+      setError({ general: errorMessage });
+      
+      // 네트워크 오류인 경우 사용자에게 안내
+      if (err.originalError && (err.originalError.code === 'ECONNABORTED' || err.originalError.code === 'NETWORK_ERROR')) {
+        console.log('네트워크 오류로 인한 로그인 실패:', err.originalError);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -146,6 +159,22 @@ const LoginPage = ({ onLogin }) => {
         {error.password && (
           <div style={{ color: '#f44336', fontSize: 12, marginBottom: 12, alignSelf: 'flex-start' }}>
             {error.password}
+          </div>
+        )}
+        
+        {/* 일반적인 에러 메시지 표시 */}
+        {error.general && (
+          <div style={{ 
+            color: '#f44336', 
+            fontSize: 14, 
+            marginBottom: 12, 
+            textAlign: 'center',
+            padding: '8px 12px',
+            backgroundColor: '#ffebee',
+            borderRadius: '4px',
+            border: '1px solid #ffcdd2'
+          }}>
+            {error.general}
           </div>
         )}
         

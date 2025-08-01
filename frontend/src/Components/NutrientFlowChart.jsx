@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './NutrientFlowChart.css';
 
-const NutrientFlowChart = ({ farmId }) => {
+const NutrientFlowChart = ({ farmCode }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMetrics, setSelectedMetrics] = useState(['phLevel', 'ecLevel']);
@@ -11,48 +11,45 @@ const NutrientFlowChart = ({ farmId }) => {
 
   const fetchSensorData = async () => {
     try {
-      const res = await axios.get(`http://192.168.0.33:3000/chart/nutrient/daily/ABCD1234`);
-      console.log("Nutrient sensor response: ", res.data);
-      
+      const res = await axios.get(`/chart/nutrient/daily/${farmCode}`);
+      console.log("Nutrient sensor response: ", res.data.data.datasets[0].data);
+      // res.data.data.datasets[0].data.ecAverageData
+      // res.data.data.datasets[0].data.phAverageData
       let phLevel, ecLevel;
       
       // API 응답 구조에 따른 데이터 추출
       if (res.data) {
         // pH 값 추출 (다양한 응답 구조 대응)
-        if (res.data.data && res.data.data.phLevel) {
-          phLevel = res.data.data.phLevel;
-        } else if (res.data.phLevel) {
-          phLevel = res.data.phLevel;
+        if (res.data.data.datasets[0].data && res.data.data.datasets[0].data.phAverageData) {
+          phLevel = res.data.data.datasets[0].data.phAverageData;
+        } else if (res.data.data.datasets[0].data.phAverageData) {
+          phLevel = res.data.data.datasets[0].data.phAverageData;
         } else if (typeof res.data === 'number') {
           phLevel = res.data;
         } else {
-          phLevel = 6.0; // 기본값
+          phLevel = [6.0]; // 기본값
         }
 
         // EC 값 추출 (실제 센서 데이터 우선)
-        if (res.data.data && res.data.data.elcDT) {
-          ecLevel = res.data.data.elcDT;
-        } else if (res.data.elcDT) {
-          ecLevel = res.data.elcDT;
-        } else if (res.data.data && res.data.data.ecLevel) {
-          ecLevel = res.data.data.ecLevel;
-        } else if (res.data.ecLevel) {
-          ecLevel = res.data.ecLevel;
+        if (res.data.data.datasets[0].data && res.data.data.datasets[0].data.ecAverageData) {
+          ecLevel = res.data.data.datasets[0].data.ecAverageData;
+        } else if (res.data.data.datasets[0].data.ecAverageData) {
+          ecLevel = res.data.data.datasets[0].data.ecAverageData;
         } else if (typeof res.data === 'number') {
           ecLevel = res.data;
         } else {
-          ecLevel = 2.0; // 기본값
+          ecLevel = [0.0]; // 기본값
         }
       } else {
-        phLevel = 6.0;
-        ecLevel = 2.0;
+        phLevel = [0.0];
+        ecLevel = [0.0];
       }
 
       console.log(`실제 센서 데이터 - pH: ${phLevel}, EC: ${ecLevel}`);
       return { phLevel, ecLevel };
     } catch (error) {
       console.error('Sensor data fetch error:', error);
-      return { phLevel: 6.0, ecLevel: 2.0 }; // 에러 시 기본값
+      return { phLevel: [0.0], ecLevel: [0.0] }; // 에러 시 기본값
     }
   };
 
@@ -73,12 +70,12 @@ const NutrientFlowChart = ({ farmId }) => {
     todayMidnight.setHours(0, 0, 0, 0); // 00:00:00으로 설정
     
          // 10시간 데이터 생성 (00시~10시)
-     for (let i = 0; i <= 10; i++) {
-       const time = new Date(todayMidnight.getTime() + i * 60 * 60 * 1000);
-       
-       // 시간대별 자연스러운 변동 패턴
-       const hourOfDay = i; // 0~10
-       const morningFactor = Math.sin((hourOfDay / 10) * Math.PI) * 0.1; // 아침에 점진적 증가
+    for (let i = 0; i <= 24; i*2) {
+      const time = new Date(todayMidnight.getTime() + i * 60 * 60 * 1000);
+      
+      // 시간대별 자연스러운 변동 패턴
+      const hourOfDay = i; // 0~10
+      const morningFactor = Math.sin((hourOfDay / 10) * Math.PI) * 0.1; // 아침에 점진적 증가
       const phVariation = morningFactor + (hourOfDay % 3 === 0 ? 0.02 : 0); // 3시간마다 작은 변동
       const ecVariation = morningFactor + (hourOfDay % 2 === 0 ? 0.01 : 0); // 2시간마다 작은 변동
       
@@ -125,7 +122,7 @@ const NutrientFlowChart = ({ farmId }) => {
     };
 
     loadData();
-  }, [farmId]);
+  }, [farmCode]);
 
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString('ko-KR', {
@@ -198,15 +195,15 @@ const NutrientFlowChart = ({ farmId }) => {
       );
     }
 
-         const chartWidth = 500;
-     const chartHeight = 400;
-     const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+    const chartWidth = 500;
+    const chartHeight = 400;
+    const margin = { top: 20, right: 30, bottom: 40, left: 60 };
     const width = chartWidth - margin.left - margin.right;
     const height = chartHeight - margin.top - margin.bottom;
 
     return (
       <div className="nutrient-chart-container">
-                 <div className="nutrient-chart-header">
+        <div className="nutrient-chart-header">
            <h3>양액 공급량 시계열 데이터 (00시~10시)</h3>
           <div className="nutrient-chart-controls">
             {/* <select 
