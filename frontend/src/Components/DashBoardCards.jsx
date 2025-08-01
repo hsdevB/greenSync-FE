@@ -14,10 +14,7 @@ import NutrientFlowChart from './NutrientFlowChart.jsx';
 
 // import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 
-const DashBoardCards = ({ farmData }) => {
-  // 디버깅을 위한 콘솔 로그
-  console.log('DashBoardCards rendered with farmData:', farmData);
-
+const DashBoardCards = ({ farmCode }) => {
   // 상태 관리 초기화
   const [refreshDisabled, setRefreshDisabled] = useState(false); // 새로고침 비활성화 상태
   const [refreshTimer, setRefreshTimer] = useState(0); // 새로고침 타이머
@@ -94,13 +91,11 @@ const DashBoardCards = ({ farmData }) => {
   useEffect(() => {
     // 첫 번째 데이터로 고정
     // const farmId = 1;
-    const farmId = 4;
-
     const fetchIndoorTemp = async () => { // 화살표 함수 사용 
       try {
         // 프록시를 사용하지 않고 직접 주소로 요청
-        const res = await axios.get(`/sensor/temperature/${farmId}`);
-        console.log("Temperature response: ", res.data);
+        const res = await axios.get(`/sensor/temperature/code/${farmCode}`);
+
         if (res.data && typeof res.data === 'number') {
           setIndoorTemp(res.data);
         } else if (res.data && res.data.data && res.data.data.temperature) {
@@ -121,13 +116,10 @@ const DashBoardCards = ({ farmData }) => {
 
 //실내습도 데이터 가져오기
 useEffect(() => {
-  // 첫 번째 데이터로 고정
-  const farmCode = 1;
-
   const fetchIndoorHumi = async () => {
     try {
-      const res = await axios.get(`/humidity/code/${farmCode}`);
-      console.log("Humidity response: ", res.data);
+      const res = await axios.get(`/sensor/humidity/code/${farmCode}`);
+  
       if (res.data && typeof res.data === 'number') {
         setIndoorHumi(res.data);
       } else if (res.data && res.data.data && res.data.data.humidity) {
@@ -150,13 +142,9 @@ useEffect(() => {
 
 //이산화탄소 데이터 가져오기
 useEffect(() => {
-  // 첫 번째 데이터로 고정
-  const farmCode = 1;
-
   const fetchCarbonDioxide = async () => {
       try {
-        const res = await axios.get(`/carbonDioxide/code/${farmCode}`);
-        console.log("CO2 response: ", res.data);
+        const res = await axios.get(`/sensor/carbonDioxide/code/${farmCode}`);
         if (res.data && typeof res.data === 'number') {
           setCarbonDioxide(res.data);
         } else if (res.data && res.data.data && res.data.data.co2) {
@@ -177,13 +165,9 @@ useEffect(() => {
 
 //광량 데이터 가져오기
 useEffect(() => {
-  // 첫 번째 데이터로 고정
-  const farmCode = 1;
-
   const fetchIlluminance = async () => {
     try {
-      const res = await axios.get(`/illuminance/code/${farmCode}`);
-      console.log("Illuminance response: ", res.data);
+      const res = await axios.get(`/sensor/illuminance/code/${farmCode}`);
       if (res.data && typeof res.data === 'number') {
         setIlluminance(res.data);
       } else if (res.data && res.data.data && res.data.data.illuminance) {
@@ -565,12 +549,12 @@ useEffect(() => {
 
       {/* 일일 온/습도 모니터링 그래프 */}
       <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
-        <DailyTempHumidityChart farmId={1} />
+        <DailyTempHumidityChart farmCode={farmCode} />
       </div>
       
       {/* 양액량 시계열 그래프 */}
       <div className="dashboard-single-cards-row" style={{ margin: '0 32px 24px 32px' }}>
-        <NutrientFlowChart farmId={1} />
+        <NutrientFlowChart farmCode={farmCode} />
       </div>
 
       {/* 일일 급수량 그래프 - 주석 처리됨 */}

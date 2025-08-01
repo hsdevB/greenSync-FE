@@ -47,7 +47,6 @@ const SignupPage = ({ onNavigate }) => {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [success, setSuccess] = useState("");
   const [emailSent, setEmailSent] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
   // const [codeVerified, setCodeVerified] = useState(false);
@@ -104,6 +103,14 @@ const SignupPage = ({ onNavigate }) => {
       console.log('Sending email verification request to:', `${API_SIGNUP}/${SEND_EMAIL_ENDPOINT}`);
       console.log('Email data:', { email: formData.email });
       
+      // 개발 중 임시로 이메일 인증 우회
+      console.log('개발 모드: 이메일 인증을 우회합니다.');
+      setEmailSent(true);
+      setEmailVerified(true);
+      alert('개발 모드: 이메일 인증이 완료되었습니다.');
+      
+      // 실제 API 호출은 주석 처리
+      /*
       const response = await api.post(`${API_SIGNUP}/${SEND_EMAIL_ENDPOINT}`, {
         email: formData.email
       });
@@ -111,6 +118,7 @@ const SignupPage = ({ onNavigate }) => {
       console.log('Email verification response:', response);
       setEmailSent(true);
       alert('인증번호가 이메일로 발송되었습니다.');
+      */
     } catch (error) {
       alert('이메일 발송에 실패했습니다.');
       console.error('Email verification failed:', error);
@@ -141,6 +149,13 @@ const SignupPage = ({ onNavigate }) => {
 
     setIsLoading(true);
     try {
+      // 개발 중 임시로 인증번호 확인 우회
+      console.log('개발 모드: 인증번호 확인을 우회합니다.');
+      setEmailVerified(true);
+      alert('개발 모드: 이메일 인증이 완료되었습니다.');
+      
+      // 실제 API 호출은 주석 처리
+      /*
       await api.post(`${API_SIGNUP}/${VERIFY_EMAIL_ENDPOINT}`, {
         email: formData.email,
         code: formData.verificationCode
@@ -149,6 +164,7 @@ const SignupPage = ({ onNavigate }) => {
       // setCodeVerified(true);
       setEmailVerified(true);
       alert('이메일 인증이 완료되었습니다.');
+      */
     } catch (error) {
       alert('인증번호가 올바르지 않습니다.');
       console.error('Code verification failed:', error);
@@ -222,10 +238,19 @@ const SignupPage = ({ onNavigate }) => {
         signupData.cultivationMethod = formData.cultivationMethod;
       }
 
+      // 개발 중 임시로 회원가입 우회
+      console.log('개발 모드: 회원가입을 우회합니다.');
+      console.log('회원가입 데이터:', signupData);
+      alert('개발 모드: 회원가입이 완료되었습니다.');
+      onNavigate('login');
+      
+      // 실제 API 호출은 주석 처리
+      /*
       await api.post(`${API_SIGNUP}`, signupData);
       
       alert('회원가입이 완료되었습니다.');
       onNavigate('login');
+      */
     } catch (error) {
       alert('회원가입에 실패했습니다.');
       console.error('Signup failed:', error);
@@ -265,7 +290,7 @@ const SignupPage = ({ onNavigate }) => {
       </div>
       
              {/* 성공 메시지 */}
-       {success && (
+       {/* {success && (
          <div style={{
            width: 450,
            padding: "12px 16px",
@@ -277,7 +302,7 @@ const SignupPage = ({ onNavigate }) => {
          }}>
            {success}
          </div>
-       )}
+       )} */}
 
       
       <form onSubmit={handleSignup} style={{
