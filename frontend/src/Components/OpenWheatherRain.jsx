@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-const OPENWEATHER_API_KEY = "58ae922a8ae59948dca89a2e0120c426";
-const CITY = "Seoul";
-const LANG = "kr";
-const UNITS = "metric";
+const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+const CITY = import.meta.env.VITE_CITY;
+const LANG = import.meta.env.VITE_LANG;
+const UNITS = import.meta.env.VITE_UNITS;
 
 export default function OpenWheatherRain() {
     const [rain, setRain] = useState(0);
