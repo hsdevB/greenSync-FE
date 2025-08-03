@@ -594,35 +594,61 @@ const SignupPage = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* 농장명 (관리자만) */}
-        {role === 'admin' && (
-          <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
-            <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>농장명</div>
-            <div style={{ flex: 1 }}>
+        {/* 소속농장코드 */}
+        <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 24, width: "100%" }}>
+          <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>소속 농장 코드</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", gap: 6 }}>
               <input
                 type="text"
-                name="farmName"
-                placeholder="농장명을 입력하세요"
-                value={formData.farmName}
+                name="farmCode"
+                placeholder={role === 'admin' ? '생성 버튼을 클릭하세요' : '농장코드를 입력하세요'}
+                value={formData.farmCode}
                 onChange={handleInputChange}
-                disabled={isLoading}
+                disabled={isLoading || (role === 'admin' && !formData.farmCode)}
                 style={{
-                  width: "90%",
+                  flex: 1,
                   padding: "12px 16px",
-                  border: errors.farmName ? "2px solid #f44336" : "1px solid #bdbdbd",
+                  border: errors.farmCode ? "2px solid #f44336" : "1px solid #bdbdbd",
                   borderRadius: 6,
                   fontSize: 16,
+                  backgroundColor: (role === 'admin' && !formData.farmCode) ? "#f5f5f5" : "white",
                   opacity: isLoading ? 0.6 : 1
                 }}
-              />
-              {errors.farmName && (
-                <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
-                  {errors.farmName}
-                </div>
+                />
+              {role === 'admin' && (
+                <button
+                  type="button"
+                  onClick={generateFarmCode}
+                  disabled={isLoading}
+                  style={{
+                    padding: "12px 16px",
+                    marginRight: 4,
+                    background: isLoading ? "#cccccc" : "#388e3c",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 6,
+                    fontWeight: "bold",
+                    cursor: isLoading ? "not-allowed" : "pointer",
+                    fontSize: 14
+                  }}
+                >
+                  {isLoading ? "생성중..." : " 생성 "}
+                </button>
               )}
             </div>
+            {errors.farmCode && (
+              <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
+                {errors.farmCode}
+              </div>
+            )}
+            {role === 'admin' && formData.farmCode && (
+              <div style={{ color: '#666', fontSize: 12, marginTop: 4 }}>
+                생성된 농장코드를 복사하여 직원들에게 공유하세요.
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* 재배방식 (관리자만) */}
         {role === 'admin' && (
@@ -659,62 +685,6 @@ const SignupPage = ({ onNavigate }) => {
             </div>
           </div>
         )}
-
-        {/* 농장코드 */}
-        <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 24, width: "100%" }}>
-          <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>농장코드</div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", gap: 6 }}>
-              <input
-                type="text"
-                name="farmCode"
-                placeholder={role === 'admin' ? '생성 버튼을 클릭하세요' : '농장코드를 입력하세요'}
-                value={formData.farmCode}
-                onChange={handleInputChange}
-                disabled={isLoading || (role === 'admin' && !formData.farmCode)}
-                style={{
-                  flex: 1,
-                  padding: "12px 16px",
-                  border: errors.farmCode ? "2px solid #f44336" : "1px solid #bdbdbd",
-                  borderRadius: 6,
-                  fontSize: 16,
-                  backgroundColor: (role === 'admin' && !formData.farmCode) ? "#f5f5f5" : "white",
-                  opacity: isLoading ? 0.6 : 1
-                }}
-              />
-              {role === 'admin' && (
-                <button
-                  type="button"
-                  onClick={generateFarmCode}
-                  disabled={isLoading}
-                  style={{
-                    padding: "12px 16px",
-                    marginRight: 4,
-                    background: isLoading ? "#cccccc" : "#388e3c",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 6,
-                    fontWeight: "bold",
-                    cursor: isLoading ? "not-allowed" : "pointer",
-                    fontSize: 14
-                  }}
-                >
-                  {isLoading ? "생성중..." : " 생성 "}
-                </button>
-              )}
-            </div>
-            {errors.farmCode && (
-              <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
-                {errors.farmCode}
-              </div>
-            )}
-            {role === 'admin' && formData.farmCode && (
-              <div style={{ color: '#666', fontSize: 12, marginTop: 4 }}>
-                생성된 농장코드를 복사하여 직원들에게 공유하세요.
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* 회원가입/취소 버튼 */}
         <div style={{ display: "flex", width: "100%", gap: 12 }}>
