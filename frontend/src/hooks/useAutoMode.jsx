@@ -3,9 +3,9 @@ import useControlStore from '../store/useControlStore.jsx';
 import { MQTTClient } from '../utils/MQTTClient.jsx';
 import axios from 'axios';
 
-const farmCode = 'ABCD1234'; // 임시 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const DEVICE_STATUS_ENDPOINT = import.meta.env.VITE_DEVICE_STATUS_ENDPOINT;
+const CONTROL_SETTINGS_ENDPOINT = import.meta.env.VITE_CONTROL_SETTINGS_ENDPOINT;
 const SENSOR_ENDPOINT = import.meta.env.VITE_SENSOR_ENDPOINT;
 
 // axios 인스턴스 생성
@@ -21,7 +21,7 @@ const deviceStatusApi = {
   // 온도 업데이트 
   updateTemperature: async (farmCode, newValue) => {
     try {
-      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${DEVICE_STATUS_ENDPOINT}/${farmCode}`, {
+      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${CONTROL_SETTINGS_ENDPOINT}/${farmCode}`, {
         controlTemperature: newValue
       });
       return response.data;
@@ -34,7 +34,7 @@ const deviceStatusApi = {
   // 습도 업데이트
   updateHumidity: async (farmCode, newValue) => {
     try {
-      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${DEVICE_STATUS_ENDPOINT}/${farmCode}`, {
+      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${CONTROL_SETTINGS_ENDPOINT}/${farmCode}`, {
         controlHumidity: newValue
       });
       return response.data;
@@ -47,8 +47,8 @@ const deviceStatusApi = {
   // LED 레벨 업데이트 
   updateLed: async (farmCode, newLevel) => {
     try {
-      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${DEVICE_STATUS_ENDPOINT}/${farmCode}`, {
-        led: newLevel
+      const response = await apiClient.put(`${SENSOR_ENDPOINT}/${CONTROL_SETTINGS_ENDPOINT}/${farmCode}`, {
+        ledStage: newLevel
       });
       return response.data;
     } catch (error) {
@@ -59,7 +59,7 @@ const deviceStatusApi = {
 };
 
 // 자동 모드 로직을 담은 커스텀 훅
-export const useAutoMode = (sendToUnity) => {
+export const useAutoMode = (farmCode, sendToUnity) => {
   const mqttClientRef = useRef(null);
 
   const {
@@ -67,7 +67,7 @@ export const useAutoMode = (sendToUnity) => {
     setWater, setFan, setLed,
     setTemp1,
     setHumid1,
-    autoMode
+    autoMode,
   } = useControlStore();
 
   // MQTT 클라이언트 초기화 (한 번만)
