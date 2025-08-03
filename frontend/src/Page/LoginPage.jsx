@@ -3,8 +3,8 @@ import { validateUserId, validatePassword } from '../utils/validation';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.VITE_API_BASE_URL;
-const API_LOGIN_API = import.meta.VITE_LOGIN_API;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_LOGIN_API = import.meta.env.VITE_LOGIN_API;
 
 // Axios 인스턴스 생성
 const api = axios.create({
@@ -58,7 +58,7 @@ const LoginPage = ({ onLogin }) => {
 
     setIsLoading(true);
     try {
-      // 👍 App.jsx에 로그인 처리를 위임합니다.
+      // App.jsx에 로그인 처리를 위임합니다.
       await onLogin(formData.userId, formData.password);
       // 성공 시 App.jsx에서 페이지 이동을 처리하므로 여기서는 별도 처리가 필요 없습니다.
     } catch (err) {
