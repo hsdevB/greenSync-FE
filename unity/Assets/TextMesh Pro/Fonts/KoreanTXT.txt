@@ -1,0 +1,7 @@
+고형배지
+수경재배
+유리온실
+플라스틱온실
+농장유형
+온실유형
+!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmonpqrstuvwxyz{|}~

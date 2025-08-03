@@ -320,16 +320,14 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
     setWater, setFan, setLed, 
     setTemp1,
     setHumid1,
-    persistToLocal,
     autoMode, manualMode,
-    toggleAutoMode, toggleManualMode,
     setState: setControlState // store의 모든 상태를 한 번에 업데이트하는 함수
   } = useControlStore();
   
-  const [isLoading, setIsLoading] = useState(true); // 데이터 로딩 상태
-  const [connectionStatus, setConnectionStatus] = useState({
-    backend: false,
-  });
+  // const [isLoading, setIsLoading] = useState(true); // 데이터 로딩 상태
+  // const [connectionStatus, setConnectionStatus] = useState({
+  //   backend: false,
+  // });
 
   const sendToUnity = useCallback((eventName, payload) => {
     // const message = new UnityMessage(eventName, payload);
@@ -342,8 +340,6 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
     }
   }, [safeSendMessage]);
 
-
-
   // 자동 모드 커스텀 훅 사용
   const { simulatedData } = useAutoMode(farmCode, sendToUnity);
 
@@ -351,7 +347,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
   useEffect(() => {
     const initializeComponent = async () => {
       try {
-        setIsLoading(true);
+        // setIsLoading(true);
         
         // 먼저 현재 상태를 조회해봄
         try {
@@ -370,7 +366,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
           };
 
           setControlState(storeState);
-          setConnectionStatus(prev => ({ ...prev, backend: true }));
+          // setConnectionStatus(prev => ({ ...prev, backend: true }));
         } catch (error) {
           console.log('기존 상태 없음, 초기 데이터 설정 중...', error);
           
@@ -388,7 +384,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
           };
 
           setControlState(storeState);
-          setConnectionStatus(prev => ({ ...prev, backend: true }));
+          // setConnectionStatus(prev => ({ ...prev, backend: true }));
           
           console.log('초기 상태 설정 완료:', initialData);
         }
@@ -405,9 +401,9 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
           // autoMode: true,
           // manualMode: false
         });
-        setConnectionStatus(prev => ({ ...prev, backend: false }));
+        // setConnectionStatus(prev => ({ ...prev, backend: false }));
       } finally {
-        setIsLoading(false);
+        // setIsLoading(false);
       }
     };
 
@@ -432,15 +428,15 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
     }
   }, []);
 
-  // 새로고침 버튼 클릭 핸들러
-  const handleRefresh = () => {
-    // 실제 새로고침 로직 (예: 데이터 fetch 등)
-    // fetchData();
-    const now = Date.now();
-    localStorage.setItem("lastRefreshTime", now.toString());
-    setRefreshDisabled(true);
-    setRefreshTimer(300); // 5분(300초)
-  };
+  // // 새로고침 버튼 클릭 핸들러
+  // const handleRefresh = () => {
+  //   // 실제 새로고침 로직 (예: 데이터 fetch 등)
+  //   // fetchData();
+  //   const now = Date.now();
+  //   localStorage.setItem("lastRefreshTime", now.toString());
+  //   setRefreshDisabled(true);
+  //   setRefreshTimer(300); // 5분(300초)
+  // };
 
   // 타이머 관리 (useEffect)
   useEffect(() => {
@@ -477,15 +473,9 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
     } catch (error) {
       // 3. API 호출 실패 시 롤백
       console.error("온도 업데이트 실패, 원래 값으로 롤백:", error);
-      setTemp1(originalValue); // UI 상태를 원래대로
-      sendToUnity(`tempControl${sensorNum}`, { value: originalValue }); // Unity도 원래대로
+      setTemp1(currentTemp); // UI 상태를 원래대로
+      sendToUnity(`tempControl${sensorNum}`, { value: currentTemp }); // Unity도 원래대로
     }
-
-    if (sensorNum === 1) setTemp1(newValue);
-    // else if (sensorNum === 2) setTemp2(newValue);
-    // else if (sensorNum === 3) setTemp3(newValue);
-    // else if (sensorNum === 4) setTemp4(newValue);
-    persistToLocal();
   };
 
   // 습도 제어 ▲▼
@@ -506,52 +496,53 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
     } catch (error) {
       // 3. 실패 시 롤백
       console.error("습도 업데이트 실패, 롤백:", error);
-      setHumid1(originalValue);
-      sendToUnity(`humidControl${sensorNum}`, { value: originalValue });
+      setHumid1(currentHumid);
+      sendToUnity(`humidControl${sensorNum}`, { value: currentHumid });
     }
-    
-    if (sensorNum === 1) setHumid1(newValue);
-    // else if (sensorNum === 2) setHumid2(newValue);
-    // else if (sensorNum === 3) setHumid3(newValue);
-    // else if (sensorNum === 4) setHumid4(newValue);
-    
-    persistToLocal();
   };
   
 
   // 관개 시스템
   const handleWaterClick = async () => {
-    const newWaterState = !water; // 현재 상태의 반대값으로 토글
-    
-    setWater(newWaterState); // 급수 상태를 토글
-    sendToUnity("startWater", { status: newWaterState });
+    if(water) return; // 이미 급수 중이면 무시
+
+    // 1. UI 즉시 업데이트
+    setWater(true);
+    sendToUnity("startWater", { status: true });
 
     if (mqttClientRef.current?.isConnected) {
       await mqttClientRef.current.blinkLed(0, fan);
     }
-    
-    persistToLocal();
+    // 5초 후 자동 종료
+    setTimeout(async () => {
+        setWater(false);
+        sendToUnity("startWater", { status: false });
+    }, 5000);
   };
 
   // 환기 시스템 토글
   const handleFanToggle = () => {
-    const newState = !fan;
+    const originalState = fan;
+    const newState = !originalState;
+
+    // 1. UI 즉시 업데이트
+    setFan(newState);
     sendToUnity("fanStatus", { status: newState });
 
     if (mqttClientRef.current?.isConnected) {
       mqttClientRef.current.publish(`device/control/${farmCode}`, { "fan": newState });
       // mqttClientRef.current.publish('device/control/ABCD1234', { "fan": newState });
     }
-
-    setFan(newState);
-    persistToLocal();
   };
 
   // LED 조명
   const handleLedToggle = async (e) => {
     // 센서로는 밝기기 조절 할 때마다 led 꺼졌다 켜졌다 전달해야 함.
+    const originallevel = ledLevel;
     const level = parseInt(e.target.value);
-    console.log("LED 밝기 설정:", level);
+
+    // 1. UI 즉시 업데이트
+    setLed({ ledLevel: level });
     sendToUnity("ledLevel", { level });
 
     try {
@@ -567,9 +558,6 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
       setLed({ ledLevel: originallevel });
       sendToUnity("ledLevel", { originallevel });
     }
-
-    setLed(level);
-    persistToLocal();
   };
 
   const handleModeToggle = async (mode) => {
@@ -583,24 +571,6 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
       } catch (error) {
           console.error("모드 변경 실패:", error);
       }
-  };
-
-  // 자동모드 토글 함수
-  const handleAutoModeToggle = () => {
-    try {
-      toggleAutoMode();
-    } catch (error) {
-      console.error("자동모드 변경 실패:", error);
-    }
-  };
-
-  // 수동모드 토글 함수
-  const handleManualModeToggle = () => {
-    try {
-      toggleManualMode();
-    } catch (error) {
-      console.error("수동모드 변경 실패:", error);
-    }
   };
 
   const controlDisabled = autoMode;
@@ -670,18 +640,6 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
           <DataCard label="급수" value={water ? "ON" : "OFF"} unit={water ? "🟢" : "🔴"} icon={<WateringPlantsIcon isOn={water} />} />
         </div>
 
-        {/* 백엔드 API 연결 상태 표시 */}
-        {/* <div className="realtime-data-section">
-          <div className="section-title">백엔드 API 연결 상태</div>
-          <div className="data-grid">
-            <DataCard
-              label="백엔드 API"
-              value={connectionStatus.backend ? "연결됨" : "연결 안됨"}
-              unit={connectionStatus.backend ? "🟢" : "🔴"}
-            />
-          </div>
-        </div> */}
-
         {/* 기기 제어 */}
         <div className="device-control-section">
           <div className="section-title">⚙️ 공조 설비 기기 - 원격제어</div>
@@ -705,18 +663,17 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
           <div className="control-row">
             <span>자동모드</span>
             <button 
-              onClick={handleAutoModeToggle}
-              disabled={!manualMode} // 수동모드가 꺼져 있으면 자동모드도 못 누르게
-              className={autoMode ? "btn-on" : "btn-off"}
-            >
-              {autoMode ? "ON" : "OFF"}
+              onClick={() => handleModeToggle('auto')} 
+              disabled={autoMode} 
+              className={autoMode ? "btn-on" : "btn-off"}>
+                {autoMode ? "ON" : "OFF"}
             </button>
           </div>
           <div className="control-row">
             <span>수동모드</span>
             <button 
-              onClick={handleManualModeToggle}
-              disabled={!autoMode} // 자동모드가 꺼져 있으면 수동모드도 못 누르게게
+              onClick={() => handleModeToggle('manual')}
+              disabled={manualMode} // 자동모드가 꺼져 있으면 수동모드도 못 누르게게
               className={manualMode ? "btn-on" : "btn-off"}
             >
               {manualMode ? "ON" : "OFF"}
