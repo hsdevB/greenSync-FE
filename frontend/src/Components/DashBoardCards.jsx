@@ -9,8 +9,8 @@ import OpenWeather from "./OpenWheater.jsx";
 // import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
-import DailyTempHumidityChart from './DailyTempHumidityChart.jsx';
-import NutrientFlowChart from './NutrientFlowChart.jsx';
+import DailyTempHumidityChart from './DailyTempHumidityChart.jsx'; //  일일 온도그래프 추가
+import NutrientFlowChart from './NutrientFlowChart.jsx'; // 양액 그래프 추가
 
 // import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 

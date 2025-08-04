@@ -330,7 +330,7 @@ function AppContent() {
         <Route path="/user-profile" element={<UserProfilePage />} />
         <Route path="/crop-control" element={<CropControlUI />} />
         <Route path="*" element={<DashboardLayout farmData={farmData} farmCode={farmCode} onLogout={handleLogout} />} />
-        <Route path="*" element={<DashBoardCards farmCode={farmCode}/>} />
+        <Route path="*" element={<DashBoardCards farmCode={farmCode}/>} /> // 대시보드 카드 추가
       </Routes>
     );
   }

@@ -10,7 +10,7 @@ export default function OpenWeather() {
 
   // 날씨 데이터 가져오기
   useEffect(() => {
-    fetch(`http://192.168.0.33:3000/weather/raw`)
+    fetch(`http://192.168.0.33:3000/weather/raw`) // 통합 엔드포인트 시도
       .then(res => res.json())
       .then(data => {
         console.log('Weather API 응답:', data);
