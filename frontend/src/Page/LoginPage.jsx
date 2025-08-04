@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const API_LOGIN_API = import.meta.env.VITE_LOGIN_API;
+// const API_LOGIN_API = import.meta.env.VITE_LOGIN_API;
 
 // Axios 인스턴스 생성
 const api = axios.create({

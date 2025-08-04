@@ -206,6 +206,8 @@ function AppContent() {
         const savedFarmType = localStorage.getItem('farmType');
         const savedHouseType = localStorage.getItem('houseType');
         const savedFarmCode = localStorage.getItem('farmCode');
+        console.log("savedFarmCode: ", savedFarmCode);
+        console.log("localStorage: ", localStorage);
         
         if (savedToken && savedFarmType && savedHouseType && savedFarmCode) {
           // 앱 시작 시 토큰이 있으면 바로 apiClient 기본 헤더에 설정
@@ -235,10 +237,15 @@ function AppContent() {
       const farmType = result.farmType;
       const houseType = result.houseType;
       
+      console.log("result.farmCode: ", result.farmCode);
+      console.log("farmCode: ", farmCode);
       // 2단계: 받은 토큰을 apiClient 기본 헤더에 설정
       // 이제부터 모든 요청에 이 토큰이 포함
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       localStorage.setItem('authToken', token);
+      localStorage.setItem('farmCode', farmCode);
+      localStorage.setItem('farmType', farmType);
+      localStorage.setItem('houseType', houseType);
 
       setFarmCode(farmCode);
       setFarmType(farmType);
