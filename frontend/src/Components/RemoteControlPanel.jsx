@@ -302,6 +302,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
 
   // MQTT 클라이언트 초기화
   useEffect(() => {
+    // mqttClientRef.current = new MQTTClient(farmCode);
     mqttClientRef.current = new MQTTClient();
     mqttClientRef.current.connect(); // 실제 브로커 주소로 변경 필요
     
@@ -311,6 +312,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
       }
     };
   }, []);
+  // }, [farmCode]);
 
   // 전역 store 업데이트 및 저장
   const {
@@ -459,8 +461,12 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
   // 수동 모드 ---------------------------------------------------
   // 온도 제어 ▲▼
   const handleTempChange = async (sensorNum, delta) => {
-    const currentTemp = temp1;
-    const newValue = Math.max(10, Math.min(40, currentTemp + delta));
+    const originalValue = temp1; // 실패 시 되돌리기 위한 원래 값
+    const newValue = Math.max(10, Math.min(40, originalValue + delta));
+
+    // 1. UI 즉시 업데이트 (낙관적 업데이트)
+    setTemp1(newValue);
+    sendToUnity(`tempControl${sensorNum}`, { value: newValue });
     
     try {
       // 2. 백그라운드에서 API 호출
@@ -473,16 +479,18 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
     } catch (error) {
       // 3. API 호출 실패 시 롤백
       console.error("온도 업데이트 실패, 원래 값으로 롤백:", error);
-      setTemp1(currentTemp); // UI 상태를 원래대로
-      sendToUnity(`tempControl${sensorNum}`, { value: currentTemp }); // Unity도 원래대로
+      setTemp1(originalValue); // UI 상태를 원래대로
+      sendToUnity(`tempControl${sensorNum}`, { value: originalValue }); // Unity도 원래대로
     }
   };
 
   // 습도 제어 ▲▼
   const handleHumidChange = async (sensorNum, delta) => {
-    const currentHumid = humid1;
-    const newValue = Math.max(30, Math.min(90, currentHumid + delta));
-    
+    const originalValue = humid1;
+    const newValue = Math.max(30, Math.min(90, originalValue + delta));
+
+    // 1. UI 즉시 업데이트
+    setHumid1(newValue);
     sendToUnity(`humidControl${sensorNum}`, { value: newValue });
 
     try {
@@ -496,8 +504,8 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
     } catch (error) {
       // 3. 실패 시 롤백
       console.error("습도 업데이트 실패, 롤백:", error);
-      setHumid1(currentHumid);
-      sendToUnity(`humidControl${sensorNum}`, { value: currentHumid });
+      setHumid1(originalValue);
+      sendToUnity(`humidControl${sensorNum}`, { value: originalValue });
     }
   };
   
@@ -542,13 +550,14 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
     const level = parseInt(e.target.value);
 
     // 1. UI 즉시 업데이트
-    setLed({ ledLevel: level });
+    setLed(level);
     sendToUnity("ledLevel", { level });
 
     try {
       // 2. 백그라운드 API 호출
       await deviceStatusApi.updateLed(farmCode, level);
       console.log("LED 밝기 변경 성공!");
+      console.log("ledLevel: ", ledLevel);
       if (mqttClientRef.current?.isConnected && level > 0) {
         mqttClientRef.current.blinkLed(1, fan);
       }
