@@ -360,7 +360,7 @@ const SignupPage = ({ onNavigate }) => {
               value={formData.userId}
               onChange={handleInputChange}
               style={{
-                width: "100%",
+                width: "90%",
                 padding: "12px 16px",
                 border: errors.userId ? "2px solid #f44336" : "1px solid #bdbdbd",
                 borderRadius: 6,
@@ -386,7 +386,7 @@ const SignupPage = ({ onNavigate }) => {
               value={formData.password}
               onChange={handleInputChange}
               style={{
-                width: "100%",
+                width: "90%",
                 padding: "12px 16px",
                 border: errors.password ? "2px solid #f44336" : "1px solid #bdbdbd",
                 borderRadius: 6,
@@ -412,7 +412,7 @@ const SignupPage = ({ onNavigate }) => {
               value={formData.passwordCheck}
               onChange={handleInputChange}
               style={{
-                width: "100%",
+                width: "90%",
                 padding: "12px 16px",
                 border: errors.passwordCheck ? "2px solid #f44336" : "1px solid #bdbdbd",
                 borderRadius: 6,
@@ -431,23 +431,24 @@ const SignupPage = ({ onNavigate }) => {
         <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
           <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>이메일</div>
           <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input
-                type="email"
-                name="email"
-                placeholder="이메일을 입력하세요"
-                value={formData.email}
-                onChange={handleInputChange}
-                disabled={emailVerified}
-                style={{
-                  flex: 1,
-                  padding: "12px 16px",
-                  border: errors.email ? "2px solid #f44336" : emailVerified ? "2px solid #4caf50" : "1px solid #bdbdbd",
-                  borderRadius: 6,
-                  fontSize: 16,
-                  backgroundColor: emailVerified ? "#f0f8f0" : "white"
-                }}
-              />
+                         <div style={{ display: "flex", gap: 12 }}>
+               <input
+                 type="email"
+                 name="email"
+                 placeholder="이메일을 입력하세요"
+                 value={formData.email}
+                 onChange={handleInputChange}
+                 disabled={emailVerified}
+                 style={{
+                   flex: 1,
+                   padding: "12px 16px",
+                   border: errors.email ? "2px solid #f44336" : emailVerified ? "2px solid #4caf50" : "1px solid #bdbdbd",
+                   borderRadius: 6,
+                   fontSize: 16,
+                   backgroundColor: emailVerified ? "#f0f8f0" : "white",
+                   marginRight: "4px"
+                 }}
+               />
               <button
                 type="button"
                 onClick={handleEmailVerify}
@@ -460,7 +461,9 @@ const SignupPage = ({ onNavigate }) => {
                   borderRadius: 6,
                   fontWeight: "bold",
                   cursor: emailVerified ? "not-allowed" : "pointer",
-                  fontSize: 14
+                  fontSize: 14,
+                  width: "80px",
+                  minWidth: "80px"
                 }}
               >
                 {emailVerified ? "인증완료" : "인증발송"}
@@ -479,21 +482,22 @@ const SignupPage = ({ onNavigate }) => {
           <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
             <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>인증번호</div>
             <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", gap: 8 }}>
-                <input
-                  type="text"
-                  name="verificationCode"
-                  placeholder="인증번호를 입력하세요"
-                  value={formData.verificationCode}
-                  onChange={handleInputChange}
-                  style={{
-                    flex: 1,
-                    padding: "12px 16px",
-                    border: errors.verificationCode ? "2px solid #f44336" : "1px solid #bdbdbd",
-                    borderRadius: 6,
-                    fontSize: 16
-                  }}
-                />
+                             <div style={{ display: "flex", gap: 12 }}>
+                 <input
+                   type="text"
+                   name="verificationCode"
+                   placeholder="인증번호를 입력하세요"
+                   value={formData.verificationCode}
+                   onChange={handleInputChange}
+                   style={{
+                     flex: 1,
+                     padding: "12px 16px",
+                     border: errors.verificationCode ? "2px solid #f44336" : "1px solid #bdbdbd",
+                     borderRadius: 6,
+                     fontSize: 16,
+                     marginRight: "4px"
+                   }}
+                 />
                 <button
                   type="button"
                   onClick={handleCodeVerify}
@@ -506,7 +510,9 @@ const SignupPage = ({ onNavigate }) => {
                     borderRadius: 6,
                     fontWeight: "bold",
                     cursor: "pointer",
-                    fontSize: 14
+                    fontSize: 14,
+                    width: "80px",
+                    minWidth: "80px"
                   }}
                 >
                   확인
@@ -531,7 +537,7 @@ const SignupPage = ({ onNavigate }) => {
               value={formData.name}
               onChange={handleInputChange}
               style={{
-                width: "100%",
+                width: "90%",
                 padding: "12px 16px",
                 border: errors.name ? "2px solid #f44336" : "1px solid #bdbdbd",
                 borderRadius: 6,
@@ -557,7 +563,7 @@ const SignupPage = ({ onNavigate }) => {
               value={formData.phoneNumber}
               onChange={handleInputChange}
               style={{
-                width: "100%",
+                width: "90%",
                 padding: "12px 16px",
                 border: errors.phoneNumber ? "2px solid #f44336" : "1px solid #bdbdbd",
                 borderRadius: 6,
@@ -584,7 +590,7 @@ const SignupPage = ({ onNavigate }) => {
                 value={formData.farmName}
                 onChange={handleInputChange}
                 style={{
-                  width: "100%",
+                  width: "90%",
                   padding: "12px 16px",
                   border: errors.farmName ? "2px solid #f44336" : "1px solid #bdbdbd",
                   borderRadius: 6,
@@ -638,23 +644,24 @@ const SignupPage = ({ onNavigate }) => {
         <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 24, width: "100%" }}>
           <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>농장코드</div>
           <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input
-                type="text"
-                name="farmCode"
-                placeholder={role === 'admin' ? '코드 자동 생성' : '농장코드를 입력하세요'}
-                value={formData.farmCode}
-                onChange={handleInputChange}
-                readOnly={role === 'admin'}
-                style={{
-                  flex: 1,
-                  padding: "12px 16px",
-                  border: errors.farmCode ? "2px solid #f44336" : "1px solid #bdbdbd",
-                  borderRadius: 6,
-                  fontSize: 16,
-                  backgroundColor: role === 'admin' ? "#f5f5f5" : "white"
-                }}
-              />
+                         <div style={{ display: "flex", gap: 12 }}>
+               <input
+                 type="text"
+                 name="farmCode"
+                 placeholder={role === 'admin' ? '코드 자동 생성' : '농장코드를 입력하세요'}
+                 value={formData.farmCode}
+                 onChange={handleInputChange}
+                 readOnly={role === 'admin'}
+                 style={{
+                   flex: 1,
+                   padding: "12px 16px",
+                   border: errors.farmCode ? "2px solid #f44336" : "1px solid #bdbdbd",
+                   borderRadius: 6,
+                   fontSize: 16,
+                   backgroundColor: role === 'admin' ? "#f5f5f5" : "white",
+                   marginRight: "4px"
+                 }}
+               />
                             {role === 'admin' && (
                 <button
                   type="button"
@@ -668,7 +675,9 @@ const SignupPage = ({ onNavigate }) => {
                     borderRadius: 6,
                     fontWeight: "bold",
                     cursor: "pointer",
-                    fontSize: 14
+                    fontSize: 14,
+                    width: "80px",
+                    minWidth: "80px"
                   }}
                 >
                   생성

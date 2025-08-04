@@ -27,11 +27,7 @@ const FARM_CODE_ENDPOINT = import.meta.env.VITE_FARM_CODE_ENDPOINT;
 // --- API 호출 함수 분리 ---
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000, // 타임아웃 증가
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  }
+  timeout: 10000,
 });
 
 // 1. 로그인 API
@@ -277,39 +273,16 @@ function AppContent() {
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       localStorage.setItem('authToken', token);
 
-       // 3단계: farmCode와 농장 정보 설정
-       setFarmCode(farmCode);
-       
-       // 4단계: 농장 데이터 구성 (farmType, houseType 포함)
-       const farmData = {
-         farmId: farmCode,
-         farmCode: farmCode,
-         farmType: farmType || '수경',
-         houseType: houseType || '유리',
-         farmName: `${farmType || '수경'} ${houseType || '유리'} 농장`,
-         owner: '사용자',
-         location: '서울특별시',
-         establishedDate: new Date().toISOString().split('T')[0],
-         totalArea: '100평',
-         cropType: '방울토마토',
-         sensors: {
-           temperature: 4,
-           humidity: 4,
-           ph: 2,
-           light: 2
-         },
-         devices: {
-           waterPump: 1,
-           fan: 2,
-           heater: 1,
-           led: 4
-         }
-       };
-       
-       setFarmData(farmData);
-       localStorage.setItem('farmData', JSON.stringify(farmData));
-       localStorage.setItem('farmCode', farmCode);
-       setIsLoggedIn(true);
+      // 3단계: 인증된 상태에서 farmCode를 조회
+      // const farmCode = await getFarmCode();
+      setFarmCode(farmCode);
+      
+      // 4단계: 받아온 farmCode로 실제 농장 데이터를 조회
+      // const fetchedFarmData = await getFarmDataByCode(farmCode);
+
+      // setFarmData(fetchedFarmData);
+      // localStorage.setItem('farmData', JSON.stringify(fetchedFarmData));
+      setIsLoggedIn(true);
       
       // 로그인 성공 시 대시보드로 이동
       navigate('/dashboard', { replace: true });

@@ -135,18 +135,13 @@ Always answer in natural, fluent Korean.
       ]);
     } finally {
       setLoading(false);
-      // AI 응답 후 input에 포커스 복원 - IME 상태 초기화를 위해 blur 후 focus
+      // AI 응답 후 input에 포커스 복원 - 한글 입력 개선
       if (inputRef.current) {
-        requestAnimationFrame(() => {
+        setTimeout(() => {
           if (inputRef.current) {
-            inputRef.current.blur();
-            requestAnimationFrame(() => {
-              if (inputRef.current) {
-                inputRef.current.focus();
-              }
-            });
+            inputRef.current.focus();
           }
-        });
+        }, 100);
       }
     }
   }, [input, loading]);
@@ -170,7 +165,7 @@ Always answer in natural, fluent Korean.
     setIsComposing(false);
   }, []);
 
-  // input 변경 핸들러
+  // input 변경 핸들러 - 한글 입력 개선
   const handleInputChange = useCallback((e) => {
     const value = e.target.value;
     setInput(value);
@@ -277,6 +272,7 @@ Always answer in natural, fluent Korean.
                     spellCheck="false"
                     inputMode="text"
                     lang="ko"
+                    style={{ imeMode: 'active' }}
                   />
                   <div className="cb-input-actions">
                     <button 

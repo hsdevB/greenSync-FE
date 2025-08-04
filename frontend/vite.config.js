@@ -5,10 +5,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
-    port: 5173,
+    port: 3000,
     proxy: {
       '/sensor': {
-        target: 'http://192.168.219.135:5173', // 실제 백엔드 서버 주소로 수정
+        target: 'http://192.168.0.33:3000', // 실제 백엔드 서버 주소로 수정
         changeOrigin: true,
         secure: false,
         timeout: 10000, // 타임아웃 추가
@@ -17,7 +17,7 @@ export default defineConfig({
         }
       },
       '/weather': {
-        target: 'http://192.168.219.135:5173', // 일사량 API 서버
+        target: 'http://192.168.0.33:3000', // 일사량 API 서버
         changeOrigin: true,
         secure: false,
         timeout: 10000,
@@ -26,7 +26,7 @@ export default defineConfig({
         }
       },
       '/chart': {
-        target: 'http://192.168.219.135:5173', // 차트 API 서버
+        target: 'http://192.168.0.33:3000', // 차트 API 서버
         changeOrigin: true,
         secure: false,
         timeout: 10000,
@@ -72,7 +72,7 @@ export default defineConfig({
         }
       },
       '/api': {
-        target: 'http://106.254.212.23:3001',
+        target: 'http://192.168.219.108:3000',
         changeOrigin: true,
         secure: false,
         timeout: 10000,
