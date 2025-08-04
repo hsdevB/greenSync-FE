@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
 
-const OPENWEATHER_API_KEY = "58ae922a8ae59948dca89a2e0120c426";
-const CITY = "Seoul";
-const LANG = "kr";
-const UNITS = "metric";
+// const OPENWEATHER_API_KEY = "58ae922a8ae59948dca89a2e0120c426";
+// const CITY = "Seoul";
+// const LANG = "kr";
+// const UNITS = "metric";
 
 export default function OpenWeather() {
   const [weather, setWeather] = useState(null);
 
   // 날씨 데이터 가져오기
   useEffect(() => {
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${OPENWEATHER_API_KEY}&lang=${LANG}&units=${UNITS}`)
+    fetch(`http://192.168.0.33:3000/weather/raw`)
       .then(res => res.json())
       .then(data => {
-        console.log('OpenWeather API 응답:', data);
+        console.log('Weather API 응답:', data);
         setWeather({
           main: data.weather?.[0]?.main, // 날씨 상태
           desc: data.weather?.[0]?.description, // 날씨 설명
@@ -23,7 +23,7 @@ export default function OpenWeather() {
         });
       })
       .catch(error => {
-        console.error('OpenWeather API 오류:', error);
+        console.error('Weather API 오류:', error);
       });
   }, []);
 
