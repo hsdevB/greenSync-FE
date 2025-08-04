@@ -613,16 +613,19 @@ const SignupPage = () => {
                 name="farmCode"
                 placeholder={role === 'admin' ? '생성 버튼을 클릭하세요' : '농장코드를 입력하세요'}
                 value={formData.farmCode}
-                onChange={handleInputChange}
+                onChange={role === 'admin' ? undefined : handleInputChange}
                 disabled={isLoading || (role === 'admin' && !formData.farmCode)}
+                readOnly={role === 'admin'}
                 style={{
                   flex: 1,
                   padding: "12px 16px",
                   border: errors.farmCode ? "2px solid #f44336" : "1px solid #bdbdbd",
                   borderRadius: 6,
                   fontSize: 16,
-                  backgroundColor: (role === 'admin' && !formData.farmCode) ? "#f5f5f5" : "white",
-                  opacity: isLoading ? 0.6 : 1
+                  backgroundColor: role === 'admin' ? "#f9f9f9" : "white",
+                  opacity: isLoading ? 0.6 : 1,
+                  cursor: role === 'admin' ? "default" : "text",
+                  userSelect: role === 'admin' ? "text" : "auto"
                 }}
                 />
               {role === 'admin' && (
