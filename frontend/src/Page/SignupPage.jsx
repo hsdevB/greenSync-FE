@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { validateUserId, validatePassword, validateEmail, validateName, validatePhoneNumber } from '../utils/validation';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -34,7 +34,8 @@ apiClient.interceptors.response.use(
   }
 );
 
-const SignupPage = ({ onNavigate }) => {
+const SignupPage = () => {
+  const navigate = useNavigate();
   const [role, setRole] = useState("admin"); 
   const [formData, setFormData] = useState({
     userId: '',
@@ -45,19 +46,22 @@ const SignupPage = ({ onNavigate }) => {
     name: '',
     phoneNumber: '',
     farmCode: '',
-    farmName: '',
-    cultivationMethod: ''
+    farmType: '',
+    houseType: '',
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
 
-  const cultivationOptions = [
-    { value: 'SG', label: '고형배지+유리온실' },
-    { value: 'SP', label: '고형배지+플라스틱온실' },
-    { value: 'WG', label: '수경재배+유리온실' },
-    { value: 'WP', label: '수경재배+플라스틱온실' }
+  const farmType = [
+    { value: '고형배지', label: '고형배지' },
+    { value: '수경재배', label: '수경재배' },
+  ];
+
+  const houseType = [
+    { value: '유리온실', label: '유리온실' },
+    { value: '플라스틱온실', label: '플라스틱온실' },
   ];
 
   const handleInputChange = (e) => {
@@ -82,8 +86,8 @@ const SignupPage = ({ onNavigate }) => {
     setFormData(prev => ({
       ...prev,
       farmCode: '',
-      farmName: '',
-      cultivationMethod: ''
+      farmType: '',
+      houseType: '',
     }));
     setErrors({});
   };
@@ -94,11 +98,12 @@ const SignupPage = ({ onNavigate }) => {
     setIsLoading(true);
     try {
       const response = await apiClient.get(`${FARM_CODE_API}/${FARM_CODE_ENDPOINT}`);
+      // console.log('전체 응답 객체:', response); 
       
-      if (response.farmCode) {
+      if (response.data.farmCode) {
         setFormData(prev => ({
           ...prev,
-          farmCode: response.farmCode
+          farmCode: response.data.farmCode
         }));
         // 에러가 있었다면 제거
         if (errors.farmCode) {
@@ -108,6 +113,7 @@ const SignupPage = ({ onNavigate }) => {
           }));
         }
       }
+      // console.log(response.data.farmCode);
     } catch (error) {
       console.error('Farm code generation failed:', error);
       setErrors(prev => ({
@@ -216,11 +222,11 @@ const SignupPage = ({ onNavigate }) => {
     
     // 관리자인 경우 추가 필드 확인
     if (role === 'admin') {
-      if (!formData.farmName.trim()) {
-        newErrors.farmName = '농장명을 입력해주세요.';
+      if (!formData.farmType) {
+        newErrors.farmType = '재배방식을 선택해주세요.';
       }
-      if (!formData.cultivationMethod) {
-        newErrors.cultivationMethod = '재배방식을 선택해주세요.';
+      if (!formData.houseType) {
+        newErrors.houseType = '온실종류를 선택해주세요.';
       }
     }
     
@@ -229,13 +235,15 @@ const SignupPage = ({ onNavigate }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      // console.log("aaa");
+      console.log('발견된 유효성 검사 에러:', newErrors); 
       return;
     }
-
+    
     setIsLoading(true);
     try {
       const signupData = {
@@ -244,19 +252,20 @@ const SignupPage = ({ onNavigate }) => {
         password: formData.password,
         name: formData.name,
         email: formData.email,
-        phoneNumber: formData.phoneNumber
+        phoneNumber: formData.phoneNumber,
       };
-
+      console.log("handleSubmit: ",signupData);
+      
       // 관리자인 경우 추가 정보 포함
       if (role === 'admin') {
-        signupData.farmName = formData.farmName;
-        signupData.cultivationMethod = formData.cultivationMethod;
+        signupData.farmType = formData.farmType;
+        signupData.houseType = formData.houseType;
       }
-
+      
       await apiClient.post(`${API_SIGNUP}`, signupData);
       
       // 성공 시 로그인 페이지로 이동
-      onNavigate('/login');
+      navigate('/login');
     } catch (error) {
       console.error('Signup failed:', error);
       // 전체 에러 메시지 표시
@@ -656,14 +665,14 @@ const SignupPage = ({ onNavigate }) => {
             <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>재배방식</div>
             <div style={{ flex: 1 }}>
               <select
-                name="cultivationMethod"
-                value={formData.cultivationMethod}
+                name="farmType"
+                value={formData.farmType}
                 onChange={handleInputChange}
                 disabled={isLoading}
                 style={{
                   width: "99%",
                   padding: "12px 12px",
-                  border: errors.cultivationMethod ? "2px solid #f44336" : "1px solid #bdbdbd",
+                  border: errors.farmType ? "2px solid #f44336" : "1px solid #bdbdbd",
                   borderRadius: 6,
                   fontSize: 16,
                   backgroundColor: "white",
@@ -671,21 +680,57 @@ const SignupPage = ({ onNavigate }) => {
                 }}
               >
                 <option value="">재배방식을 선택하세요</option>
-                {cultivationOptions.map(option => (
+                {farmType.map(option => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
               </select>
-              {errors.cultivationMethod && (
+              {errors.farmType && (
                 <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
-                  {errors.cultivationMethod}
+                  {errors.farmType}
                 </div>
               )}
             </div>
           </div>
         )}
 
+        {/* 온실종류 (관리자만) */}
+        {role === 'admin' && (
+          <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
+            <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>온실종류</div>
+            <div style={{ flex: 1 }}>
+              <select
+                name="houseType"
+                value={formData.houseType}
+                onChange={handleInputChange}
+                disabled={isLoading}
+                style={{
+                  width: "99%",
+                  padding: "12px 12px",
+                  border: errors.houseType ? "2px solid #f44336" : "1px solid #bdbdbd",
+                  borderRadius: 6,
+                  fontSize: 16,
+                  backgroundColor: "white",
+                  opacity: isLoading ? 0.6 : 1
+                }}
+              >
+                <option value="">온실종류를 선택하세요</option>
+                {houseType.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {errors.houseType && (
+                <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
+                  {errors.houseType}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
         {/* 회원가입/취소 버튼 */}
         <div style={{ display: "flex", width: "100%", gap: 12 }}>
           <button 
@@ -707,7 +752,7 @@ const SignupPage = ({ onNavigate }) => {
           </button>
           <button 
             type="button" 
-            onClick={() => onNavigate('/login')}
+            onClick={() => navigate('/login')}
             disabled={isLoading}
             style={{
               flex: 1,
