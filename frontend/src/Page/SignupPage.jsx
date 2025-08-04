@@ -1,38 +1,42 @@
 import React, { useState } from "react";
 import { validateUserId, validatePassword, validateEmail, validateName, validatePhoneNumber } from '../utils/validation';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.VITE_API_BASE_URL || 'http://192.168.0.33:3000';
-const API_SIGNUP = import.meta.VITE_SIGNUP_API || '/api/signup';
-const SEND_EMAIL_ENDPOINT = import.meta.VITE_SIGNUP_SEND_EMAIL_ENDPOINT || '/send-email';
-const VERIFY_EMAIL_ENDPOINT = import.meta.VITE_SIGNUP_VERIFY_EMAIL_ENDPOINT || '/verify-email';
-const FARM_CODE_API = import.meta.VITE_FARM_CODE_API || '/api/farm';
-const FARM_CODE_ENDPOINT = import.meta.VITE_FARM_CODE_ENDPOINT || '/generate';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_SIGNUP = import.meta.env.VITE_SIGNUP_API;
+const SEND_EMAIL_ENDPOINT = import.meta.env.VITE_SIGNUP_SEND_EMAIL_ENDPOINT;
+const VERIFY_EMAIL_ENDPOINT = import.meta.env.VITE_SIGNUP_VERIFY_EMAIL_ENDPOINT;
+const FARM_CODE_API = import.meta.env.VITE_FARM_CODE_API;
+const FARM_CODE_ENDPOINT = import.meta.env.VITE_FARM_CODE_ENDPOINT;
 
 // Axios 인스턴스 생성
-const api = axios.create({
+const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000, // 15초 타임아웃으로 증가
+  timeout: 15000,
 });
 
-// 요청 인터셉터 추가
-api.interceptors.request.use(
-  (config) => {
-    console.log('API Request:', config.method?.toUpperCase(), config.url);
-    console.log('Request data:', config.data);
-    return config;
-  },
+// 응답 인터셉터 
+apiClient.interceptors.response.use(
+  (response) => response.data,
   (error) => {
-    console.error('Request error:', error);
-    return Promise.reject(error);
+    console.error('API request failed:', error);
+    if (error.response) {
+      throw new Error(error.response.data.message || `HTTP error! status: ${error.response.status}`);
+    } else if (error.request) {
+      throw new Error('서버에 연결할 수 없습니다.');
+    } else {
+      throw new Error('요청 처리 중 오류가 발생했습니다.');
+    }
   }
 );
 
-const SignupPage = ({ onNavigate }) => {
-  const [role, setRole] = useState("employee"); // 'admin' 또는 'employee'
+const SignupPage = () => {
+  const navigate = useNavigate();
+  const [role, setRole] = useState("admin"); 
   const [formData, setFormData] = useState({
     userId: '',
     password: '',
@@ -42,20 +46,22 @@ const SignupPage = ({ onNavigate }) => {
     name: '',
     phoneNumber: '',
     farmCode: '',
-    farmName: '',
-    cultivationMethod: ''
+    farmType: '',
+    houseType: '',
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
-  // const [codeVerified, setCodeVerified] = useState(false);
 
-  const cultivationOptions = [
-    { value: 'SG', label: '고형배지+유리온실' },
-    { value: 'SP', label: '고형배지+플라스틱온실' },
-    { value: 'WG', label: '수경재배+유리온실' },
-    { value: 'WP', label: '수경재배+플라스틱온실' }
+  const farmType = [
+    { value: '고형배지', label: '고형배지' },
+    { value: '수경재배', label: '수경재배' },
+  ];
+
+  const houseType = [
+    { value: '유리온실', label: '유리온실' },
+    { value: '플라스틱온실', label: '플라스틱온실' },
   ];
 
   const handleInputChange = (e) => {
@@ -65,7 +71,7 @@ const SignupPage = ({ onNavigate }) => {
       [name]: value
     }));
     
-    // 실시간 유효성 검사
+    // 에러 메시지 초기화 (LoginPage 패턴)
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -74,20 +80,48 @@ const SignupPage = ({ onNavigate }) => {
     }
   };
 
+  // 역할 변경 시 농장코드 초기화
+  const handleRoleChange = (newRole) => {
+    setRole(newRole);
+    setFormData(prev => ({
+      ...prev,
+      farmCode: '',
+      farmType: '',
+      houseType: '',
+    }));
+    setErrors({});
+  };
+
   const generateFarmCode = async () => {
+    if (role !== 'admin') return;
+
+    setIsLoading(true);
     try {
-      const response = await api.get(`${FARM_CODE_API}/${FARM_CODE_ENDPOINT}`);
+      const response = await apiClient.get(`${FARM_CODE_API}/${FARM_CODE_ENDPOINT}`);
+      // console.log('전체 응답 객체:', response); 
       
-      if (response.farmCode) {
+      if (response.data.farmCode) {
         setFormData(prev => ({
           ...prev,
-          farmCode: response.farmCode
+          farmCode: response.data.farmCode
         }));
-        alert('농장코드가 자동 생성되었습니다.');
+        // 에러가 있었다면 제거
+        if (errors.farmCode) {
+          setErrors(prev => ({
+            ...prev,
+            farmCode: ''
+          }));
+        }
       }
+      // console.log(response.data.farmCode);
     } catch (error) {
-      alert('농장코드 생성에 실패했습니다.');
       console.error('Farm code generation failed:', error);
+      setErrors(prev => ({
+        ...prev,
+        farmCode: '농장코드 생성에 실패했습니다. 다시 시도해주세요.'
+      }));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -100,74 +134,56 @@ const SignupPage = ({ onNavigate }) => {
 
     setIsLoading(true);
     try {
-      console.log('Sending email verification request to:', `${API_SIGNUP}/${SEND_EMAIL_ENDPOINT}`);
-      console.log('Email data:', { email: formData.email });
-      
-      // 개발 중 임시로 이메일 인증 우회
-      console.log('개발 모드: 이메일 인증을 우회합니다.');
-      setEmailSent(true);
-      setEmailVerified(true);
-      alert('개발 모드: 이메일 인증이 완료되었습니다.');
-      
-      // 실제 API 호출은 주석 처리
-      /*
-      const response = await api.post(`${API_SIGNUP}/${SEND_EMAIL_ENDPOINT}`, {
+      await apiClient.post(`${API_SIGNUP}/${SEND_EMAIL_ENDPOINT}`, {
         email: formData.email
       });
       
-      console.log('Email verification response:', response);
       setEmailSent(true);
-      alert('인증번호가 이메일로 발송되었습니다.');
-      */
-    } catch (error) {
-      alert('이메일 발송에 실패했습니다.');
-      console.error('Email verification failed:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-      
-      let errorMessage = '이메일 발송에 실패했습니다.';
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
+      // 성공 시 에러 제거
+      if (errors.email) {
+        setErrors(prev => ({
+          ...prev,
+          email: ''
+        }));
       }
-      
-      alert(errorMessage);
+    } catch (error) {
+      console.error('Email verification failed:', error);
+      setErrors(prev => ({
+        ...prev,
+        email: error.message || '이메일 발송에 실패했습니다.'
+      }));
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCodeVerify = async () => {
-    if (!formData.verificationCode) {
+    if (!formData.verificationCode.trim()) {
       setErrors(prev => ({ ...prev, verificationCode: '인증번호를 입력해주세요.' }));
       return;
     }
 
     setIsLoading(true);
     try {
-      // 개발 중 임시로 인증번호 확인 우회
-      console.log('개발 모드: 인증번호 확인을 우회합니다.');
-      setEmailVerified(true);
-      alert('개발 모드: 이메일 인증이 완료되었습니다.');
-      
-      // 실제 API 호출은 주석 처리
-      /*
-      await api.post(`${API_SIGNUP}/${VERIFY_EMAIL_ENDPOINT}`, {
+      await apiClient.post(`${API_SIGNUP}/${VERIFY_EMAIL_ENDPOINT}`, {
         email: formData.email,
         code: formData.verificationCode
       });
       
-      // setCodeVerified(true);
       setEmailVerified(true);
-      alert('이메일 인증이 완료되었습니다.');
-      */
+      // 성공 시 에러 제거
+      if (errors.verificationCode) {
+        setErrors(prev => ({
+          ...prev,
+          verificationCode: ''
+        }));
+      }
     } catch (error) {
-      alert('인증번호가 올바르지 않습니다.');
       console.error('Code verification failed:', error);
+      setErrors(prev => ({
+        ...prev,
+        verificationCode: error.message || '인증번호가 올바르지 않습니다.'
+      }));
     } finally {
       setIsLoading(false);
     }
@@ -176,51 +192,58 @@ const SignupPage = ({ onNavigate }) => {
   const validateForm = () => {
     const newErrors = {};
     
-    newErrors.userId = validateUserId(formData.userId);
-    newErrors.password = validatePassword(formData.password);
-    newErrors.name = validateName(formData.name);
-    newErrors.email = validateEmail(formData.email);
-    newErrors.phoneNumber = validatePhoneNumber(formData.phoneNumber);
+    // 기본 유효성 검사
+    const userIdError = validateUserId(formData.userId);
+    const passwordError = validatePassword(formData.password);
+    const nameError = validateName(formData.name);
+    const emailError = validateEmail(formData.email);
+    const phoneError = validatePhoneNumber(formData.phoneNumber);
+
+    if (userIdError) newErrors.userId = userIdError;
+    if (passwordError) newErrors.password = passwordError;
+    if (nameError) newErrors.name = nameError;
+    if (emailError) newErrors.email = emailError;
+    if (phoneError) newErrors.phoneNumber = phoneError;
     
+    // 비밀번호 확인
     if (formData.password !== formData.passwordCheck) {
       newErrors.passwordCheck = '비밀번호가 일치하지 않습니다.';
     }
     
-    // 이메일 인증이 실패하는 경우 임시로 우회 (개발 중)
-    // if (!emailVerified) {
-    //   newErrors.email = '이메일 인증을 완료해주세요.';
-    // }
+    // 이메일 인증 확인
+    if (!emailVerified) {
+      newErrors.email = '이메일 인증을 완료해주세요.';
+    }
     
-    if (!formData.farmCode) {
+    // 농장코드 확인
+    if (!formData.farmCode.trim()) {
       newErrors.farmCode = '농장코드를 입력해주세요.';
     }
     
+    // 관리자인 경우 추가 필드 확인
     if (role === 'admin') {
-      if (!formData.farmName) {
-        newErrors.farmName = '농장명을 입력해주세요.';
+      if (!formData.farmType) {
+        newErrors.farmType = '재배방식을 선택해주세요.';
       }
-      if (!formData.cultivationMethod) {
-        newErrors.cultivationMethod = '재배방식을 선택해주세요.';
+      if (!formData.houseType) {
+        newErrors.houseType = '온실종류를 선택해주세요.';
       }
     }
-    
-    // 빈 문자열인 에러 제거
-    Object.keys(newErrors).forEach(key => {
-      if (!newErrors[key]) delete newErrors[key];
-    });
     
     return newErrors;
   };
 
-  const handleSignup = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      // console.log("aaa");
+      console.log('발견된 유효성 검사 에러:', newErrors); 
       return;
     }
-
+    
     setIsLoading(true);
     try {
       const signupData = {
@@ -229,38 +252,30 @@ const SignupPage = ({ onNavigate }) => {
         password: formData.password,
         name: formData.name,
         email: formData.email,
-        phoneNumber: formData.phoneNumber
+        phoneNumber: formData.phoneNumber,
       };
-
+      console.log("handleSubmit: ",signupData);
+      
       // 관리자인 경우 추가 정보 포함
       if (role === 'admin') {
-        signupData.farmName = formData.farmName;
-        signupData.cultivationMethod = formData.cultivationMethod;
+        signupData.farmType = formData.farmType;
+        signupData.houseType = formData.houseType;
       }
-
-      // 개발 중 임시로 회원가입 우회
-      console.log('개발 모드: 회원가입을 우회합니다.');
-      console.log('회원가입 데이터:', signupData);
-      alert('개발 모드: 회원가입이 완료되었습니다.');
-      onNavigate('login');
       
-      // 실제 API 호출은 주석 처리
-      /*
-      await api.post(`${API_SIGNUP}`, signupData);
+      await apiClient.post(`${API_SIGNUP}`, signupData);
       
-      alert('회원가입이 완료되었습니다.');
-      onNavigate('login');
-      */
+      // 성공 시 로그인 페이지로 이동
+      navigate('/login');
     } catch (error) {
-      alert('회원가입에 실패했습니다.');
       console.error('Signup failed:', error);
+      // 전체 에러 메시지 표시
+      setErrors(prev => ({
+        ...prev,
+        submit: error.message || '회원가입에 실패했습니다. 다시 시도해주세요.'
+      }));
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleCancel = () => {
-    onNavigate('login');
   };
 
   return (
@@ -289,23 +304,7 @@ const SignupPage = ({ onNavigate }) => {
         회원가입
       </div>
       
-             {/* 성공 메시지 */}
-       {/* {success && (
-         <div style={{
-           width: 450,
-           padding: "12px 16px",
-           background: "#e8f5e8",
-           color: "#2e7d32",
-           borderRadius: 6,
-           marginBottom: 16,
-           fontSize: 14
-         }}>
-           {success}
-         </div>
-       )} */}
-
-      
-      <form onSubmit={handleSignup} style={{
+      <form onSubmit={handleSubmit} style={{
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -317,10 +316,26 @@ const SignupPage = ({ onNavigate }) => {
         boxShadow: "0 2px 16px rgba(56,142,60,0.10)",
         marginBottom: 16
       }}>
-        {/* 관리자/직원 토글 */}
+        {/* 전체 에러 메시지 */}
+        {errors.submit && (
+          <div style={{
+            width: "100%",
+            padding: "12px 16px",
+            background: "#ffebee",
+            color: "#c62828",
+            borderRadius: 6,
+            marginBottom: 16,
+            fontSize: 14,
+            textAlign: "center"
+          }}>
+            {errors.submit}
+          </div>
+        )}
+
+        {/* 관리자/직원 선택 */}
         <div style={{ display: "flex", width: "100%", marginBottom: 24, justifyContent: "center", gap: "40px" }}>
           <span
-            onClick={() => setRole("admin")}
+            onClick={() => handleRoleChange("admin")}
             style={{
               fontSize: "16px",
               fontWeight: role === "admin" ? "bold" : "normal",
@@ -334,7 +349,7 @@ const SignupPage = ({ onNavigate }) => {
             관리자
           </span>
           <span
-            onClick={() => setRole("employee")}
+            onClick={() => handleRoleChange("employee")}
             style={{
               fontSize: "16px",
               fontWeight: role === "employee" ? "bold" : "normal",
@@ -350,8 +365,8 @@ const SignupPage = ({ onNavigate }) => {
         </div>
 
         {/* 아이디 */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-          <div style={{ width: 120, fontWeight: "bold", fontSize: 14 }}>아이디</div>
+        <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
+          <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>아이디</div>
           <div style={{ flex: 1 }}>
             <input
               type="text"
@@ -359,12 +374,14 @@ const SignupPage = ({ onNavigate }) => {
               placeholder="아이디를 입력하세요 (3-50글자)"
               value={formData.userId}
               onChange={handleInputChange}
+              disabled={isLoading}
               style={{
                 width: "90%",
                 padding: "12px 16px",
                 border: errors.userId ? "2px solid #f44336" : "1px solid #bdbdbd",
                 borderRadius: 6,
-                fontSize: 16
+                fontSize: 16,
+                opacity: isLoading ? 0.6 : 1
               }}
             />
             {errors.userId && (
@@ -376,8 +393,8 @@ const SignupPage = ({ onNavigate }) => {
         </div>
 
         {/* 비밀번호 */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-          <div style={{ width: 120, fontWeight: "bold", fontSize: 14 }}>비밀번호</div>
+        <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
+          <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>비밀번호</div>
           <div style={{ flex: 1 }}>
             <input
               type="password"
@@ -385,12 +402,14 @@ const SignupPage = ({ onNavigate }) => {
               placeholder="비밀번호를 입력하세요 (8글자 이상)"
               value={formData.password}
               onChange={handleInputChange}
+              disabled={isLoading}
               style={{
                 width: "90%",
                 padding: "12px 16px",
                 border: errors.password ? "2px solid #f44336" : "1px solid #bdbdbd",
                 borderRadius: 6,
-                fontSize: 16
+                fontSize: 16,
+                opacity: isLoading ? 0.6 : 1
               }}
             />
             {errors.password && (
@@ -402,8 +421,8 @@ const SignupPage = ({ onNavigate }) => {
         </div>
 
         {/* 비밀번호 확인 */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-          <div style={{ width: 120, fontWeight: "bold", fontSize: 14 }}>비밀번호 확인</div>
+        <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
+          <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>비밀번호 확인</div>
           <div style={{ flex: 1 }}>
             <input
               type="password"
@@ -411,12 +430,14 @@ const SignupPage = ({ onNavigate }) => {
               placeholder="비밀번호를 다시 입력하세요"
               value={formData.passwordCheck}
               onChange={handleInputChange}
+              disabled={isLoading}
               style={{
                 width: "90%",
                 padding: "12px 16px",
                 border: errors.passwordCheck ? "2px solid #f44336" : "1px solid #bdbdbd",
                 borderRadius: 6,
-                fontSize: 16
+                fontSize: 16,
+                opacity: isLoading ? 0.6 : 1
               }}
             />
             {errors.passwordCheck && (
@@ -431,42 +452,41 @@ const SignupPage = ({ onNavigate }) => {
         <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
           <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>이메일</div>
           <div style={{ flex: 1 }}>
-                         <div style={{ display: "flex", gap: 12 }}>
-               <input
-                 type="email"
-                 name="email"
-                 placeholder="이메일을 입력하세요"
-                 value={formData.email}
-                 onChange={handleInputChange}
-                 disabled={emailVerified}
-                 style={{
-                   flex: 1,
-                   padding: "12px 16px",
-                   border: errors.email ? "2px solid #f44336" : emailVerified ? "2px solid #4caf50" : "1px solid #bdbdbd",
-                   borderRadius: 6,
-                   fontSize: 16,
-                   backgroundColor: emailVerified ? "#f0f8f0" : "white",
-                   marginRight: "4px"
-                 }}
-               />
+            <div style={{ display: "flex", gap: 6 }}>
+              <input
+                type="email"
+                name="email"
+                placeholder="이메일을 입력하세요"
+                value={formData.email}
+                onChange={handleInputChange}
+                disabled={isLoading || emailVerified}
+                style={{
+                  flex: 1,
+                  padding: "12px 16px",
+                  border: errors.email ? "2px solid #f44336" : emailVerified ? "2px solid #4caf50" : "1px solid #bdbdbd",
+                  borderRadius: 6,
+                  fontSize: 16,
+                  backgroundColor: emailVerified ? "#f0f8f0" : "white",
+                  opacity: isLoading && !emailVerified ? 0.6 : 1
+                }}
+              />
               <button
                 type="button"
                 onClick={handleEmailVerify}
-                disabled={isLoading || emailVerified}
+                disabled={isLoading || emailVerified || !formData.email.trim()}
                 style={{
-                  padding: "12px 18px",
-                  background: emailVerified ? "#4caf50" : "#388e3c",
+                  padding: "8px 10px",
+                  marginRight: 4,
+                  background: emailVerified ? "#4caf50" : (isLoading || !formData.email.trim()) ? "#cccccc" : "#388e3c",
                   color: "white",
                   border: "none",
                   borderRadius: 6,
                   fontWeight: "bold",
-                  cursor: emailVerified ? "not-allowed" : "pointer",
-                  fontSize: 14,
-                  width: "80px",
-                  minWidth: "80px"
+                  cursor: (emailVerified || isLoading || !formData.email.trim()) ? "not-allowed" : "pointer",
+                  fontSize: 14
                 }}
               >
-                {emailVerified ? "인증완료" : "인증발송"}
+                {emailVerified ? "인증완료" : isLoading ? "발송중..." : "인증발송"}
               </button>
             </div>
             {errors.email && (
@@ -482,40 +502,40 @@ const SignupPage = ({ onNavigate }) => {
           <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
             <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>인증번호</div>
             <div style={{ flex: 1 }}>
-                             <div style={{ display: "flex", gap: 12 }}>
-                 <input
-                   type="text"
-                   name="verificationCode"
-                   placeholder="인증번호를 입력하세요"
-                   value={formData.verificationCode}
-                   onChange={handleInputChange}
-                   style={{
-                     flex: 1,
-                     padding: "12px 16px",
-                     border: errors.verificationCode ? "2px solid #f44336" : "1px solid #bdbdbd",
-                     borderRadius: 6,
-                     fontSize: 16,
-                     marginRight: "4px"
-                   }}
-                 />
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  type="text"
+                  name="verificationCode"
+                  placeholder="인증번호를 입력하세요"
+                  value={formData.verificationCode}
+                  onChange={handleInputChange}
+                  disabled={isLoading}
+                  style={{
+                    flex: 1,
+                    padding: "12px 16px",
+                    border: errors.verificationCode ? "2px solid #f44336" : "1px solid #bdbdbd",
+                    borderRadius: 6,
+                    fontSize: 16,
+                    opacity: isLoading ? 0.6 : 1
+                  }}
+                />
                 <button
                   type="button"
                   onClick={handleCodeVerify}
-                  disabled={isLoading}
+                  disabled={isLoading || !formData.verificationCode.trim()}
                   style={{
-                    padding: "12px 18px",
-                    background: "#388e3c",
+                    padding: "8px 10px",
+                    marginRight: 4,
+                    background: (isLoading || !formData.verificationCode.trim()) ? "#cccccc" : "#388e3c",
                     color: "white",
                     border: "none",
                     borderRadius: 6,
                     fontWeight: "bold",
-                    cursor: "pointer",
-                    fontSize: 14,
-                    width: "80px",
-                    minWidth: "80px"
+                    cursor: (isLoading || !formData.verificationCode.trim()) ? "not-allowed" : "pointer",
+                    fontSize: 14
                   }}
                 >
-                  확인
+                  {isLoading ? "확인중..." : "확인"}
                 </button>
               </div>
               {errors.verificationCode && (
@@ -526,9 +546,10 @@ const SignupPage = ({ onNavigate }) => {
             </div>
           </div>
         )}
+
         {/* 이름 */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-          <div style={{ width: 120, fontWeight: "bold", fontSize: 14 }}>이름</div>
+        <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
+          <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>이름</div>
           <div style={{ flex: 1 }}>
             <input
               type="text"
@@ -536,12 +557,14 @@ const SignupPage = ({ onNavigate }) => {
               placeholder="이름을 입력하세요 (2-50글자)"
               value={formData.name}
               onChange={handleInputChange}
+              disabled={isLoading}
               style={{
                 width: "90%",
                 padding: "12px 16px",
                 border: errors.name ? "2px solid #f44336" : "1px solid #bdbdbd",
                 borderRadius: 6,
-                fontSize: 16
+                fontSize: 16,
+                opacity: isLoading ? 0.6 : 1
               }}
             />
             {errors.name && (
@@ -553,8 +576,8 @@ const SignupPage = ({ onNavigate }) => {
         </div>
 
         {/* 휴대전화 */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-          <div style={{ width: 120, fontWeight: "bold", fontSize: 14 }}>휴대전화</div>
+        <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
+          <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>휴대전화</div>
           <div style={{ flex: 1 }}>
             <input
               type="tel"
@@ -562,12 +585,14 @@ const SignupPage = ({ onNavigate }) => {
               placeholder="휴대전화번호를 입력하세요 (010-1234-5678)"
               value={formData.phoneNumber}
               onChange={handleInputChange}
+              disabled={isLoading}
               style={{
                 width: "90%",
                 padding: "12px 16px",
                 border: errors.phoneNumber ? "2px solid #f44336" : "1px solid #bdbdbd",
                 borderRadius: 6,
-                fontSize: 16
+                fontSize: 16,
+                opacity: isLoading ? 0.6 : 1
               }}
             />
             {errors.phoneNumber && (
@@ -578,109 +603,49 @@ const SignupPage = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* 농장명 (관리자만) */}
-        {role === 'admin' && (
-          <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-            <div style={{ width: 120, fontWeight: "bold", fontSize: 14 }}>농장명</div>
-            <div style={{ flex: 1 }}>
+        {/* 소속농장코드 */}
+        <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 24, width: "100%" }}>
+          <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>소속 농장 코드</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", gap: 6 }}>
               <input
                 type="text"
-                name="farmName"
-                placeholder="농장명을 입력하세요"
-                value={formData.farmName}
-                onChange={handleInputChange}
+                name="farmCode"
+                placeholder={role === 'admin' ? '생성 버튼을 클릭하세요' : '농장코드를 입력하세요'}
+                value={formData.farmCode}
+                onChange={role === 'admin' ? undefined : handleInputChange}
+                disabled={isLoading || (role === 'admin' && !formData.farmCode)}
+                readOnly={role === 'admin'}
                 style={{
-                  width: "90%",
+                  flex: 1,
                   padding: "12px 16px",
-                  border: errors.farmName ? "2px solid #f44336" : "1px solid #bdbdbd",
-                  borderRadius: 6,
-                  fontSize: 16
-                }}
-              />
-              {errors.farmName && (
-                <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
-                  {errors.farmName}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* 재배방식 (관리자만) */}
-        {role === 'admin' && (
-          <div style={{ display: "flex", alignItems: "center", marginBottom: 16, width: "100%" }}>
-            <div style={{ width: 120, fontWeight: "bold", fontSize: 14 }}>재배방식</div>
-            <div style={{ flex: 1 }}>
-              <select
-                name="cultivationMethod"
-                value={formData.cultivationMethod}
-                onChange={handleInputChange}
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  border: errors.cultivationMethod ? "2px solid #f44336" : "1px solid #bdbdbd",
+                  border: errors.farmCode ? "2px solid #f44336" : "1px solid #bdbdbd",
                   borderRadius: 6,
                   fontSize: 16,
-                  backgroundColor: "white"
+                  backgroundColor: role === 'admin' ? "#f9f9f9" : "white",
+                  opacity: isLoading ? 0.6 : 1,
+                  cursor: role === 'admin' ? "default" : "text",
+                  userSelect: role === 'admin' ? "text" : "auto"
                 }}
-              >
-                <option value="">재배방식을 선택하세요</option>
-                {cultivationOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {errors.cultivationMethod && (
-                <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
-                  {errors.cultivationMethod}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* 농장코드 */}
-        <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 24, width: "100%" }}>
-          <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>농장코드</div>
-          <div style={{ flex: 1 }}>
-                         <div style={{ display: "flex", gap: 12 }}>
-               <input
-                 type="text"
-                 name="farmCode"
-                 placeholder={role === 'admin' ? '코드 자동 생성' : '농장코드를 입력하세요'}
-                 value={formData.farmCode}
-                 onChange={handleInputChange}
-                 readOnly={role === 'admin'}
-                 style={{
-                   flex: 1,
-                   padding: "12px 16px",
-                   border: errors.farmCode ? "2px solid #f44336" : "1px solid #bdbdbd",
-                   borderRadius: 6,
-                   fontSize: 16,
-                   backgroundColor: role === 'admin' ? "#f5f5f5" : "white",
-                   marginRight: "4px"
-                 }}
-               />
-                            {role === 'admin' && (
+                />
+              {role === 'admin' && (
                 <button
                   type="button"
                   onClick={generateFarmCode}
                   disabled={isLoading}
                   style={{
-                    padding: "12px 18px",
-                    background: "#388e3c",
+                    padding: "12px 16px",
+                    marginRight: 4,
+                    background: isLoading ? "#cccccc" : "#388e3c",
                     color: "white",
                     border: "none",
                     borderRadius: 6,
                     fontWeight: "bold",
-                    cursor: "pointer",
-                    fontSize: 14,
-                    width: "80px",
-                    minWidth: "80px"
+                    cursor: isLoading ? "not-allowed" : "pointer",
+                    fontSize: 14
                   }}
                 >
-                  생성
+                  {isLoading ? "생성중..." : " 생성 "}
                 </button>
               )}
             </div>
@@ -697,6 +662,78 @@ const SignupPage = ({ onNavigate }) => {
           </div>
         </div>
 
+        {/* 재배방식 (관리자만) */}
+        {role === 'admin' && (
+          <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
+            <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>재배방식</div>
+            <div style={{ flex: 1 }}>
+              <select
+                name="farmType"
+                value={formData.farmType}
+                onChange={handleInputChange}
+                disabled={isLoading}
+                style={{
+                  width: "99%",
+                  padding: "12px 12px",
+                  border: errors.farmType ? "2px solid #f44336" : "1px solid #bdbdbd",
+                  borderRadius: 6,
+                  fontSize: 16,
+                  backgroundColor: "white",
+                  opacity: isLoading ? 0.6 : 1
+                }}
+              >
+                <option value="">재배방식을 선택하세요</option>
+                {farmType.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {errors.farmType && (
+                <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
+                  {errors.farmType}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 온실종류 (관리자만) */}
+        {role === 'admin' && (
+          <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16, width: "100%" }}>
+            <div style={{ width: 120, fontWeight: "bold", fontSize: 14, paddingTop: 12 }}>온실종류</div>
+            <div style={{ flex: 1 }}>
+              <select
+                name="houseType"
+                value={formData.houseType}
+                onChange={handleInputChange}
+                disabled={isLoading}
+                style={{
+                  width: "99%",
+                  padding: "12px 12px",
+                  border: errors.houseType ? "2px solid #f44336" : "1px solid #bdbdbd",
+                  borderRadius: 6,
+                  fontSize: 16,
+                  backgroundColor: "white",
+                  opacity: isLoading ? 0.6 : 1
+                }}
+              >
+                <option value="">온실종류를 선택하세요</option>
+                {houseType.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {errors.houseType && (
+                <div style={{ color: '#f44336', fontSize: 12, marginTop: 4 }}>
+                  {errors.houseType}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
         {/* 회원가입/취소 버튼 */}
         <div style={{ display: "flex", width: "100%", gap: 12 }}>
           <button 
@@ -718,7 +755,7 @@ const SignupPage = ({ onNavigate }) => {
           </button>
           <button 
             type="button" 
-            onClick={handleCancel}
+            onClick={() => navigate('/login')}
             disabled={isLoading}
             style={{
               flex: 1,
@@ -739,15 +776,15 @@ const SignupPage = ({ onNavigate }) => {
       
       <div style={{ fontSize: 15, color: "#666" }}>
         이미 계정이 있으신가요? 
-        <span 
-          onClick={() => onNavigate('login')} 
+        <Link
+          to="/login"
           style={{ color: "#388e3c", textDecoration: "underline", cursor: "pointer", marginLeft: 4 }}
         >
           로그인
-        </span>
+        </Link>
       </div>
     </div>
   );
 };
 
-export default SignupPage; 
+export default SignupPage;

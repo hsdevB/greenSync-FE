@@ -8,6 +8,12 @@ export class MQTTClient {
     this.isConnected = false;
     this.isConnecting = false;
   }
+  // constructor(farmCode) {
+  //   this.farmCode = farmCode;
+  //   this.client = null;
+  //   this.isConnected = false;
+  //   this.isConnecting = false;
+  // }
 
   connect(brokerUrl = `${brokerURL}`) {
     try {
@@ -47,10 +53,12 @@ export class MQTTClient {
 
   // LED 깜박임 제어 (각 센서별 개별 제어)
   async blinkLed(ledIndex, currentFanState) {
+    console.log("반짝");
     // 특정 LED만 켜기 (온도센서=0, 습도센서=1, 급수=2, LED밝기=3)
     const ledObject = [false, false, false, false];
     ledObject[ledIndex] = true;
     
+    // this.publish(`device/control/${this.farmCode}`, {
     this.publish(`device/control/${farmCode}`, {
       "fan": currentFanState,
       "leds": ledObject
@@ -67,6 +75,7 @@ export class MQTTClient {
     const updatedLedState = [...currentStateAfterDelay];
     updatedLedState[ledIndex] = false;
     
+    // this.publish(`device/control/${this.farmCode}`, {
     this.publish(`device/control/${farmCode}`, {
       "fan": currentFanState,
       "leds": updatedLedState
