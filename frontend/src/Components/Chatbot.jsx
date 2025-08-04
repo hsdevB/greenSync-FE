@@ -1,7 +1,391 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import './Chatbot.css';
 import botAvatar from '../assets/4712035.png';
 import userAvatar from '../assets/4712036.png';
+
+// CSS 스타일을 직접 포함 2025-08-04 작성
+const styles = `
+/* FAB 버튼 */
+.cb-fab {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cb-fab:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+
+.cb-fab img {
+  width: 38px;
+  height: 38px;
+  filter: brightness(0) invert(1);
+}
+
+/* 전체 화면 오버레이 */
+.cb-fullscreen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cb-fullscreen-layout {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.cb-fullscreen-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background: #ffffff;
+  margin-left: 256px;
+  width: calc(100% - 256px);
+}
+
+/* 헤더 */
+.cb-fullscreen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #ffffff;
+}
+
+.cb-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cb-header-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #f0f0f0;
+}
+
+.cb-header-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.cb-header-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.cb-header-status {
+  font-size: 13px;
+  color: #667eea;
+}
+
+.cb-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.cb-close-btn:hover {
+  background-color: #f5f5f5;
+}
+
+/* 메인 콘텐츠 */
+.cb-fullscreen-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 환영 화면 */
+.cb-welcome-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 40px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.cb-welcome-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.cb-welcome-subtitle {
+  font-size: 16px;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* 메시지 컨테이너 */
+.cb-messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #f8f9fa;
+}
+
+/* 메시지 */
+.cb-message {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cb-message.user {
+  flex-direction: row-reverse;
+}
+
+.cb-message-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.cb-message-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cb-message-content {
+  max-width: 70%;
+  display: flex;
+  flex-direction: column;
+}
+
+.cb-message.user .cb-message-content {
+  align-items: flex-end;
+}
+
+.cb-message-text {
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.cb-message.bot .cb-message-text {
+  background: #ffffff;
+  color: #333;
+  border-bottom-left-radius: 4px;
+}
+
+.cb-message.user .cb-message-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.cb-message-time {
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+  padding: 0 4px;
+}
+
+/* 타이핑 인디케이터 */
+.cb-typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.cb-typing-indicator span {
+  width: 6px;
+  height: 6px;
+  background: #667eea;
+  border-radius: 50%;
+  animation: typing 1.4s infinite ease-in-out;
+}
+
+.cb-typing-indicator span:nth-child(1) { animation-delay: 0s; }
+.cb-typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.cb-typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-10px); opacity: 1; }
+}
+
+/* 입력 영역 */
+.cb-input-container {
+  padding: 20px 24px;
+  border-top: 1px solid #e5e5e5;
+  background: #ffffff;
+}
+
+.cb-input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  background: #f8f9fa;
+  border-radius: 24px;
+  padding: 12px 16px;
+  border: 2px solid #e5e5e5;
+  transition: border-color 0.3s ease;
+}
+
+.cb-input-wrapper:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.cb-input-field {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  line-height: 1.4;
+  outline: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 400;
+  caret-color: #667eea;
+}
+
+.cb-input-field::placeholder {
+  color: #999;
+}
+
+.cb-input-field:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cb-input-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cb-send-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.cb-send-btn:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.cb-send-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .cb-fullscreen-container {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .cb-message-content {
+    max-width: 85%;
+  }
+  
+  .cb-input-container {
+    padding: 16px 20px;
+  }
+  
+  .cb-welcome-title {
+    font-size: 24px;
+  }
+  
+  .cb-welcome-subtitle {
+    font-size: 14px;
+  }
+}
+
+/* 스크롤바 스타일링 */
+.cb-messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cb-messages-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.cb-messages-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.cb-messages-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+`;
 
 function getTime() {
   const d = new Date();
@@ -15,13 +399,12 @@ export default function Chatbot({ isOpen, onClose, sidebar }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState([]); // {role, text, time}
-  const [isComposing, setIsComposing] = useState(false); // IME 조합 상태 추적
+  const [messages, setMessages] = useState([]);
+  const [isComposing, setIsComposing] = useState(false);
 
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // 외부에서 전달받은 isOpen prop이 있으면 사용, 없으면 내부 상태 사용
   const isChatbotOpen = isOpen !== undefined ? isOpen : open;
   const handleClose = onClose || (() => setOpen(false));
 
@@ -31,7 +414,6 @@ export default function Chatbot({ isOpen, onClose, sidebar }) {
     }
   }, [messages, isChatbotOpen]);
 
-  // 채팅이 열릴 때 입력창에 자동 포커스
   useEffect(() => {
     if (isChatbotOpen && inputRef.current) {
       const timer = setTimeout(() => {
@@ -41,43 +423,22 @@ export default function Chatbot({ isOpen, onClose, sidebar }) {
     }
   }, [isChatbotOpen]);
 
-  // 스마트팜 전문 LLM 호출 함수
-  const askSmartFarmBot = async (userMessage) => {
+  const askOllama = async (userMessage) => {
     const fullPrompt = `
-You are an AI chatbot that assists users in operating their smart farms.
-- Do not use emojis in your answers.
-- Only use terms that are actually used in real-world agricultural settings.
-- Always answer in natural, fluent Korean.
-- Use only natural and easy Korean expressions that are common in everyday life.
-- Do not use translationese, artificial sentences, or vague/meaningless terms.
-- Answer as if you are a real agricultural expert, using only the logic and terms used by actual farmers.
-- If the user's question is not related to farms, smart farms, crops, or cultivation, only reply with the following sentence: "죄송합니다. 스마트팜 농장 관련으로만 질문을 주세요."
-- Do not provide any other answers, additional explanations, guesses, or alternative information.
-- For each crop, specifically provide its official optimal temperature range (°C) based on agricultural data, possible problems that may occur at the given temperature, crops that can better withstand the condition, and recommended actions.
-- If the given temperature is outside the official optimal range for a crop, do NOT use the word "optimal." Instead, explain that the crop "can tolerate it, but may experience stress."
-- Do not make guesses or create information that is not true. Do NOT say "A is the best" if none of the crops are clearly optimal at the given condition.
-- If none of the crops are in their optimal range, clearly state that all are at risk of stress and that careful environmental control is required.
-- Do not use uncommon terms such as "flower stalk" or "losing soil." Use only expressions commonly used in real agricultural settings, such as "wilting" or "flower drop."
-- If you are unsure about the answer or do not know the answer, simply reply, "잘 모르겠습니다" or "정확한 정보를 제공해 드릴 수 없습니다."
-- Do not make up new knowledge or provide speculative explanations under any circumstances.
-- If the user provides a temperature value without specifying the unit, always interpret it as degrees Celsius (°C).
-- Limit your answer to 500 characters or less.
-- If the user's input is unclear, ambiguous, or too short (e.g., just a number or a single word), do not guess what they mean.
-- Instead, politely ask them to clarify or provide more context.
-- Never assume the meaning of short or contextless inputs.
-- never guess or provide a solution based on assumed meanings of these values.
-- If the user's question is unclear, ask for more details.
-- Never guess or interpret these inputs. Only provide guidance and answers for values within a realistic range.
-- Do not use any Markdown formatting such as tables, code blocks, bold, or italics in your answers.
-- Always respond using only natural, easy language commonly used in real agricultural settings.
-- If you need to provide data, include numbers and units naturally within the sentence.
-- If the user's question is not clear, please do not make assumptions or answer arbitrarily.
+당신은 친근하고 도움이 되는 AI 어시스턴트입니다.
 
-Always answer in natural, fluent Korean.
+**중요한 지침:**
+- 반드시 한국어로만 답변해주세요
+- 영어나 다른 언어는 사용하지 마세요
+- 자연스럽고 친근한 한국어로 답변해주세요
+- 이모지는 사용하지 마세요
+- 명확하고 유용한 정보를 제공해주세요
+- 사용자의 질문에 정확하고 도움이 되는 답변을 해주세요
+- 한국어 문법과 표현을 올바르게 사용해주세요
 
 질문: ${userMessage}
 답변:
-  `.trim();
+`.trim();
 
     try {
       const response = await fetch('http://localhost:11434/api/generate', {
@@ -87,19 +448,16 @@ Always answer in natural, fluent Korean.
           model: 'qwen3:1.7b',
           prompt: fullPrompt,
           stream: false,
-          think: false,
-          system: '너는 한국인을 위한 스마트팜을 위한 농장 ai야',
           options: {
-            seed: 42,
-            temperature: 0.2,
+            temperature: 0.7,
             top_p: 0.9,
-            use_mmap: true
+            seed: 42
           }
         })
       });
 
       if (!response.ok) {
-        throw new Error('LLM 서버 응답 오류');
+        throw new Error('Ollama 서버 응답 오류');
       }
 
       const data = await response.json();
@@ -107,8 +465,8 @@ Always answer in natural, fluent Korean.
       const cleanResponse = data.response.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
       return cleanResponse;
     } catch (err) {
-      console.error('LLM 호출 오류:', err.message);
-      throw new Error('스마트팜 AI 서버 호출 중 오류 발생');
+      console.error('Ollama 호출 오류:', err.message);
+      throw new Error('AI 서버에 연결할 수 없습니다. Ollama가 실행 중인지 확인해주세요.');
     }
   };
 
@@ -121,8 +479,7 @@ Always answer in natural, fluent Korean.
     setLoading(true);
     
     try {
-      // 스마트팜 전문 AI 호출
-      const botResponse = await askSmartFarmBot(userMsg.text);
+      const botResponse = await askOllama(userMsg.text);
       setMessages(msgs => [
         ...msgs,
         { role: 'bot', text: botResponse, time: getTime() }
@@ -131,78 +488,71 @@ Always answer in natural, fluent Korean.
       console.error('챗봇 오류:', error);
       setMessages(msgs => [
         ...msgs,
-        { role: 'bot', text: '스마트팜 AI 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.', time: getTime() }
+        { role: 'bot', text: error.message, time: getTime() }
       ]);
     } finally {
       setLoading(false);
-      // AI 응답 후 input에 포커스 복원 - 한글 입력 개선
       if (inputRef.current) {
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           if (inputRef.current) {
-            inputRef.current.focus();
+            inputRef.current.blur();
+            requestAnimationFrame(() => {
+              if (inputRef.current) {
+                inputRef.current.focus();
+              }
+            });
           }
-        }, 100);
+        });
       }
     }
   }, [input, loading]);
 
-  // 키보드 이벤트 핸들러 수정 - IME 상태를 정확히 추적
-  const handleKeyDown = useCallback((e) => {
-    // Enter 키이고 한글 조합 중이 아닐 때만 전송
+  const handleKeyUp = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
-      e.preventDefault();
       send();
     }
   }, [send, isComposing]);
 
-  // IME 조합 시작
   const handleCompositionStart = useCallback(() => {
     setIsComposing(true);
   }, []);
 
-  // IME 조합 종료
   const handleCompositionEnd = useCallback(() => {
     setIsComposing(false);
   }, []);
 
-  // input 변경 핸들러 - 한글 입력 개선
   const handleInputChange = useCallback((e) => {
-    const value = e.target.value;
-    setInput(value);
+    setInput(e.target.value);
   }, []);
 
-  // 전송 버튼 클릭 핸들러
   const handleSendClick = useCallback(() => {
     send();
   }, [send]);
 
   return (
     <>
-      {/* 외부에서 제어되지 않을 때만 FAB 버튼 표시 */}
+      <style>{styles}</style>
       {isOpen === undefined && (
         <button 
           className="cb-fab" 
           onClick={() => setOpen(true)} 
-          aria-label="스마트팜 AI 챗봇 열기"
+          aria-label="AI 챗봇 열기"
         >
-          <img src={BOT_AVATAR} alt="스마트팜 AI" style={{width: 38, height: 38}} />
+          <img src={BOT_AVATAR} alt="AI 챗봇" style={{width: 38, height: 38}} />
         </button>
       )}
       {isChatbotOpen && (
         <div className="cb-fullscreen-overlay">
           <div className="cb-fullscreen-layout">
-            {/* 사이드바 */}
             {sidebar}
             
-            {/* 메인 콘텐츠 */}
             <div className="cb-fullscreen-container">
-              {/* 헤더 */}
               <div className="cb-fullscreen-header">
                 <div className="cb-header-left">
-                  <img src={BOT_AVATAR} alt="SmartFarm AI" className="cb-header-avatar" />
+                  <img src={BOT_AVATAR} alt="AI Assistant" className="cb-header-avatar" />
                   <div className="cb-header-info">
-                    <div className="cb-header-name">스마트팜 AI 어시스턴트</div>
-                    <div className="cb-header-status">● 전문 농업 상담</div>
+                    <div className="cb-header-name">AI 어시스턴트</div>
+                    <div className="cb-header-status">● Ollama qwen3:1.7b</div>
                   </div>
                 </div>
                 <button className="cb-close-btn" onClick={handleClose}>
@@ -210,13 +560,12 @@ Always answer in natural, fluent Korean.
                 </button>
               </div>
 
-              {/* 메인 콘텐츠 */}
               <div className="cb-fullscreen-content">
                 {messages.length === 0 ? (
                   <div className="cb-welcome-screen">
                     <div className="cb-welcome-title">무엇을 도와드릴까요?</div>
                     <div className="cb-welcome-subtitle">
-                      스마트팜 운영에 관한 모든 것을 물어보세요
+                      질문하시면 AI가 답변해드립니다
                     </div>
                   </div>
                 ) : (
@@ -252,7 +601,6 @@ Always answer in natural, fluent Korean.
                 )}
               </div>
 
-              {/* 입력 영역 */}
               <div className="cb-input-container">
                 <div className="cb-input-wrapper">
                   <input
@@ -262,17 +610,11 @@ Always answer in natural, fluent Korean.
                     placeholder="무엇이든 물어보세요"
                     value={input}
                     onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
+                    onKeyUp={handleKeyUp}
                     onCompositionStart={handleCompositionStart}
                     onCompositionEnd={handleCompositionEnd}
                     disabled={loading}
                     autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    inputMode="text"
-                    lang="ko"
-                    style={{ imeMode: 'active' }}
                   />
                   <div className="cb-input-actions">
                     <button 
@@ -293,4 +635,4 @@ Always answer in natural, fluent Korean.
       )}
     </>
   );
-}
+} 
