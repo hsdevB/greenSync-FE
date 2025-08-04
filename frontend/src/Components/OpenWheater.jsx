@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
 const CITY = import.meta.env.VITE_CITY;
@@ -10,9 +11,9 @@ export default function OpenWeather() {
 
   // 날씨 데이터 가져오기
   useEffect(() => {
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${OPENWEATHER_API_KEY}&lang=${LANG}&units=${UNITS}`)
-      .then(res => res.json())
-      .then(data => {
+    axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${OPENWEATHER_API_KEY}&lang=${LANG}&units=${UNITS}`)
+      .then(response => {
+        const data = response.data;
         console.log('OpenWeather API 응답:', data);
         setWeather({
           main: data.weather?.[0]?.main, // 날씨 상태

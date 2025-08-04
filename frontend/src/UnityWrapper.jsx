@@ -12,7 +12,7 @@ class WebGLMessage {
 
 // 재배방식과 외관정보를 조합해서 폴더명 생성
 const getFolderName = (farmType, houseType) => {
-  const farmTypeCode = farmType === '고형배지' ? 'S' : farmType === '수경' ? 'W' : farmType;
+  const farmTypeCode = farmType === '고형배지' ? 'S' : farmType === '수경재배' ? 'W' : farmType;
   const houseTypeCode = houseType === '플라스틱' ? 'P' : houseType === '유리' ? 'G' : houseType;
   console.log(`getFolderName: ${farmTypeCode}${houseTypeCode} (${farmType} + ${houseType})`);
   return `${farmTypeCode}${houseTypeCode}`; // SP, SG, WP, WG
