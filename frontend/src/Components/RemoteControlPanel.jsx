@@ -332,7 +332,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
   const sendToUnity = useCallback((eventName, payload) => {
     // const message = new UnityMessage(eventName, payload);
     const message = { name: eventName, data: payload };
-    console.log("Sending to Unity:", JSON.stringify(message));
+    //console.log("Sending to Unity:", JSON.stringify(message));
     try {
       safeSendMessage("MessageManager", "ReceiveMessage", JSON.stringify(message));
     } catch (error) {
@@ -352,7 +352,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
         // 먼저 현재 상태를 조회해봄
         try {
           const currentState = await deviceStatusApi.getControlState(farmCode);
-          console.log('기존 상태 로드됨:', currentState);
+          //console.log('기존 상태 로드됨:', currentState);
 
           // API 응답을 store 형태로 변환
           const storeState = {
@@ -368,7 +368,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
           setControlState(storeState);
           // setConnectionStatus(prev => ({ ...prev, backend: true }));
         } catch (error) {
-          console.log('기존 상태 없음, 초기 데이터 설정 중...', error);
+          //console.log('기존 상태 없음, 초기 데이터 설정 중...', error);
           
           // 상태가 없으면 초기 데이터 설정 (회원가입 후 첫 접속)
           const initialData = await deviceStatusApi.setInitData(farmCode);
@@ -386,7 +386,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
           setControlState(storeState);
           // setConnectionStatus(prev => ({ ...prev, backend: true }));
           
-          console.log('초기 상태 설정 완료:', initialData);
+          //console.log('초기 상태 설정 완료:', initialData);
         }
         
       } catch (error) {
@@ -465,7 +465,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
     try {
       // 2. 백그라운드에서 API 호출
       await deviceStatusApi.updateTemperature(farmCode, newValue);
-      console.log("온도 변경 성공!");
+      //console.log("온도 변경 성공!");
       // MQTT 로직은 성공 시에만 실행하는 것이 더 안정적일 수 있음
       if (mqttClientRef.current?.isConnected) {
         await mqttClientRef.current.blinkLed(3, fan);
@@ -488,7 +488,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
     try {
       // 2. 백그라운드 API 호출
       await deviceStatusApi.updateHumidity(farmCode, newValue);
-      console.log("습도 변경 성공!");
+      //console.log("습도 변경 성공!");
       // MQTT 로직은 성공 시에만 실행하는 것이 더 안정적일 수 있음
       if (mqttClientRef.current?.isConnected) {
         await mqttClientRef.current.blinkLed(2, fan);
@@ -548,7 +548,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
     try {
       // 2. 백그라운드 API 호출
       await deviceStatusApi.updateLed(farmCode, level);
-      console.log("LED 밝기 변경 성공!");
+      //console.log("LED 밝기 변경 성공!");
       if (mqttClientRef.current?.isConnected && level > 0) {
         mqttClientRef.current.blinkLed(1, fan);
       }

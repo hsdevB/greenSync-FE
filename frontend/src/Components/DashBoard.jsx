@@ -6,8 +6,8 @@ import './DashBoard.css';
 
 const Dashboard = ({ selectedMenu, unityContext, farmCode }) => {
   // 디버깅을 위한 콘솔 로그
-  console.log('Dashboard selectedMenu:', selectedMenu);
-  console.log('showChatbot:', selectedMenu === 'ai-analysis');
+  //console.log('Dashboard selectedMenu:', selectedMenu);
+  //console.log('showChatbot:', selectedMenu === 'ai-analysis');
 
   return (
     <div className="dashboard-main">

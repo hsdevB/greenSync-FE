@@ -2,115 +2,79 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './NutrientFlowChart.css';
 
-const NutrientFlowChart = ({ farmId }) => {
+const NutrientFlowChart = ({ farmCode }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMetrics, setSelectedMetrics] = useState(['phLevel', 'ecLevel']);
-
-  // 실제 센서 데이터 가져오기
-
-  const fetchSensorData = async () => {
-    try {
-      const res = await axios.get(`http://192.168.0.33:3000/chart/nutrient/daily/ABCD1234`);
-      console.log("Nutrient sensor response: ", res.data);
-      
-      let phLevel, ecLevel;
-      
-      // API 응답 구조에 따른 데이터 추출
-      if (res.data) {
-        // pH 값 추출 (다양한 응답 구조 대응)
-        if (res.data.data && res.data.data.phLevel) {
-          phLevel = res.data.data.phLevel;
-        } else if (res.data.phLevel) {
-          phLevel = res.data.phLevel;
-        } else if (typeof res.data === 'number') {
-          phLevel = res.data;
-        } else {
-          phLevel = 6.0; // 기본값
-        }
-
-        // EC 값 추출 (실제 센서 데이터 우선)
-        if (res.data.data && res.data.data.elcDT) {
-          ecLevel = res.data.data.elcDT;
-        } else if (res.data.elcDT) {
-          ecLevel = res.data.elcDT;
-        } else if (res.data.data && res.data.data.ecLevel) {
-          ecLevel = res.data.data.ecLevel;
-        } else if (res.data.ecLevel) {
-          ecLevel = res.data.ecLevel;
-        } else if (typeof res.data === 'number') {
-          ecLevel = res.data;
-        } else {
-          ecLevel = 2.0; // 기본값
-        }
-      } else {
-        phLevel = 6.0;
-        ecLevel = 2.0;
-      }
-
-      console.log(`실제 센서 데이터 - pH: ${phLevel}, EC: ${ecLevel}`);
-      return { phLevel, ecLevel };
-    } catch (error) {
-      console.error('Sensor data fetch error:', error);
-      return { phLevel: 6.0, ecLevel: 2.0 }; // 에러 시 기본값
-    }
-  };
-
-     // 실제 데이터 기반 시계열 데이터 생성 (00시~10시)
-  const generateTimeSeriesData = async () => {
-    const now = new Date();
-    const timeSeriesData = [];
-    
-    // 실제 센서 데이터 가져오기
-    const sensorData = await fetchSensorData();
-    const basePhLevel = sensorData.phLevel;
-    const baseEcLevel = sensorData.ecLevel;
-    
-    console.log(`기준값 설정 - pH: ${basePhLevel}, EC: ${baseEcLevel}`);
-    
-         // 오늘 자정(00:00)부터 10시간 데이터 생성
-    const todayMidnight = new Date(now);
-    todayMidnight.setHours(0, 0, 0, 0); // 00:00:00으로 설정
-    
-         // 10시간 데이터 생성 (00시~10시)
-     for (let i = 0; i <= 10; i++) {
-       const time = new Date(todayMidnight.getTime() + i * 60 * 60 * 1000);
-       
-       // 시간대별 자연스러운 변동 패턴
-       const hourOfDay = i; // 0~10
-       const morningFactor = Math.sin((hourOfDay / 10) * Math.PI) * 0.1; // 아침에 점진적 증가
-      const phVariation = morningFactor + (hourOfDay % 3 === 0 ? 0.02 : 0); // 3시간마다 작은 변동
-      const ecVariation = morningFactor + (hourOfDay % 2 === 0 ? 0.01 : 0); // 2시간마다 작은 변동
-      
-      // 실제 센서값을 중심으로 한 범위 설정
-      const phRange = [basePhLevel - 0.3, basePhLevel + 0.3]; // 실제 pH ±0.3 범위
-      const ecRange = [baseEcLevel - 0.2, baseEcLevel + 0.2]; // 실제 EC ±0.2 범위
-      
-      timeSeriesData.push({
-        timestamp: time,
-        phLevel: Math.max(phRange[0], Math.min(phRange[1], basePhLevel + phVariation)),
-        ecLevel: Math.max(ecRange[0], Math.min(ecRange[1], baseEcLevel + ecVariation))
-      });
-    }
-    
-    return timeSeriesData;
-  };
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const timeSeriesData = await generateTimeSeriesData();
+        // 여러 가능한 API 엔드포인트 시도
+        let phLevels = [];
+        let ecLevels = [];
+        
+        try {
+          // 먼저 개별 pH, EC 엔드포인트 시도
+          const [phResponse, ecResponse] = await Promise.all([
+            axios.get(`http://192.168.0.33:3000/chart/nutrient/daily/${farmCode}`),
+            axios.get(`http://192.168.0.33:3000/chart/nutrient/daily/${farmCode}`)
+          ]);
+
+          phLevels = phResponse.data.data?.datasets?.[0]?.data?.phAverageData || [];
+          ecLevels = ecResponse.data.data?.datasets?.[0]?.data?.ecAverageData || [];
+          
+          console.log("개별 엔드포인트 - pH 데이터:", phLevels);
+          console.log("개별 엔드포인트 - EC 데이터:", ecLevels);
+        } catch (error) {
+          console.log("개별 엔드포인트 실패, 통합 엔드포인트 시도");
+          
+          // 개별 엔드포인트가 실패하면 통합 nutrient 엔드포인트 시도
+          const nutrientResponse = await axios.get(`http://192.168.0.33:3000/chart/nutrient/daily/${farmCode}`);
+          
+          console.log("통합 nutrient 응답:", nutrientResponse.data);
+          
+          // 통합 응답에서 데이터 추출
+          if (nutrientResponse.data.data?.datasets?.[0]?.data) {
+            const nutrientData = nutrientResponse.data.data.datasets[0].data;
+            phLevels = nutrientData.phAverageData || [];
+            ecLevels = nutrientData.ecAverageData || [];
+          } else if (nutrientResponse.data.phLevel) {
+            phLevels = [nutrientResponse.data.phLevel];
+            ecLevels = [nutrientResponse.data.ecLevel];
+          }
+          
+          console.log("통합 엔드포인트 - pH 데이터:", phLevels);
+          console.log("통합 엔드포인트 - EC 데이터:", ecLevels);
+        }
+
+        // 시간 라벨 생성 (00시~10시)
+        const timeLabels = ['00시', '01시', '02시', '03시', '04시', '05시', '06시', '07시', '08시', '09시', '10시'];
+        
+        // 시계열 데이터 생성
+        const timeSeriesData = timeLabels.map((label, index) => {
+          const timestamp = new Date();
+          timestamp.setHours(index, 0, 0, 0);
+          
+          return {
+            timestamp: timestamp,
+            phLevel: phLevels[index] || 0, // 기본값 6.0
+            ecLevel: ecLevels[index] || 0  // 기본값 2.0
+          };
+        });
+
+        console.log("최종 시계열 데이터:", timeSeriesData);
         setData(timeSeriesData);
       } catch (error) {
         console.error('Data loading error:', error);
-                 // 에러 시 기본 데이터 생성 (00시~10시)
-         const now = new Date();
-         const todayMidnight = new Date(now);
-         todayMidnight.setHours(0, 0, 0, 0); // 00:00:00으로 설정
-         
-         const fallbackData = [];
-         for (let i = 0; i <= 10; i++) {
+        // 에러 시 기본 데이터 생성 (00시~10시)
+        const now = new Date();
+        const todayMidnight = new Date(now);
+        todayMidnight.setHours(0, 0, 0, 0); // 00:00:00으로 설정
+        
+        const fallbackData = [];
+        for (let i = 0; i <= 10; i++) {
           const time = new Date(todayMidnight.getTime() + i * 60 * 60 * 1000);
           fallbackData.push({
             timestamp: time,
@@ -125,7 +89,7 @@ const NutrientFlowChart = ({ farmId }) => {
     };
 
     loadData();
-  }, [farmId]);
+  }, [farmCode]);
 
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString('ko-KR', {
@@ -168,9 +132,30 @@ const NutrientFlowChart = ({ farmId }) => {
       return ranges[metric] || [0, 100];
     }
     
-    const values = data.map(item => item[metric]);
+    const values = data.map(item => item[metric]).filter(val => 
+      !isNaN(val) && val !== null && val !== undefined && typeof val === 'number'
+    );
+    
+    if (values.length === 0) {
+      const ranges = {
+        phLevel: [5, 7],
+        ecLevel: [1, 3]
+      };
+      return ranges[metric] || [0, 100];
+    }
+    
     const min = Math.min(...values);
     const max = Math.max(...values);
+    
+    // min, max가 유효한지 확인
+    if (isNaN(min) || isNaN(max)) {
+      const ranges = {
+        phLevel: [5, 7],
+        ecLevel: [1, 3]
+      };
+      return ranges[metric] || [0, 100];
+    }
+    
     const range = max - min;
     
     // 최소 범위 보장 (너무 작은 변동도 보이도록)
@@ -198,47 +183,47 @@ const NutrientFlowChart = ({ farmId }) => {
       );
     }
 
-         const chartWidth = 500;
-     const chartHeight = 400;
-     const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+    const chartWidth = 500;
+    const chartHeight = 400;
+    const margin = { top: 20, right: 30, bottom: 40, left: 60 };
     const width = chartWidth - margin.left - margin.right;
     const height = chartHeight - margin.top - margin.bottom;
 
     return (
       <div className="nutrient-chart-container">
-                 <div className="nutrient-chart-header">
-           <h3>양액 공급량 시계열 데이터 (00시~10시)</h3>
-          <div className="nutrient-chart-controls">
-            {/* <select 
-              value={timeRange} 
-              onChange={(e) => setTimeRange(e.target.value)}
-              className="time-range-select"
-            >
-              <option value="24h">24시간</option>
-            </select> */}
-          </div>
+        <div className="nutrient-chart-header">
+        <h3>양액 공급량 시계열 데이터 (00시~10시)</h3>
+        <div className="nutrient-chart-controls">
+          {/* <select 
+            value={timeRange} 
+            onChange={(e) => setTimeRange(e.target.value)}
+            className="time-range-select"
+          >
+            <option value="24h">24시간</option>
+          </select> */}
         </div>
+      </div>
 
-        <div className="nutrient-chart-metrics">
-          {['phLevel', 'ecLevel'].map(metric => (
-            <label key={metric} className="metric-checkbox">
-              <input
-                type="checkbox"
-                checked={selectedMetrics.includes(metric)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedMetrics([...selectedMetrics, metric]);
-                  } else {
-                    setSelectedMetrics(selectedMetrics.filter(m => m !== metric));
-                  }
-                }}
-              />
-              <span style={{ color: getMetricColor(metric) }}>
-                {getMetricLabel(metric)}
-              </span>
-            </label>
-          ))}
-        </div>
+      <div className="nutrient-chart-metrics">
+        {['phLevel', 'ecLevel'].map(metric => (
+          <label key={metric} className="metric-checkbox">
+            <input
+              type="checkbox"
+              checked={selectedMetrics.includes(metric)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedMetrics([...selectedMetrics, metric]);
+                } else {
+                  setSelectedMetrics(selectedMetrics.filter(m => m !== metric));
+                }
+              }}
+            />
+            <span style={{ color: getMetricColor(metric) }}>
+              {getMetricLabel(metric)}
+            </span>
+          </label>
+        ))}
+      </div>
 
         <div className="nutrient-chart">
           <svg width={chartWidth} height={chartHeight} className="nutrient-svg">
@@ -256,9 +241,9 @@ const NutrientFlowChart = ({ farmId }) => {
               />
             ))}
 
-                         {/* X축 시간 라벨 */}
-             {data.filter((_, i) => i % 2 === 0).map((item, i) => {
-               const x = margin.left + (i * 2 * width / (data.length - 1));
+          {/* X축 시간 라벨 */}
+            {data.filter((_, i) => i % 2 === 0).map((item, i) => {
+              const x = margin.left + (i * 2 * width / (data.length - 1));
               return (
                 <text
                   key={`time-${i}`}
@@ -278,12 +263,21 @@ const NutrientFlowChart = ({ farmId }) => {
               const [min, max] = getYAxisRange(metric);
               const color = getMetricColor(metric);
               
+              console.log(`${metric} 렌더링 - 데이터:`, data.map(item => item[metric]));
+              console.log(`${metric} 렌더링 - 범위:`, [min, max]);
+              
               const points = data.map((item, i) => {
-                const x = margin.left + (i * width / (data.length - 1));
-                const normalizedValue = (item[metric] - min) / (max - min);
+                const x = margin.left + (i * width / Math.max(data.length - 1, 1));
+                const value = item[metric];
+                if (isNaN(value) || value === null || value === undefined) {
+                  return null; // 유효하지 않은 점은 건너뛰기
+                }
+                const normalizedValue = (max - min) === 0 ? 0.5 : (value - min) / (max - min);
                 const y = margin.top + (1 - normalizedValue) * height;
                 return `${x},${y}`;
-              }).join(' ');
+              }).filter(point => point !== null).join(' ');
+
+              console.log(`${metric} 렌더링 - 포인트:`, points);
 
               return (
                 <g key={metric}>
@@ -296,8 +290,12 @@ const NutrientFlowChart = ({ farmId }) => {
                     strokeLinejoin="round"
                   />
                   {data.map((item, i) => {
-                    const x = margin.left + (i * width / (data.length - 1));
-                    const normalizedValue = (item[metric] - min) / (max - min);
+                    const x = margin.left + (i * width / Math.max(data.length - 1, 1));
+                    const value = item[metric];
+                    if (isNaN(value) || value === null || value === undefined) {
+                      return null; // 유효하지 않은 점은 건너뛰기
+                    }
+                    const normalizedValue = (max - min) === 0 ? 0.5 : (value - min) / (max - min);
                     const y = margin.top + (1 - normalizedValue) * height;
                     
                     return (
@@ -308,11 +306,11 @@ const NutrientFlowChart = ({ farmId }) => {
                         r="4"
                         fill={color}
                         className="data-point"
-                        data-value={item[metric]}
+                        data-value={value}
                         data-unit={getMetricUnit(metric)}
                       />
                     );
-                  })}
+                  }).filter(circle => circle !== null)}
                 </g>
               );
             })}
@@ -346,32 +344,32 @@ const NutrientFlowChart = ({ farmId }) => {
               );
             })}
 
-                         {/* 범례 */}
-             <g transform={`translate(${chartWidth - 180}, ${margin.top})`}>
-               {selectedMetrics.map((metric, index) => {
-                 const color = getMetricColor(metric);
-                 return (
-                   <g key={`legend-${metric}`} transform={`translate(0, ${index * 20})`}>
-                     <line
-                       x1="0"
-                       y1="0"
-                       x2="20"
-                       y2="0"
-                       stroke={color}
-                       strokeWidth="3"
-                     />
-                     <text
-                       x="30"
-                       y="4"
-                       fontSize="12"
-                       fill={color}
-                     >
-                       {getMetricLabel(metric)}
-                     </text>
-                   </g>
-                 );
-               })}
-             </g>
+          {/* 범례 */}
+            <g transform={`translate(${chartWidth - 180}, ${margin.top})`}>
+              {selectedMetrics.map((metric, index) => {
+                const color = getMetricColor(metric);
+                return (
+                  <g key={`legend-${metric}`} transform={`translate(0, ${index * 20})`}>
+                    <line
+                      x1="0"
+                      y1="0"
+                      x2="20"
+                      y2="0"
+                      stroke={color}
+                      strokeWidth="3"
+                    />
+                    <text
+                      x="30"
+                      y="4"
+                      fontSize="12"
+                      fill={color}
+                    >
+                      {getMetricLabel(metric)}
+                    </text>
+                  </g>
+                );
+              })}
+            </g>
           </svg>
         </div>
 
@@ -389,14 +387,20 @@ const NutrientFlowChart = ({ farmId }) => {
                 </tr>
               </thead>
               <tbody>
-                                 {data.slice(0, 11).map((item, index) => (
+                {data.slice(0, 11).map((item, index) => (
                   <tr key={index}>
                     <td>{formatTime(item.timestamp)}</td>
-                    {selectedMetrics.map(metric => (
-                      <td key={metric} style={{ color: getMetricColor(metric) }}>
-                        {item[metric].toFixed(2)} {getMetricUnit(metric)}
-                      </td>
-                    ))}
+                    {selectedMetrics.map(metric => {
+                      const value = item[metric];
+                      const displayValue = (isNaN(value) || value === null || value === undefined) 
+                        ? 'N/A' 
+                        : `${value.toFixed(2)} ${getMetricUnit(metric)}`;
+                      return (
+                        <td key={metric} style={{ color: getMetricColor(metric) }}>
+                          {displayValue}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>

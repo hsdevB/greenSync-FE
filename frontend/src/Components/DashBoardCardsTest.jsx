@@ -13,7 +13,7 @@ import useControlStore from '../store/useControlStore.jsx';
 
 const DashBoardCards = ({ farmData }) => {
   // 디버깅을 위한 콘솔 로그
-  console.log('DashBoardCards rendered with farmData:', farmData);
+  //console.log('DashBoardCards rendered with farmData:', farmData);
 
   // farmData가 없을 때를 대비한 기본값 설정
   const safeFarmData = farmData || { farmId: 1 };
@@ -104,7 +104,7 @@ const DashBoardCards = ({ farmData }) => {
       try {
         // 프록시를 사용하지 않고 직접 주소로 요청
         const res = await axios.get(`/sensor/temperature/${farmId}`);
-        console.log("Temperature response: ", res.data);
+        //console.log("Temperature response: ", res.data);
         if (res.data && typeof res.data === 'number') {
           setIndoorTemp(res.data);
         } else if (res.data && res.data.data && res.data.data.temperature) {
@@ -131,7 +131,7 @@ useEffect(() => {
   const fetchIndoorHumi = async () => {
     try {
       const res = await axios.get(`/sensor/humidity/${farmId}`);
-      console.log("Humidity response: ", res.data);
+      //console.log("Humidity response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setIndoorHumi(res.data);
       } else if (res.data && res.data.data && res.data.data.humidity) {
@@ -158,7 +158,7 @@ useEffect(() => {
   const fetchNutrient = async () => {
     try {
       const res = await axios.get(`/sensor/nutrient/${farmId}`);
-      console.log("Nutrient response: ", res.data);
+      //console.log("Nutrient response: ", res.data);
 
         // pH 값 설정
         if (res.data && typeof res.data === 'number') {
@@ -199,7 +199,7 @@ useEffect(() => {
   const fetchCarbonDioxide = async () => {
       try {
         const res = await axios.get(`/sensor/carbonDioxide/${farmId}`);
-        console.log("CO2 response: ", res.data);
+        //console.log("CO2 response: ", res.data);
         if (res.data && typeof res.data === 'number') {
           setCarbonDioxide(res.data);
         } else if (res.data && res.data.data && res.data.data.co2) {
@@ -226,7 +226,7 @@ useEffect(() => {
   const fetchIlluminance = async () => {
     try {
       const res = await axios.get(`/sensor/illuminance/${farmId}`);
-      console.log("Illuminance response: ", res.data);
+      //console.log("Illuminance response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setIlluminance(res.data);
       } else if (res.data && res.data.data && res.data.data.illuminance) {
@@ -253,7 +253,7 @@ useEffect(() => {
   const fetchSolarRadiation = async () => {
     try {
       const res = await axios.get(`/sensor/solarRadiation/${farmId}`);
-      console.log("Solar Radiation response: ", res.data);
+      //console.log("Solar Radiation response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setSolarRadiation(res.data);
       } else if (res.data && res.data.data && res.data.data.solarRadiation) {

@@ -13,8 +13,8 @@ class WebGLMessage {
 // 재배방식과 외관정보를 조합해서 폴더명 생성
 const getFolderName = (farmType, houseType) => {
   const farmTypeCode = farmType === '고형배지' ? 'S' : farmType === '수경재배' ? 'W' : farmType;
-  const houseTypeCode = houseType === '플라스틱' ? 'P' : houseType === '유리' ? 'G' : houseType;
-  console.log(`getFolderName: ${farmTypeCode}${houseTypeCode} (${farmType} + ${houseType})`);
+  const houseTypeCode = houseType === '플라스틱온실' ? 'P' : houseType === '유리온실' ? 'G' : houseType;
+  // //console.log(`getFolderName: ${farmTypeCode}${houseTypeCode} (${farmType} + ${houseType})`);
   return `${farmTypeCode}${houseTypeCode}`; // SP, SG, WP, WG
 };
 
@@ -24,17 +24,14 @@ const useSharedUnityContext = (farmCode,farmType, houseType) => {
   const initializationRef = useRef(false);
   const currentFolderRef = useRef(null);
 
-  console.log('🔍 farmData 상태:', farmType);
-
   // 폴더명 계산
   const folderName = useMemo(() => {
     if (!farmType || !houseType) {
-      console.log('⚠️ farmData 불완전, 기본값 WG 사용');
+      // //console.log('⚠️ farmData 불완전, 기본값 WG 사용');
       return 'WG';
     }
     
     const folder = getFolderName(farmType, houseType);
-    console.log(`✅ 폴더명 결정: ${folder}`);
     return folder;
   }, [farmType, houseType]);
 
@@ -47,11 +44,11 @@ const useSharedUnityContext = (farmCode,farmType, houseType) => {
       codeUrl: `Build/${folderName}/Build.wasm.unityweb`,
     };
 
-    console.log('🎯 Unity Config 생성:', config);
+    // //console.log('🎯 Unity Config 생성:', config);
     
     // 폴더가 변경되면 초기화 상태 리셋
     if (currentFolderRef.current !== folderName) {
-      console.log(`📁 폴더 변경: ${currentFolderRef.current} → ${folderName}`);
+      // //console.log(`📁 폴더 변경: ${currentFolderRef.current} → ${folderName}`);
       currentFolderRef.current = folderName;
       setIsReady(false);
       initializationRef.current = false;
@@ -73,7 +70,7 @@ const useSharedUnityContext = (farmCode,farmType, houseType) => {
       }
       
       unityContext.sendMessage(objectName, methodName, parameter);
-      console.log(`✅ Unity 메시지 전송 성공: ${objectName}.${methodName}`);
+      //console.log(`✅ Unity 메시지 전송 성공: ${objectName}.${methodName}`);
       return true;
     } catch (error) {
       console.error(`❌ Unity 메시지 전송 실패: ${objectName}.${methodName}`, error);
@@ -84,7 +81,7 @@ const useSharedUnityContext = (farmCode,farmType, houseType) => {
   // sendToUnity 함수 (RemoteControlPanel 방식과 동일)
   const sendToUnity = useCallback((eventName, payload) => {
     const message = new WebGLMessage(eventName, payload);
-    console.log("Sending to Unity:", JSON.stringify(message));
+    //console.log("Sending to Unity:", JSON.stringify(message));
     
     try {
       // 여러 가능한 매니저에 시도 (MessageManager 우선)
@@ -122,7 +119,7 @@ const useSharedUnityContext = (farmCode,farmType, houseType) => {
       houseType: houseType,
     };
 
-    console.log('📤 농장 데이터 전송:', farmInitData);
+    //console.log('📤 농장 데이터 전송:', farmInitData);
 
     // UnityMessage 방식으로 전송
     const success = sendToUnity("INITIALIZE_FARM", farmInitData);
@@ -130,7 +127,7 @@ const useSharedUnityContext = (farmCode,farmType, houseType) => {
     if (success) {
       setIsReady(true);
       initializationRef.current = true;
-      console.log('✅ 농장 데이터 전달 완료!');
+      //console.log('✅ 농장 데이터 전달 완료!');
       return true;
     } else {
       setError('농장 데이터 전송에 실패했습니다.');
@@ -141,7 +138,7 @@ const useSharedUnityContext = (farmCode,farmType, houseType) => {
   // Unity 로드 완료 시 농장 데이터 전달
   useEffect(() => {
     if (unityContext.isLoaded && farmType && houseType && !initializationRef.current) {
-      console.log('🚀 Unity 로드 완료, 농장 데이터 전송 시작...');
+      //console.log('🚀 Unity 로드 완료, 농장 데이터 전송 시작...');
       
       // Unity가 완전히 초기화될 때까지 대기
       const timer = setTimeout(() => {
@@ -157,10 +154,10 @@ const useSharedUnityContext = (farmCode,farmType, houseType) => {
     if (unityContext.loadingProgression === 0 && !unityContext.isLoaded) return;
 
     const progress = Math.round(unityContext.loadingProgression * 100);
-    console.log(`📊 ${folderName} Unity 로딩: ${progress}%`);
+    //console.log(`📊 ${folderName} Unity 로딩: ${progress}%`);
     
     if (unityContext.isLoaded && !initializationRef.current) {
-      console.log(`🎉 ${folderName} Unity 로딩 완료!`);
+      //console.log(`🎉 ${folderName} Unity 로딩 완료!`);
     }
   }, [unityContext.loadingProgression, unityContext.isLoaded, folderName]);
 
@@ -168,12 +165,12 @@ const useSharedUnityContext = (farmCode,farmType, houseType) => {
   useEffect(() => {
     // 테스트용 전역 함수
     window.sendFarmDataToUnity = () => {
-      console.log('🔧 수동으로 농장 데이터 전송 시도...');
+      //console.log('🔧 수동으로 농장 데이터 전송 시도...');
       return sendFarmDataToUnity();
     };
 
     window.testUnityMessage = (eventName = "TEST_EVENT", payload = { test: "data" }) => {
-      console.log('🔧 Unity 메시지 테스트...');
+      //console.log('🔧 Unity 메시지 테스트...');
       return sendToUnity(eventName, payload);
     };
 

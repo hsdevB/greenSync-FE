@@ -191,7 +191,7 @@ useEffect(() => {
   const fetchInsolation = async () => {
     try {
       const res = await axios.get(`/weather/mapped`);
-      console.log("Insolation response: ", res.data);
+      //console.log("Insolation response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setInsolation(res.data);
       } else if (res.data && res.data.data && res.data.data.insolation) {
@@ -216,7 +216,7 @@ useEffect(() => {
   const fetchWindDirection = async () => {
     try {
       const res = await axios.get(`/weather/mapped`);
-      console.log("Wind Direction response: ", res.data);
+      //console.log("Wind Direction response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setWindDirection(res.data);
       } else if (res.data && res.data.data && res.data.data.windDirection) {
@@ -240,7 +240,7 @@ useEffect(() => {
   const fetchWindSpeed = async () => {
     try {
       const res = await axios.get(`/weather/mapped`);
-      console.log("Wind Speed response: ", res.data);
+      //console.log("Wind Speed response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setWindSpeed(res.data);
       } else if (res.data && res.data.data && res.data.data.windSpeed) {
@@ -264,7 +264,7 @@ useEffect(() => {
   const fetchDewPoint = async () => {
     try {
       const res = await axios.get(`/weather/mapped`);
-      console.log("Dew Point response: ", res.data);
+      //console.log("Dew Point response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setDewPoint(res.data);
       } else if (res.data && res.data.data && res.data.data.dewPoint) {
@@ -288,7 +288,7 @@ useEffect(() => {
   const fetchIsRain = async () => {
     try {
       const res = await axios.get(`/weather/mapped`);
-      console.log("Is Rain response: ", res.data);
+      //console.log("Is Rain response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setIsRain(res.data);
       } else if (res.data && res.data.data && res.data.data.isRain) {

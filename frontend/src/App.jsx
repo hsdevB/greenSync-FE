@@ -17,6 +17,7 @@ import { MQTTProvider } from './hooks/MQTTProvider';
 import axios from 'axios';
 import './App.css';
 import DashBoardCards from './Components/DashBoardCards.jsx';
+import NutrientFlowChart from './Components/NutrientFlowChart.jsx';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const API_LOGIN_API = import.meta.env.VITE_LOGIN_API;
@@ -124,10 +125,10 @@ function DashboardLayout({ farmCode, farmType, houseType, onLogout }) {
                     console.error('Unity 에러:', error);
                   }}
                   onProgress={(progress) => {
-                    console.log('Unity 로딩 진행률:', progress);
+                    //console.log('Unity 로딩 진행률:', progress);
                   }}
                   onInitialized={() => {
-                    console.log('Unity 초기화 완료!');
+                    //console.log('Unity 초기화 완료!');
                   }}
                 />
                 {/* Unity 로딩 오버레이 */}
@@ -287,7 +288,7 @@ function AppContent() {
   }
 
   // 로그인된 상태에서의 라우팅
-  if (isLoggedIn ) {
+  if (isLoggedIn) {
     return (
       <Routes>
         <Route path="/dashboard" element={<DashboardLayout farmType={farmType} houseType={houseType} farmCode={farmCode} onLogout={handleLogout} />} />
@@ -295,6 +296,7 @@ function AppContent() {
         <Route path="/crop-control" element={<CropControlUI />} />
         <Route path="*" element={<DashboardLayout farmType={farmType} houseType={houseType} farmCode={farmCode} onLogout={handleLogout} />} />
         <Route path="*" element={<DashBoardCards farmCode={farmCode}/>} />
+        <Route path="*" element={<NutrientFlowChart farmCode={farmCode}/>} />
       </Routes>
     );
   }

@@ -28,10 +28,10 @@ function AIButton({ farmId }) {
   };
 
   // farmId를 사용하는 예시 (실제 API 호출 시 사용)
-  console.log('Farm ID:', farmId);
+  //console.log('Farm ID:', farmId);
 
   const handleAnalyze = async () => {
-    console.log('AI 분석 시작 - 모달 열기');
+    //console.log('AI 분석 시작 - 모달 열기');
     setShowModal(true);
     setLoading(true);
     setResult(null);
@@ -40,26 +40,26 @@ function AIButton({ farmId }) {
       // 실제 코드: const res = await axios.post('http://localhost:3001/predict', { farm_id: farmId, crop: crop });
       const res = await simulateAPICall(); // 시뮬레이션용
       
-      console.log('API Response:', res.data); // 디버깅용
+      //console.log('API Response:', res.data); // 디버깅용
       
       if (res.data.status === 'success' && res.data.predicted) {
-        console.log('결과 설정:', res.data.predicted);
+        //console.log('결과 설정:', res.data.predicted);
         setResult(res.data.predicted);
       } else {
-        console.log('분석 실패 - 데이터 형식 오류');
+        //console.log('분석 실패 - 데이터 형식 오류');
         alert('AI 분석 실패: 데이터 형식이 올바르지 않습니다.');
       }
     } catch (err) {
       console.error('AI 분석 오류:', err);
       alert('서버 오류 발생');
     } finally {
-      console.log('로딩 완료');
+      //console.log('로딩 완료');
       setLoading(false);
     }
   };
 
   const closeModal = () => {
-    console.log('모달 닫기');
+    //console.log('모달 닫기');
     setShowModal(false);
   };
 

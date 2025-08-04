@@ -155,7 +155,7 @@ export const useAutoMode = (farmCode, sendToUnity) => {
 
           // 2. 백그라운드 API 호출
           await deviceStatusApi.updateTemperature(farmCode, newTargetTemp);
-          console.log(`자동 모드: 센서${sensorNum} 온도 ${newTargetTemp}도로 설정 (현재: ${sensor.temp}도)`);
+          //console.log(`자동 모드: 센서${sensorNum} 온도 ${newTargetTemp}도로 설정 (현재: ${sensor.temp}도)`);
 
           // MQTT 깜박임 처리
           if (mqttClientRef.current && mqttClientRef.current.isConnected) {
@@ -193,7 +193,7 @@ export const useAutoMode = (farmCode, sendToUnity) => {
 
           // 2. 백그라운드 API 호출
           await deviceStatusApi.updateHumidity(farmCode, newTargetHumid);
-          console.log(`자동 모드: 센서${sensorNum} 습도 ${newTargetHumid}%로 설정 (현재: ${sensor.humid}%)`);
+          //console.log(`자동 모드: 센서${sensorNum} 습도 ${newTargetHumid}%로 설정 (현재: ${sensor.humid}%)`);
   
           // MQTT 깜박임 처리
           if (mqttClientRef.current && mqttClientRef.current.isConnected) {
@@ -225,7 +225,7 @@ export const useAutoMode = (farmCode, sendToUnity) => {
 
           // 2. 백그라운드 API 호출
           await deviceStatusApi.updateLed(farmCode, ledLevelByTime);
-          console.log('자동 모드: LED 밝기', ledLevelByTime, '로 설정 (현재 시간:', hour, '시)');
+          //console.log('자동 모드: LED 밝기', ledLevelByTime, '로 설정 (현재 시간:', hour, '시)');
           
           // LED 밝기 변경 시 MQTT LED 깜박임
           if (ledLevelByTime > 0 && mqttClientRef.current && mqttClientRef.current.isConnected) {
@@ -247,7 +247,7 @@ export const useAutoMode = (farmCode, sendToUnity) => {
 
     const wateringInterval = setInterval(async () => {
       // UI 즉시 업데이트
-      console.log('자동 모드: 급수 시작');
+      //console.log('자동 모드: 급수 시작');
       sendToUnity("startWater", { status: true });
       setWater(true);
       
@@ -256,7 +256,7 @@ export const useAutoMode = (farmCode, sendToUnity) => {
         await mqttClientRef.current.blinkLed(0, fan);
       }
       setTimeout(async () => {
-        console.log('자동 모드: 급수 종료');
+        //console.log('자동 모드: 급수 종료');
         setWater(false);
         sendToUnity("startWater", { status: false });
       }, 1000 * 5); // 5초간 급수
@@ -273,7 +273,7 @@ export const useAutoMode = (farmCode, sendToUnity) => {
     const fanToggleInterval = setInterval(async() => {
       const newFan = !fan;
 
-        console.log('자동 모드: 환기 시스템', newFan ? 'ON' : 'OFF');
+        //console.log('자동 모드: 환기 시스템', newFan ? 'ON' : 'OFF');
         // UI 즉시 업데이트
         sendToUnity("fanStatus", { status: newFan });
         setFan(newFan);
