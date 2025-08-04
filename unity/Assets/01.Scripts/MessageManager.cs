@@ -214,7 +214,7 @@ public class MessageManager : MonoBehaviour
 
             if (houseTypeUI != null)
             {
-                string typeText = $"({farmData.houseType})";
+                string typeText = $"{farmData.houseType}";
                 UpdateTextComponent(houseTypeUI, typeText, typeText);
                 Debug.Log($"{typeText}");
             }
