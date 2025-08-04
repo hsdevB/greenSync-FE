@@ -1,25 +1,20 @@
 import React, { useEffect, useState } from "react";
-
-// const OPENWEATHER_API_KEY = "58ae922a8ae59948dca89a2e0120c426";
-// const CITY = "Seoul";
-// const LANG = "kr";
-// const UNITS = "metric";
-
+import axios from "axios";
+const BACKEND_IP_ADDRESS = '192.168.0.33';
 export default function OpenWeather() {
   const [weather, setWeather] = useState(null);
 
   // 날씨 데이터 가져오기
   useEffect(() => {
-    fetch(`http://192.168.0.33:3000/weather/raw`) // 통합 엔드포인트 시도
-      .then(res => res.json())
-      .then(data => {
-        console.log('Weather API 응답:', data);
+    axios.get(`http://${BACKEND_IP_ADDRESS}:3000/weather/raw`)
+      .then(response => {
+        const data = response.data;
         setWeather({
-          main: data.weather?.[0]?.main, // 날씨 상태
-          desc: data.weather?.[0]?.description, // 날씨 설명
-          icon: data.weather?.[0]?.icon, // 날씨 아이콘
-          temp: data.main?.temp, // 온도
-          rain: data.rain?.['1h'] ?? 0, // 1시간 강수량
+          main: data.weatherInfo?.main || "데이터가 없습니다", // 날씨 상태
+          desc: data.weatherInfo?.description || "데이터가 없습니다", // 날씨 설명
+          icon: data.weatherInfo?.icon || "데이터가 없습니다", // 날씨 아이콘
+          temp: data.weatherInfo?.temperature || "데이터가 없습니다", // 온도
+          rain: data.weatherInfo?.rainInfo || 0, // 1시간 강수량
         });
       })
       .catch(error => {
@@ -64,7 +59,7 @@ export default function OpenWeather() {
                 display: "block"
               }}
               onError={(e) => {
-                console.log('날씨 아이콘 로드 실패:', e.target.src);
+                //console.log('날씨 아이콘 로드 실패:', e.target.src);
                 e.target.style.display = 'none';
                 // 아이콘 로드 실패 시 이모티콘 표시
                 e.target.nextSibling.style.display = 'block';

@@ -6,7 +6,7 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   box-shadow: 0 4px 24px rgba(0,0,0,0.18);
   border: none;
   display: flex;
@@ -14,10 +14,19 @@
   justify-content: center;
   z-index: 1001;
   cursor: pointer;
-  transition: box-shadow 0.2s;
+  transition: all 0.3s ease;
 }
-.cb-fab img { width: 38px; height: 38px; }
-.cb-fab:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
+
+.cb-fab:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+
+.cb-fab img {
+  width: 38px;
+  height: 38px;
+  filter: brightness(0) invert(1);
+}
 
 /* 전체 화면 오버레이 */
 .cb-fullscreen-overlay {
@@ -26,16 +35,21 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: #ffffff;
+  background: rgba(0, 0, 0, 0.5);
   z-index: 2000;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .cb-fullscreen-layout {
   display: flex;
   height: 100vh;
+  width: 100%;
   background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
 }
 
 .cb-fullscreen-container {
@@ -43,8 +57,8 @@
   flex-direction: column;
   flex: 1;
   background: #ffffff;
-  margin-left: 256px; /* 사이드바 너비만큼 여백 추가 */
-  width: calc(100% - 256px); /* 사이드바 너비를 제외한 나머지 공간 */
+  margin-left: 256px;
+  width: calc(100% - 256px);
 }
 
 /* 헤더 */
@@ -84,7 +98,7 @@
 
 .cb-header-status {
   font-size: 13px;
-  color: #4caf50;
+  color: #667eea;
 }
 
 .cb-close-btn {
@@ -119,19 +133,20 @@
   height: 100%;
   text-align: center;
   padding: 40px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
 .cb-welcome-title {
-  font-size: 24px;
-  font-weight: 600;
+  font-size: 28px;
+  font-weight: 700;
   color: #333;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .cb-welcome-subtitle {
   font-size: 16px;
   color: #666;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 /* 메시지 컨테이너 */
@@ -142,6 +157,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  background: #f8f9fa;
 }
 
 /* 메시지 */
@@ -149,6 +165,12 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .cb-message.user {
@@ -161,6 +183,8 @@
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .cb-message-avatar img {
@@ -183,18 +207,19 @@
   padding: 12px 16px;
   border-radius: 18px;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.5;
   word-wrap: break-word;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .cb-message.bot .cb-message-text {
-  background: #f8f9fa;
+  background: #ffffff;
   color: #333;
   border-bottom-left-radius: 4px;
 }
 
 .cb-message.user .cb-message-text {
-  background: #007bff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border-bottom-right-radius: 4px;
 }
@@ -211,15 +236,16 @@
   display: flex;
   gap: 4px;
   padding: 12px 16px;
-  background: #f8f9fa;
+  background: #ffffff;
   border-radius: 18px;
   border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .cb-typing-indicator span {
   width: 6px;
   height: 6px;
-  background: #999;
+  background: #667eea;
   border-radius: 50%;
   animation: typing 1.4s infinite ease-in-out;
 }
@@ -247,7 +273,13 @@
   background: #f8f9fa;
   border-radius: 24px;
   padding: 12px 16px;
-  border: 1px solid #e5e5e5;
+  border: 2px solid #e5e5e5;
+  transition: border-color 0.3s ease;
+}
+
+.cb-input-wrapper:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .cb-input-field {
@@ -257,32 +289,18 @@
   font-size: 14px;
   line-height: 1.4;
   outline: none;
-  font-family: inherit;
-  height: 20px;
-  padding: 0;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  caret-color: #007bff;
-}
-
-/* 커서 깜박임 효과 */
-.cb-input-field:focus {
-  caret-color: #007bff;
-  animation: cursor-pulse 1s infinite;
-}
-
-@keyframes cursor-pulse {
-  0%, 50% {
-    caret-color: #007bff;
-  }
-  51%, 100% {
-    caret-color: transparent;
-  }
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 400;
+  caret-color: #667eea;
 }
 
 .cb-input-field::placeholder {
   color: #999;
+}
+
+.cb-input-field:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .cb-input-actions {
@@ -292,14 +310,14 @@
 }
 
 .cb-send-btn {
-  background: #007bff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   padding: 8px;
   border-radius: 50%;
   cursor: pointer;
   font-size: 16px;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -308,20 +326,22 @@
 }
 
 .cb-send-btn:hover:not(:disabled) {
-  background: #0056b3;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .cb-send-btn:disabled {
   background: #ccc;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* 반응형 */
 @media (max-width: 768px) {
   .cb-fullscreen-container {
-    margin-left: 0; /* 모바일에서는 사이드바 여백 제거 */
-    width: 100%; /* 모바일에서는 전체 너비 사용 */
-    max-width: 100%;
+    margin-left: 0;
+    width: 100%;
   }
   
   .cb-message-content {
@@ -331,4 +351,31 @@
   .cb-input-container {
     padding: 16px 20px;
   }
+  
+  .cb-welcome-title {
+    font-size: 24px;
+  }
+  
+  .cb-welcome-subtitle {
+    font-size: 14px;
+  }
+}
+
+/* 스크롤바 스타일링 */
+.cb-messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cb-messages-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.cb-messages-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.cb-messages-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 } 

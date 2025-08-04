@@ -36,7 +36,7 @@ const UserProfilePage = () => {
   // 사용자 정보 로드 (실제로는 API 호출)
   useEffect(() => {
     // TODO: API에서 사용자 정보 로드
-    console.log("사용자 정보 로드");
+    //console.log("사용자 정보 로드");
     
     // 농장 코드가 없으면 생성
     if (!userInfo.farmCode) {

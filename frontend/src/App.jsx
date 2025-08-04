@@ -11,18 +11,16 @@ import CropControlUI from './Components/CropControlUI';
 import AIAnalysisModal from './Components/AIAnalysisModal';
 import UserProfilePage from './Page/UserProfilePage';
 import Chatbot from './Components/Chatbot';
-import RemoteControlPanel from './Components/RemoteControlPanel';
 import { IotDataProvider } from './api/IotDataProvider.jsx';
 import { UserProvider } from './store/useUserStore.jsx';
 import { MQTTProvider } from './hooks/MQTTProvider';
 import axios from 'axios';
 import './App.css';
 import DashBoardCards from './Components/DashBoardCards.jsx';
+import NutrientFlowChart from './Components/NutrientFlowChart.jsx';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const API_LOGIN_API = import.meta.env.VITE_LOGIN_API;
-const FARM_CODE_API = import.meta.env.VITE_FARM_CODE_API;
-const FARM_CODE_ENDPOINT = import.meta.env.VITE_FARM_CODE_ENDPOINT;
 
 // --- API 호출 함수 분리 ---
 const apiClient = axios.create({
@@ -39,20 +37,6 @@ const loginUser = async (userId, password) => {
   return response.data.data;
 };
 
-// 2. farmCode API 호출
-// const getFarmCode = async () => {
-//   const response = await apiClient.get(`${FARM_CODE_API}/${FARM_CODE_ENDPOINT}`);
-//   return response.data; 
-// };
-
-// 3. farmCode로 농장 데이터 조회 API 호출 (아직 없는듯)
-// const getFarmDataByCode = async (farmCode) => {
-//   const response = await apiClient.get(`/farm/${farmCode}/farmData`);
-//   // 성공 시, 농장 상세 데이터가 반환되는 API 필요 
-//   // 예: { farmId: "...", farmName: "...", farmType: "고형배지", ... }
-//   return response.data;
-// };
-
 function getCurrentTimeString() {
   const now = new Date();
   const year = now.getFullYear();
@@ -68,9 +52,9 @@ function getCurrentTimeString() {
   return `${year}년 ${month}월 ${date}일 ${days[day]}요일 ${ampm} ${hour}:${min}`;
 }
 
-function DashboardLayout({ farmData, farmCode, onLogout }) {
+function DashboardLayout({ farmCode, farmType, houseType, onLogout }) {
   // 기존 대시보드 레이아웃을 별도 컴포넌트로 분리
-  const unityContext = useSharedUnityContext(farmData);
+  const unityContext = useSharedUnityContext(farmCode, farmType, houseType);
   const [selectedMenu, setSelectedMenu] = React.useState('dashboard');
   const [showAIModal, setShowAIModal] = React.useState(false);
   const [showChatbot, setShowChatbot] = React.useState(false);
@@ -102,7 +86,7 @@ function DashboardLayout({ farmData, farmCode, onLogout }) {
           selected={selectedMenu}
           onSelect={handleMenuSelect}
           onLogout={onLogout}
-          farmData={farmData}
+          // farmData={farmData}
         />
         {/* 상단 고정된 대시보드 헤더 */}
         <div className="dashboard-header-fixed">
@@ -141,10 +125,10 @@ function DashboardLayout({ farmData, farmCode, onLogout }) {
                     console.error('Unity 에러:', error);
                   }}
                   onProgress={(progress) => {
-                    console.log('Unity 로딩 진행률:', progress);
+                    //console.log('Unity 로딩 진행률:', progress);
                   }}
                   onInitialized={() => {
-                    console.log('Unity 초기화 완료!');
+                    //console.log('Unity 초기화 완료!');
                   }}
                 />
                 {/* Unity 로딩 오버레이 */}
@@ -154,7 +138,7 @@ function DashboardLayout({ farmData, farmCode, onLogout }) {
                       Unity 로딩 중... {Math.round(unityContext.loadingProgression * 100)}%
                     </div>
                     <div style={{ fontSize: '12px', marginTop: '8px', opacity: 0.7 }}>
-                      빌드: {unityContext.folderName || '대기 중'} ({farmData?.farmType} + {farmData?.houseType})
+                      빌드: {unityContext.folderName || '대기 중'} ({farmType} + {houseType})
                     </div>
                     <div className="unity-loading-bar-bg">
                       <div
@@ -164,25 +148,6 @@ function DashboardLayout({ farmData, farmCode, onLogout }) {
                     </div>
                   </div>
                 )}
-                                  {/* Unity 로딩 오버레이 */}
-                  {unityContext.unityProvider && !unityContext.isLoaded && (
-                    <div className="unity-loading-overlay">
-                      <div className="unity-loading-text">
-                        Unity 로딩 중... {Math.round(unityContext.loadingProgression * 100)}%
-                      </div>
-                      <div className="unity-loading-bar-bg">
-                        <div
-                          className="unity-loading-bar-fill"
-                          style={{ width: `${Math.round(unityContext.loadingProgression * 100)}%` }}
-                        ></div>
-                      </div>
-                      {unityContext.error && (
-                        <div className="unity-error-text">
-                          오류: {unityContext.error}
-                        </div>
-                      )}
-                    </div>
-                  )}
               </div>
             </div>
           </div>
@@ -217,7 +182,7 @@ function DashboardLayout({ farmData, farmCode, onLogout }) {
               selected={selectedMenu}
               onSelect={handleMenuSelect}
               onLogout={onLogout}
-              farmData={farmData}
+              // farmData={farmData}
             />
           }
         />
@@ -228,7 +193,8 @@ function DashboardLayout({ farmData, farmCode, onLogout }) {
 
 function AppContent() {
   const [farmCode, setFarmCode] = useState(null);
-  const [farmData, setFarmData] = useState(null);
+  const [farmType, setFarmType] = useState(null);
+  const [houseType, setHouseType] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -238,13 +204,15 @@ function AppContent() {
     const checkSession = async () => {
       try {
         const savedToken = localStorage.getItem('authToken');
-        const savedFarmData = localStorage.getItem('farmData');
+        const savedFarmType = localStorage.getItem('farmType');
+        const savedHouseType = localStorage.getItem('houseType');
         const savedFarmCode = localStorage.getItem('farmCode');
         
-        if (savedToken && savedFarmData && savedFarmCode) {
+        if (savedToken && savedFarmType && savedHouseType && savedFarmCode) {
           // 앱 시작 시 토큰이 있으면 바로 apiClient 기본 헤더에 설정
           apiClient.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
-          setFarmData(JSON.parse(savedFarmData));
+          setFarmType(savedFarmType);
+          setHouseType(savedHouseType);
           setFarmCode(savedFarmCode);
           setIsLoggedIn(true);
         }
@@ -273,15 +241,10 @@ function AppContent() {
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       localStorage.setItem('authToken', token);
 
-      // 3단계: 인증된 상태에서 farmCode를 조회
-      // const farmCode = await getFarmCode();
       setFarmCode(farmCode);
-      
-      // 4단계: 받아온 farmCode로 실제 농장 데이터를 조회
-      // const fetchedFarmData = await getFarmDataByCode(farmCode);
+      setFarmType(farmType);
+      setHouseType(houseType);
 
-      // setFarmData(fetchedFarmData);
-      // localStorage.setItem('farmData', JSON.stringify(fetchedFarmData));
       setIsLoggedIn(true);
       
       // 로그인 성공 시 대시보드로 이동
@@ -295,9 +258,11 @@ function AppContent() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    setFarmData(null);
+    setFarmType(null);
+    setHouseType(null);
     setFarmCode(null);
-    localStorage.removeItem('farmData');
+    localStorage.removeItem('farmType');
+    localStorage.removeItem('houseType');
     localStorage.removeItem('farmCode');
     localStorage.removeItem('authToken');
     // 로그아웃 시 apiClient 헤더에서도 토큰 제거
@@ -323,14 +288,15 @@ function AppContent() {
   }
 
   // 로그인된 상태에서의 라우팅
-  if (isLoggedIn ) {
+  if (isLoggedIn) {
     return (
       <Routes>
-        <Route path="/dashboard" element={<DashboardLayout farmData={farmData} farmCode={farmCode} onLogout={handleLogout} />} />
+        <Route path="/dashboard" element={<DashboardLayout farmType={farmType} houseType={houseType} farmCode={farmCode} onLogout={handleLogout} />} />
         <Route path="/user-profile" element={<UserProfilePage />} />
         <Route path="/crop-control" element={<CropControlUI />} />
-        <Route path="*" element={<DashboardLayout farmData={farmData} farmCode={farmCode} onLogout={handleLogout} />} />
-        <Route path="*" element={<DashBoardCards farmCode={farmCode}/>} /> // 대시보드 카드 추가
+        <Route path="*" element={<DashboardLayout farmType={farmType} houseType={houseType} farmCode={farmCode} onLogout={handleLogout} />} />
+        <Route path="*" element={<DashBoardCards farmCode={farmCode}/>} />
+        <Route path="*" element={<NutrientFlowChart farmCode={farmCode}/>} />
       </Routes>
     );
   }

@@ -91,17 +91,24 @@ const DailyTempHumidityChart = ({ farmCode }) => {
         
         setChartData(chartDataConfig);
         
-        // 요약 데이터 생성
-        const avgTemp = (temperatures.reduce((a, b) => a + b, 0) / temperatures.length).toFixed(1);
-        const avgHumid = (humidities.reduce((a, b) => a + b, 0) / humidities.length).toFixed(1);
+        // 요약 데이터 생성 - 유효한 데이터만 필터링하여 평균 계산
+        const validTemperatures = temperatures.filter(temp => temp !== null && temp !== undefined && !isNaN(temp));
+        const validHumidities = humidities.filter(humid => humid !== null && humid !== undefined && !isNaN(humid));
+        
+        const avgTemp = validTemperatures.length > 0 
+          ? (validTemperatures.reduce((a, b) => a + b, 0) / validTemperatures.length).toFixed(1)
+          : '0.0';
+        const avgHumid = validHumidities.length > 0 
+          ? (validHumidities.reduce((a, b) => a + b, 0) / validHumidities.length).toFixed(1)
+          : '0.0';
         
         setSummary({
           avgTemp: avgTemp,
           avgHumid: avgHumid,
-          maxTemp: Math.max(...temperatures),
-          minTemp: Math.min(...temperatures),
-          maxHumid: Math.max(...humidities),
-          minHumid: Math.min(...humidities)
+          maxTemp: validTemperatures.length > 0 ? Math.max(...validTemperatures) : 0,
+          minTemp: validTemperatures.length > 0 ? Math.min(...validTemperatures) : 0,
+          maxHumid: validHumidities.length > 0 ? Math.max(...validHumidities) : 0,
+          minHumid: validHumidities.length > 0 ? Math.min(...validHumidities) : 0
         });
         
       } catch (err) {
@@ -193,16 +200,7 @@ const DailyTempHumidityChart = ({ farmCode }) => {
         },
       },
       title: {
-        display: true,
-        text: '일일 온/습도 모니터링',
-        font: {
-          size: 16,
-          weight: 'bold',
-        },
-        padding: {
-          top: 10,
-          bottom: 20,
-        },
+        display: false,
       },
       tooltip: {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -329,7 +327,7 @@ const DailyTempHumidityChart = ({ farmCode }) => {
   return (
     <div className="dashboard-graph-card">
       <div className="dashboard-graph-title">일일 온/습도 모니터링</div>
-      <div style={{ height: '200px', position: 'relative' }}>
+      <div style={{ height: '250px', position: 'relative' }}>
         {chartData && <Line options={options} data={chartData} />}
       </div>
       {summary && (

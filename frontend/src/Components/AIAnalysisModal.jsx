@@ -15,19 +15,19 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
   // 센서 데이터 가져오기
   const fetchSensorData = async () => {
     try {
-      console.log('센서 데이터 요청 - Farm ID:', farmId);
+      //console.log('센서 데이터 요청 - Farm ID:', farmId);
       
       // 온도 데이터 가져오기
       const tempResponse = await axios.get(`/temperature/code/${farmId}`);
-      console.log('온도 응답:', tempResponse.data);
+      //console.log('온도 응답:', tempResponse.data);
       
       // 습도 데이터 가져오기
       const humidityResponse = await axios.get(`/humidity/code/${farmId}`);
-      console.log('습도 응답:', humidityResponse.data);
+      //console.log('습도 응답:', humidityResponse.data);
       
       // 조명 데이터 가져오기 (일사량)
       const lightResponse = await axios.get(`/weather/code/${farmId}`);
-      console.log('조명 응답:', lightResponse.data);
+      //console.log('조명 응답:', lightResponse.data);
       
       // 데이터 파싱
       const temp = tempResponse.data && typeof tempResponse.data === 'number' 
@@ -48,7 +48,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
         light: light !== '--' ? `${light}%` : '--'
       });
       
-      console.log('센서 데이터 설정:', { temp, humidity, light });
+      //console.log('센서 데이터 설정:', { temp, humidity, light });
       
     } catch (error) {
       console.error('센서 데이터 가져오기 오류:', error);
@@ -65,7 +65,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
     setLoading(true);
     setError(null);
     
-    console.log('AI 분석 요청 시작 - Farm ID:', farmId);
+    //console.log('AI 분석 요청 시작 - Farm ID:', farmId);
     
     try {
       // 먼저 센서 데이터 가져오기
@@ -75,7 +75,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
         userMessage: `농장 ID ${farmId}의 토마토 AI 분석 결과를 알려줘 예를 들어 작물 상태, 환경최적화, 급수시스템, 예측분석, 권장사항 다음주 수확 수 kg은?`
       };
       
-      console.log('AI 서버 요청 데이터:', requestData);
+      //console.log('AI 서버 요청 데이터:', requestData);
       
       // AI 서버 호출 (프록시 사용)
       const response = await axios.post('/api/ollama/ask', requestData, {
@@ -85,7 +85,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
         }
       });
       
-      console.log('AI 서버 응답:', response.data);
+      //console.log('AI 서버 응답:', response.data);
 
       if (response.data && response.data.reply) {
         // AI 응답을 파싱하여 구조화된 데이터로 변환
@@ -122,7 +122,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
       setError(errorMessage);
       
       // 에러 발생 시 센서 데이터를 사용한 샘플 데이터 생성
-      console.log('에러로 인해 센서 데이터 기반 샘플 데이터를 사용합니다.');
+      //console.log('에러로 인해 센서 데이터 기반 샘플 데이터를 사용합니다.');
       const sampleData = {
         farmInfo: {
           farmId: farmId,
@@ -146,8 +146,8 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
 
   // AI 응답을 파싱하는 함수
   const parseAIResponse = (response, farmId) => {
-    console.log('AI 응답 파싱 시작:', response);
-    console.log('현재 센서 데이터:', sensorData);
+    //console.log('AI 응답 파싱 시작:', response);
+    //console.log('현재 센서 데이터:', sensorData);
     
     // AI 응답에서 수치 추출
     const extractData = (text) => {
@@ -161,7 +161,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
       };
 
       try {
-        console.log('텍스트 파싱:', text);
+        //console.log('텍스트 파싱:', text);
         
         // 온도 추출 (AI 응답에서 더 정확한 값이 있으면 사용)
         const tempPatterns = [
@@ -177,7 +177,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
           const match = text.match(pattern);
           if (match) {
             data.temperature = `${match[1]}°C`;
-            console.log('AI에서 온도 추출 성공:', data.temperature);
+            //console.log('AI에서 온도 추출 성공:', data.temperature);
             break;
           }
         }
@@ -195,7 +195,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
           const match = text.match(pattern);
           if (match) {
             data.humidity = `${match[1]}%`;
-            console.log('AI에서 습도 추출 성공:', data.humidity);
+            //console.log('AI에서 습도 추출 성공:', data.humidity);
             break;
           }
         }
@@ -214,7 +214,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
           const match = text.match(pattern);
           if (match) {
             data.harvest = `${match[1]}kg`;
-            console.log('수확량 추출 성공:', data.harvest);
+            //console.log('수확량 추출 성공:', data.harvest);
             break;
           }
         }
@@ -246,7 +246,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
           data.prediction = '정상 성장 예상';
         }
 
-        console.log('파싱 결과:', data);
+        //console.log('파싱 결과:', data);
 
       } catch (error) {
         console.warn('AI 응답 파싱 오류:', error);

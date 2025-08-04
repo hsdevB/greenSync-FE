@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { validateUserId, validatePassword } from '../utils/validation';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import Chatbot from '../Components/Chatbot';
+import botAvatar from '../assets/4712035.png';
 
-const API_BASE_URL = import.meta.VITE_API_BASE_URL;
-const API_LOGIN_API = import.meta.VITE_LOGIN_API;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_LOGIN_API = import.meta.env.VITE_LOGIN_API;
 
 // Axios 인스턴스 생성
 const api = axios.create({
@@ -36,8 +38,9 @@ api.interceptors.response.use(
 // 로그인 컴포넌트
 const LoginPage = ({ onLogin }) => {
   const [formData, setFormData] = useState({ userId: '', password: '' });
-  const [error, setError] = useState({});
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -46,37 +49,24 @@ const LoginPage = ({ onLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // 입력 유효성 검사
-    const newErrors = {};
-    if (!formData.userId.trim()) {
-      newErrors.userId = '아이디를 입력해주세요.';
-    }
-    if (!formData.password.trim()) {
-      newErrors.password = '비밀번호를 입력해주세요.';
-    }
-    
-    if (Object.keys(newErrors).length > 0) {
-      setError(newErrors);
+    setError('');
+
+    // 프론트엔드 기본 유효성 검사
+    const userIdError = validateUserId(formData.userId);
+    const passwordError = validatePassword(formData.password);
+    if (userIdError || passwordError) {
+      setError(userIdError || passwordError);
       return;
     }
-    
+
     setIsLoading(true);
-    setError({}); // 이전 에러 초기화
-    
     try {
-      // 👍 App.jsx에 로그인 처리를 위임합니다.
+      // App.jsx에 로그인 처리를 위임합니다.
       await onLogin(formData.userId, formData.password);
       // 성공 시 App.jsx에서 페이지 이동을 처리하므로 여기서는 별도 처리가 필요 없습니다.
     } catch (err) {
       // App.jsx의 handleLogin에서 발생한 에러를 여기서 표시합니다.
-      const errorMessage = err.message || '로그인에 실패했습니다. 다시 시도해주세요.';
-      setError({ general: errorMessage });
-      
-      // 네트워크 오류인 경우 사용자에게 안내
-      if (err.originalError && (err.originalError.code === 'ECONNABORTED' || err.originalError.code === 'NETWORK_ERROR')) {
-        console.log('네트워크 오류로 인한 로그인 실패:', err.originalError);
-      }
+      setError(err.message || '로그인에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsLoading(false);
     }
@@ -162,22 +152,6 @@ const LoginPage = ({ onLogin }) => {
           </div>
         )}
         
-        {/* 일반적인 에러 메시지 표시 */}
-        {error.general && (
-          <div style={{ 
-            color: '#f44336', 
-            fontSize: 14, 
-            marginBottom: 12, 
-            textAlign: 'center',
-            padding: '8px 12px',
-            backgroundColor: '#ffebee',
-            borderRadius: '4px',
-            border: '1px solid #ffcdd2'
-          }}>
-            {error.general}
-          </div>
-        )}
-        
         <button 
           type="submit" 
           disabled={isLoading}
@@ -207,6 +181,53 @@ const LoginPage = ({ onLogin }) => {
           회원가입
         </Link>
       </div>
+
+      {/* 챗봇 버튼 */}
+      <button 
+        onClick={() => setIsChatbotOpen(true)}
+        style={{
+          position: "fixed",
+          right: "32px",
+          bottom: "32px",
+          width: "60px",
+          height: "60px",
+          borderRadius: "50%",
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
+          border: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1001,
+          cursor: "pointer",
+          transition: "all 0.3s ease"
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = "scale(1.05)";
+          e.target.style.boxShadow = "0 8px 32px rgba(0,0,0,0.25)";
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = "scale(1)";
+          e.target.style.boxShadow = "0 4px 24px rgba(0,0,0,0.18)";
+        }}
+        aria-label="AI 챗봇 열기"
+      >
+        <img 
+          src={botAvatar} 
+          alt="AI 챗봇" 
+          style={{
+            width: "28px",
+            height: "28px",
+            filter: "brightness(0) invert(1)"
+          }}
+        />
+      </button>
+
+      {/* 챗봇 컴포넌트 */}
+      <Chatbot 
+        isOpen={isChatbotOpen}
+        onClose={() => setIsChatbotOpen(false)}
+      />
     </div>
   );
 };
