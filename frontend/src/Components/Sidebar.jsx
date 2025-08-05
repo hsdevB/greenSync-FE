@@ -4,7 +4,7 @@ import React from "react";
 import { useUserStore } from "../store/useUserStore.jsx";
 import "./Sidebar.css";
 
-const Sidebar = ({ selected, onSelect, onLogout }) => {
+const Sidebar = ({ selected, onSelect, onLogout, onCloseChatbot }) => {
   const { userInfo } = useUserStore();
   
   return (
@@ -52,7 +52,10 @@ const Sidebar = ({ selected, onSelect, onLogout }) => {
           <li>
             <button
               className={`sidebar-menu-btn${selected === 'dashboard' ? ' selected' : ''}`}
-              onClick={() => onSelect && onSelect('dashboard')}
+              onClick={() => {
+                onSelect && onSelect('dashboard');
+                onCloseChatbot && onCloseChatbot();
+              }}
             >
               <BarChart3 className="sidebar-menu-icon" /> 대시보드
             </button>
@@ -60,7 +63,10 @@ const Sidebar = ({ selected, onSelect, onLogout }) => {
           <li>
             <button
               className={`sidebar-menu-btn${selected === 'remote' ? ' selected' : ''}`}
-              onClick={() => onSelect && onSelect('remote')}
+              onClick={() => {
+                onSelect && onSelect('remote');
+                onCloseChatbot && onCloseChatbot();
+              }}
             >
               <Settings className="sidebar-menu-icon" /> 원격제어
             </button>

@@ -1,0 +1,158 @@
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import botAvatar from '../assets/4712035.png';
+import userAvatar from '../assets/4712036.png';
+import './AIChatbox.css'; // Import external CSS
+
+function getTime() {
+  const d = new Date();
+  return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+}
+
+const BOT_AVATAR = botAvatar;
+const USER_AVATAR = userAvatar;
+
+export default function AIChatbox({ isOpen, onClose, sidebar }) {
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [isComposing, setIsComposing] = useState(false);
+
+  const chatEndRef = useRef(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const askOllama = async (userMessage) => {
+    const fullPrompt = `
+You are an AI chatbot that assists users in operating their smart farms.
+- Do not use emojis in your answers.
+- Only use terms that are actually used in real-world agricultural settings.
+- Always answer in natural, fluent Korean.
+- Use only natural and easy Korean expressions that are common in everyday life.
+- Do not use translationese, artificial sentences, or vague/meaningless terms.
+- Answer as if you are a real agricultural expert, using only the logic and terms used by actual farmers.
+- If the user's question is not related to farms, smart farms, crops, or cultivation, only reply with the following sentence: "죄송합니다. 스마트팜 농장 관련으로만 질문을 주세요."
+- Do not provide any other answers, additional explanations, guesses, or alternative information.
+- For each crop, specifically provide its official optimal temperature range (°C) based on agricultural data, possible problems that may occur at the given temperature, crops that can better withstand the condition, and recommended actions.
+- If the given temperature is outside the official optimal range for a crop, do NOT use the word "optimal." Instead, explain that the crop "can tolerate it, but may experience stress."
+- Do not make guesses or create information that is not true. Do NOT say "A is the best" if none of the crops are clearly optimal at the given condition.
+- If none of the crops are in their optimal range, clearly state that all are at risk of stress and that careful environmental control is required.
+- Do not use uncommon terms such as "flower stalk" or "losing soil." Use only expressions commonly used in real agricultural settings, such as "wilting" or "flower drop."
+- If you are unsure about the answer or do not know the answer, simply reply, "잘 모르겠습니다" or "정확한 정보를 제공해 드릴 수 없습니다."
+- Do not make up new knowledge or provide speculative explanations under any circumstances.
+- If the user provides a temperature value without specifying the unit, always interpret it as degrees Celsius (°C).
+- Limit your answer to 500 characters or less.
+- Instead, politely ask them to clarify or provide more context.
+- Never assume the meaning of short or contextless inputs.
+- never guess or provide a solution based on assumed meanings of these values.
+- If the user's question is unclear, ask for more details.
+- Never guess or interpret these inputs. Only provide guidance and answers for values within a realistic range.
+- Do not use any Markdown formatting such as tables, code blocks, bold, or italics in your answers.
+- Always respond using only natural, easy language commonly used in real agricultural settings.
+- If you need to provide data, include numbers and units naturally within the sentence.
+- If the user's question is not clear, please do not make assumptions or answer arbitrarily.
+
+
+Always answer in natural, fluent Korean.
+질문: ${userMessage}
+답변:
+`.trim();
+
+    try {
+      const response = await fetch('http://localhost:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'qwen3:1.7b',
+          prompt: fullPrompt,
+          stream: false,
+          system: '너는 한국인을 위한 스마트팜을 위한 농장 ai야',
+          options: {
+            temperature: 0.2,
+            top_p: 0.85,
+            seed: 42
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Ollama 서버 응답 오류');
+      }
+
+      const data = await response.json();
+      // <think> 태그 제거
+      const cleanResponse = data.response.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+      return cleanResponse;
+    } catch (err) {
+      console.error('Ollama 호출 오류:', err.message);
+      throw new Error('AI 서버에 연결할 수 없습니다. Ollama가 실행 중인지 확인해주세요.');
+    }
+  };
+
+  const send = useCallback(async () => {
+    if (!input.trim() || loading) return;
+    
+    const userMsg = { role: 'user', text: input.trim(), time: getTime() };
+    setMessages(msgs => [...msgs, userMsg]);
+    setInput('');
+    setLoading(true);
+    
+    try {
+      const botResponse = await askOllama(userMsg.text);
+      setMessages(msgs => [
+        ...msgs,
+        { role: 'bot', text: botResponse, time: getTime() }
+      ]);
+    } catch (error) {
+      console.error('AI 챗박스 오류:', error);
+      setMessages(msgs => [
+        ...msgs,
+        { role: 'bot', text: error.message, time: getTime() }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }, [input, loading]);
+
+  const handleKeyDown = useCallback((e) => {
+    // 모든 키 입력을 허용하되, Enter만 특별 처리
+    if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
+      e.preventDefault();
+      send();
+    }
+  }, [send, isComposing]);
+
+  const handleCompositionStart = useCallback(() => {
+    setIsComposing(true);
+  }, []);
+
+  const handleCompositionEnd = useCallback(() => {
+    setIsComposing(false);
+  }, []);
+
+  const handleInputChange = useCallback((e) => {
+    // 모든 문자 입력 허용 (한글, 영어, 숫자, 특수문자)
+    setInput(e.target.value);
+  }, []);
+
+  const handleSendClick = useCallback(() => {
+    send();
+  }, [send]);
+
+  return null; // 모달 형태 제거 - 이제 페이지 형태로만 사용
+}

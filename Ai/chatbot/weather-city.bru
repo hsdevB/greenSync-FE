@@ -1,0 +1,15 @@
+meta {
+  name: Weather City API Test
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/weather/city/seoul
+  auth: inherit
+}
+
+docs {
+  Weather API의 /city/seoul 엔드포인트 테스트
+  서울 날씨 데이터 조회
+} 

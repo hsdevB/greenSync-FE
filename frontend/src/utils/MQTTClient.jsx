@@ -19,11 +19,11 @@ export class MQTTClient {
     try {
       // 실제 환경
       this.client = mqtt.connect(brokerUrl);
-      // console.log(`MQTT 브로커 연결 시도: ${brokerUrl}`);
+      // //console.log(`MQTT 브로커 연결 시도: ${brokerUrl}`);
       // this.isConnected = true;
       // 실제 환경에서는 mqtt.connect(brokerUrl) 사용
       this.client.on('connect', () => {
-        console.log('MQTT 브로커 연결 성공');
+        //console.log('MQTT 브로커 연결 성공');
         this.isConnected = true;
       });
     } catch (error) {
@@ -39,7 +39,7 @@ export class MQTTClient {
 
     try {
       const payload = typeof message === 'string' ? message : JSON.stringify(message);
-      console.log(`MQTT 발행 - Topic: ${topic}, Payload: ${payload}`);
+      //console.log(`MQTT 발행 - Topic: ${topic}, Payload: ${payload}`);
       
       this.client.publish(topic, payload, (error) => {
         if (error) {
@@ -86,7 +86,7 @@ export class MQTTClient {
     if (this.client && this.isConnected) {
       this.client.end();
       this.isConnected = false;
-      console.log('MQTT 연결 종료');
+      //console.log('MQTT 연결 종료');
     }
   }
 }

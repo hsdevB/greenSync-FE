@@ -1,0 +1,481 @@
+/* AI Chat Page Styles */
+.ai-chat-page {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+}
+
+/* AI Chat Dashboard Component Styles */
+.ai-chat-dashboard {
+  width: 100%;
+  height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+  max-height: calc(100vh - 80px);
+  position: relative;
+}
+
+.ai-chat-header {
+  display: flex;
+  align-items: center;
+  padding: 20px 30px;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+  margin-right: 20px;
+}
+
+.back-button:hover {
+  background-color: #f0f8ff;
+}
+
+.ai-chat-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.ai-chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  margin: 0;
+  width: 100%;
+  background: white;
+  box-shadow: none;
+  height: calc(100vh - 80px);
+  min-height: 0;
+  overflow: hidden;
+  max-height: calc(100vh - 80px);
+  position: relative;
+}
+
+.ai-chat-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  min-height: 0;
+  height: calc(100vh - 180px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* 기존 AIChatbox 스타일들 */
+.ac-fab {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #007bff;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.ac-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+}
+
+.ac-fab img {
+  width: 38px;
+  height: 38px;
+  filter: brightness(0) invert(1);
+}
+
+.ac-fullscreen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ac-fullscreen-layout {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ac-fullscreen-container {
+  flex: 1;
+  background: white;
+  border-radius: 12px;
+  margin: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.ac-fullscreen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 30px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.ac-header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.ac-header-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.ac-header-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.ac-header-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.ac-header-status {
+  font-size: 14px;
+  color: #28a745;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ac-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ac-close-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.ac-fullscreen-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.ac-welcome-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: calc(100vh - 200px);
+  text-align: center;
+  color: #666;
+  min-height: 400px;
+  max-height: calc(100vh - 200px);
+  overflow: hidden;
+}
+
+.ac-welcome-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.ac-welcome-subtitle {
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+.ac-messages-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 20px;
+  max-height: calc(100vh - 200px);
+  position: relative;
+  scroll-behavior: smooth;
+}
+
+.ac-message {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.ac-message.user {
+  flex-direction: row-reverse;
+}
+
+.ac-message-avatar {
+  flex-shrink: 0;
+}
+
+.ac-message-avatar img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.ac-message-content {
+  flex: 1;
+  max-width: 70%;
+}
+
+.ac-message.user .ac-message-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.ac-message-text {
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  background: #f0f0f0;
+  color: #333;
+}
+
+.ac-message.user .ac-message-text {
+  background: #007bff;
+  color: white;
+}
+
+.ac-message.bot .ac-message-text {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+}
+
+.ac-message-time {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.ac-message.user .ac-message-time {
+  text-align: right;
+}
+
+.ac-message.bot .ac-message-time {
+  text-align: left;
+}
+
+.ac-typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 10px 14px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 18px;
+  width: fit-content;
+}
+
+.ac-typing-indicator span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #999;
+  animation: typing 1.4s infinite ease-in-out;
+}
+
+.ac-typing-indicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.ac-typing-indicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes typing {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.ac-input-container {
+  padding: 15px 20px;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  flex-shrink: 0;
+  min-height: 60px;
+  max-height: 80px;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ac-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  padding: 6px 14px;
+  transition: border-color 0.2s;
+}
+
+.ac-input-wrapper:focus-within {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.ac-input-field {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  background: transparent;
+  padding: 6px 0;
+}
+
+.ac-input-field::placeholder {
+  color: #999;
+}
+
+.ac-input-field:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ac-input-actions {
+  display: flex;
+  align-items: center;
+}
+
+.ac-send-btn {
+  background: #007bff;
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.ac-send-btn:hover:not(:disabled) {
+  background: #0056b3;
+  transform: scale(1.05);
+}
+
+.ac-send-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .ac-fullscreen-layout {
+    flex-direction: column;
+  }
+  
+  .ac-fullscreen-container {
+    margin: 10px;
+    border-radius: 8px;
+  }
+  
+  .ac-fullscreen-header {
+    padding: 15px 20px;
+  }
+  
+  .ac-fullscreen-content {
+    padding: 15px;
+  }
+  
+  .ac-input-container {
+    padding: 15px 20px;
+  }
+  
+  .ac-message-content {
+    max-width: 85%;
+  }
+}
+
+/* 스크롤바 스타일링 */
+.ac-messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ac-messages-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.ac-messages-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.ac-messages-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+} 

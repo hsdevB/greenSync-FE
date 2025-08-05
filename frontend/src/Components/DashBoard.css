@@ -3,6 +3,8 @@
   background: #f3f4f6;
   display: flex;
   font-family: 'Freesentation-9Black', sans-serif !important;
+  overflow: hidden;
+  height: 100vh;
 }
 
 .dashboard-sidebar {
@@ -70,18 +72,19 @@
   flex: 1;
   min-width: 0;
   /* padding: 0px 0px 0px 256px; */
-  margin-top: -22px;
+  margin-top: 0;
   background: transparent;
   display: flex;
   flex-direction: column;
-  /* overflow-y: auto; */
+  overflow: hidden;
+  height: calc(100vh - 80px);
+  max-height: calc(100vh - 80px);
+  padding: 0;
+  position: relative;
 }
 
 .dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+  display: none;
 }
 
 .dashboard-title {
