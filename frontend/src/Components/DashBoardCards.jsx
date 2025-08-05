@@ -9,8 +9,8 @@ import OpenWeather from "./OpenWheater.jsx";
 // import { useIotData } from '../api/useIotData.js';
 import axios from "axios";
 import useControlStore from '../store/useControlStore.jsx';
-import DailyTempHumidityChart from './DailyTempHumidityChart.jsx'; //  일일 온도그래프 추가
-import NutrientFlowChart from './NutrientFlowChart.jsx'; // 양액 그래프 추가
+import DailyTempHumidityChart from './DailyTempHumidityChart.jsx';
+import NutrientFlowChart from './NutrientFlowChart.jsx';
 
 // import { useAutoMode } from '../hooks/useAutoMode.jsx'; // 자동 모드 커스텀 훅
 
@@ -191,7 +191,7 @@ useEffect(() => {
   const fetchInsolation = async () => {
     try {
       const res = await axios.get(`/weather/mapped`);
-      console.log("Insolation response: ", res.data);
+      //console.log("Insolation response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setInsolation(res.data);
       } else if (res.data && res.data.data && res.data.data.insolation) {
@@ -216,7 +216,7 @@ useEffect(() => {
   const fetchWindDirection = async () => {
     try {
       const res = await axios.get(`/weather/mapped`);
-      console.log("Wind Direction response: ", res.data);
+      //console.log("Wind Direction response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setWindDirection(res.data);
       } else if (res.data && res.data.data && res.data.data.windDirection) {
@@ -240,7 +240,7 @@ useEffect(() => {
   const fetchWindSpeed = async () => {
     try {
       const res = await axios.get(`/weather/mapped`);
-      console.log("Wind Speed response: ", res.data);
+      //console.log("Wind Speed response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setWindSpeed(res.data);
       } else if (res.data && res.data.data && res.data.data.windSpeed) {
@@ -264,7 +264,7 @@ useEffect(() => {
   const fetchDewPoint = async () => {
     try {
       const res = await axios.get(`/weather/mapped`);
-      console.log("Dew Point response: ", res.data);
+      //console.log("Dew Point response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setDewPoint(res.data);
       } else if (res.data && res.data.data && res.data.data.dewPoint) {
@@ -289,13 +289,16 @@ useEffect(() => {
     try {
       const res = await axios.get(`/weather/mapped`);
       console.log("Is Rain response: ", res.data);
+      console.log("Response structure: ", JSON.stringify(res.data, null, 2));
+      
       if (res.data && typeof res.data === 'number') {
         setIsRain(res.data);
-      } else if (res.data && res.data.data && res.data.data.isRain) {
+      } else if (res.data && res.data.data && res.data.data.isRain !== undefined) {
         setIsRain(res.data.data.isRain);
-      } else if (res.data && res.data.isRain) {
+      } else if (res.data && res.data.isRain !== undefined) {
         setIsRain(res.data.isRain);
       } else {
+        console.log("No isRain data found in response");
         setIsRain('--');
       }
     } catch (e) {
@@ -538,7 +541,7 @@ useEffect(() => {
               <h3 className="dashboard-card-title">강수여부</h3>
             </div>
             <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-            { isRain }
+              {isRain === true ? '🌧️' : isRain === false ? '☀️' : isRain}
             </div>
             <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
               상태

@@ -10,7 +10,7 @@ import SignupPage from './Page/SignupPage';
 import CropControlUI from './Components/CropControlUI';
 import AIAnalysisModal from './Components/AIAnalysisModal';
 import UserProfilePage from './Page/UserProfilePage';
-import Chatbot from './Components/Chatbot';
+
 import { IotDataProvider } from './api/IotDataProvider.jsx';
 import { UserProvider } from './store/useUserStore.jsx';
 import { MQTTProvider } from './hooks/MQTTProvider';
@@ -55,16 +55,11 @@ function getCurrentTimeString() {
 function DashboardLayout({ farmCode, farmType, houseType, onLogout }) {
   // 기존 대시보드 레이아웃을 별도 컴포넌트로 분리
   const unityContext = useSharedUnityContext(farmCode, farmType, houseType);
-  const [selectedMenu, setSelectedMenu] = React.useState('dashboard');
-  const [showAIModal, setShowAIModal] = React.useState(false);
-  const [showChatbot, setShowChatbot] = React.useState(false);
+  const [selectedMenu, setSelectedMenu] = useState('dashboard');
+  const [showAIModal, setShowAIModal] = useState(false);
   
   const handleMenuSelect = (menu) => {
     setSelectedMenu(menu);
-    // AI 분석 버튼 클릭 시 채팅봇 열기
-    if (menu === 'ai-analysis') {
-      setShowChatbot(true);
-    }
   };
 
   const handleAIModalClose = () => {
@@ -72,10 +67,15 @@ function DashboardLayout({ farmCode, farmType, houseType, onLogout }) {
     // AI 분석 모달이 닫혀도 selectedMenu는 'ai-analysis'로 유지
     setSelectedMenu('ai-analysis');
   };
-
-  const handleChatbotClose = () => {
-    setShowChatbot(false);
-    setSelectedMenu('dashboard'); // 채팅봇 닫을 때 대시보드로 돌아가기
+  
+  // 메뉴 이름 매핑 함수
+  const getMenuTitle = (menu) => {
+    const menuTitles = {
+      'dashboard': '대시보드',
+      'remote': '원격제어',
+      'ai-analysis': '챗봇'
+    };
+    return menuTitles[menu] || '대시보드';
   };
   
   return (
@@ -91,7 +91,7 @@ function DashboardLayout({ farmCode, farmType, houseType, onLogout }) {
         {/* 상단 고정된 대시보드 헤더 */}
         <div className="dashboard-header-fixed">
           <div className="dashboard-header-content">
-            <div className="dashboard-title">대시보드</div>
+            <div className="dashboard-title">{getMenuTitle(selectedMenu)}</div>
             <div className="dashboard-time">{getCurrentTimeString()}</div>
           </div>
         </div>
@@ -171,21 +171,6 @@ function DashboardLayout({ farmCode, farmType, houseType, onLogout }) {
           isOpen={showAIModal}
           onClose={handleAIModalClose}
           farmId="farm001"
-        />
-
-        {/* AI 분석 채팅봇 */}
-        <Chatbot 
-          isOpen={showChatbot}
-          onClose={handleChatbotClose}
-          sidebar={
-            <Sidebar
-              selected={selectedMenu}
-              onSelect={handleMenuSelect}
-              onLogout={onLogout}
-              onCloseChatbot={handleChatbotClose}
-              // farmData={farmData}
-            />
-          }
         />
       </div>
     </MQTTProvider>
@@ -303,8 +288,8 @@ function AppContent() {
         <Route path="/user-profile" element={<UserProfilePage />} />
         <Route path="/crop-control" element={<CropControlUI />} />
         <Route path="*" element={<DashboardLayout farmType={farmType} houseType={houseType} farmCode={farmCode} onLogout={handleLogout} />} />
-        <Route path="*" element={<DashBoardCards farmCode={farmCode}/>} />
-        <Route path="*" element={<NutrientFlowChart farmCode={farmCode}/>} />
+        {/* <Route path="*" element={<DashBoardCards farmCode={farmCode}/>} />
+        <Route path="*" element={<NutrientFlowChart farmCode={farmCode}/>} /> */}
       </Routes>
     );
   }

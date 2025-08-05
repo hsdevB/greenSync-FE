@@ -60,8 +60,8 @@ const NutrientFlowChart = ({ farmCode }) => {
           
           return {
             timestamp: timestamp,
-            phLevel: phLevels[index] || 6.0, // 기본값 6.0
-            ecLevel: ecLevels[index] || 2.0  // 기본값 2.0
+            phLevel: phLevels[index] || null, // 기본값 6.0
+            ecLevel: ecLevels[index] || null  // 기본값 2.0
           };
         });
 
@@ -73,8 +73,8 @@ const NutrientFlowChart = ({ farmCode }) => {
           
           // 3시간 간격 데이터에서 가장 가까운 값 찾기
           const closestIndex = Math.floor(i / 3);
-          const phValue = phLevels[closestIndex] || 6.0;
-          const ecValue = ecLevels[closestIndex] || 2.0;
+          const phValue = phLevels[closestIndex] || null;
+          const ecValue = ecLevels[closestIndex] || null;
           
           hourlyData.push({
             timestamp: timestamp,
@@ -100,8 +100,8 @@ const NutrientFlowChart = ({ farmCode }) => {
           const time = new Date(todayMidnight.getTime() + i * 3 * 60 * 60 * 1000);
           fallbackData.push({
             timestamp: time,
-            phLevel: 6.0,
-            ecLevel: 2.0
+            phLevel: null,
+            ecLevel: null
           });
         }
         setData(fallbackData);
@@ -112,8 +112,8 @@ const NutrientFlowChart = ({ farmCode }) => {
           const time = new Date(todayMidnight.getTime() + i * 60 * 60 * 1000);
           fallbackHourlyData.push({
             timestamp: time,
-            phLevel: 6.0,
-            ecLevel: 2.0
+            phLevel: null,
+            ecLevel: null
           });
         }
         setHourlyData(fallbackHourlyData);

@@ -1,6 +1,7 @@
 import React from 'react';
 import DashBoardCards from './DashBoardCards';
 import RemoteControlPanel from './RemoteControlPanel';
+import AIChatComponent from './AIChatComponent';
 import './DashBoard.css';
 
 const Dashboard = ({ selectedMenu, unityContext, farmCode }) => {
@@ -18,10 +19,8 @@ const Dashboard = ({ selectedMenu, unityContext, farmCode }) => {
           farmCode={farmCode}
         />}
       {selectedMenu === 'remote' && <RemoteControlPanel unityContext={unityContext} farmCode={farmCode}/>}
-      {/* AI 분석은 사이드바에서 처리됨 */}
+      {selectedMenu === 'ai-analysis' && <AIChatComponent />}
       {/* 알림 등은 추후 추가 */}
-      
-      {/* AI 분석은 사이드바에서 처리됨 */}
     </div>
   );
 };

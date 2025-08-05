@@ -58,7 +58,7 @@ const DailyTempHumidityChart = ({ farmCode }) => {
         // const temperatures = dummyData.map(d => Math.round(d.temp * 10) / 10);
         // const humidities = dummyData.map(d => Math.max(0, Math.min(100, Math.round(d.humid * 10) / 10)));
         
-        const timeLabels = ['00시', '01시', '02시', '03시', '04시', '05시', '06시', '07시', '08시', '09시', '10시'];
+        const timeLabels = ['00시', '02시', '04시', '06시', '08시', '10시', '12시', '14시', '16시', '18시', '20시', '22시'];
         
         // Chart.js 데이터 형식으로 변환
         const chartDataConfig = {

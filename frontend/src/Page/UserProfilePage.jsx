@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Mail, Phone, MapPin, Shield, Edit, Eye, EyeOff, Brain } from "lucide-react";
+import { Mail, Phone, MapPin, Shield, Edit, Eye, EyeOff } from "lucide-react";
 import { useUserStore } from "../store/useUserStore.jsx";
 import FarmCode from "../utils/FarmCode.js";
-import AIAnalysisModal from "../Components/AIAnalysisModal.jsx";
 
 const UserProfilePage = () => {
   const { userInfo, updateUserInfo, updateProfileImage } = useUserStore();
@@ -34,8 +33,7 @@ const UserProfilePage = () => {
   const [isImageEditing, setIsImageEditing] = useState(false);
   const fileInputRef = useRef(null);
 
-  // AI 분석 모달 상태
-  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+
 
   // 사용자 정보 로드 (실제로는 API 호출)
   useEffect(() => {
@@ -448,34 +446,7 @@ const UserProfilePage = () => {
                   <Shield size={16} />
                   비밀번호 변경
                 </button>
-                <button
-                  onClick={() => {
-                    if (!userInfo.farmCode) {
-                      alert('농장코드가 필요합니다. 회원가입 페이지로 이동합니다.');
-                      window.location.href = '/signup';
-                      return;
-                    }
-                    setIsAIModalOpen(true);
-                  }}
-                  disabled={!userInfo.farmCode}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "8px 16px",
-                    background: userInfo.farmCode ? "#9c27b0" : "#cccccc",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: userInfo.farmCode ? "pointer" : "not-allowed",
-                    fontSize: "14px",
-                    opacity: userInfo.farmCode ? 1 : 0.6
-                  }}
-                  title={!userInfo.farmCode ? "농장코드가 필요합니다. 회원가입 페이지에서 설정해주세요." : "AI 분석 시작"}
-                >
-                  <Brain size={16} />
-                  AI 분석
-                </button>
+
               </>
             ) : (
               <div style={{ display: "flex", gap: "8px" }}>
@@ -668,55 +639,29 @@ const UserProfilePage = () => {
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "70%" }}>
                       <input
                         type="text"
-                        value={isEditing ? editData.farmCode : userInfo.farmCode}
-                        onChange={(e) => {
-                          const newCode = e.target.value.toUpperCase();
-                          setEditData({...editData, farmCode: newCode});
-                        }}
-                        disabled={!isEditing}
+                        value={userInfo.farmCode}
+                        disabled={true}
                         style={{
                           flex: 1,
                           padding: "8px 12px",
                           border: "1px solid #ddd",
                           borderRadius: "4px",
                           fontSize: "14px",
-                          background: isEditing ? "white" : "#f5f5f5",
+                          background: "#f5f5f5",
                           fontFamily: "monospace",
-                          letterSpacing: "1px"
+                          letterSpacing: "1px",
+                          color: "#666"
                         }}
-                        placeholder={isEditing ? "농장 코드를 입력하세요" : ""}
+                        placeholder="농장 코드"
                       />
-                      {isEditing && (
-                        <button
-                          onClick={generateFarmCode}
-                          style={{
-                            padding: "8px 12px",
-                            background: "#4CAF50",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            whiteSpace: "nowrap"
-                          }}
-                          title="새 농장 코드 생성"
-                        >
-                          생성
-                        </button>
-                      )}
                     </div>
-                    {isEditing && editData.farmCode && (
-                      <div style={{
-                        fontSize: "11px",
-                        color: validateFarmCode(editData.farmCode) ? "#4CAF50" : "#f44336",
-                        marginTop: "4px"
-                      }}>
-                        {validateFarmCode(editData.farmCode) 
-                          ? "✓ 유효한 농장 코드입니다" 
-                          : "✗ 유효하지 않은 농장 코드입니다"
-                        }
-                      </div>
-                    )}
+                    <div style={{
+                      fontSize: "11px",
+                      color: "#666",
+                      marginTop: "4px"
+                    }}>
+                      {/* 농장 코드는 수정할 수 없습니다 */}
+                    </div>
                   </div>
                 </div>
 
@@ -969,12 +914,7 @@ const UserProfilePage = () => {
         style={{ display: "none" }}
       />
 
-      {/* AI 분석 모달 */}
-      <AIAnalysisModal
-        isOpen={isAIModalOpen}
-        onClose={() => setIsAIModalOpen(false)}
-        farmCode={userInfo.farmCode}
-      />
+
     </div>
   );
 };

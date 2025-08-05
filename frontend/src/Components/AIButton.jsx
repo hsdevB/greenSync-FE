@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Chatbot from './Chatbot';
 import './AIButton.css';
 
-function AIButton({ farmId }) {
+function AIButton({ farmCode }) {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [crop, setCrop] = useState('tomato');
