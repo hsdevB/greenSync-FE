@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { validateUserId, validatePassword } from '../utils/validation';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import Chatbot from '../Components/Chatbot';
-import botAvatar from '../assets/4712035.png';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const API_LOGIN_API = import.meta.env.VITE_LOGIN_API;
@@ -40,7 +38,6 @@ const LoginPage = ({ onLogin }) => {
   const [formData, setFormData] = useState({ userId: '', password: '' });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -181,53 +178,6 @@ const LoginPage = ({ onLogin }) => {
           회원가입
         </Link>
       </div>
-
-      {/* 챗봇 버튼 */}
-      <button 
-        onClick={() => setIsChatbotOpen(true)}
-        style={{
-          position: "fixed",
-          right: "32px",
-          bottom: "32px",
-          width: "60px",
-          height: "60px",
-          borderRadius: "50%",
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
-          border: "none",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1001,
-          cursor: "pointer",
-          transition: "all 0.3s ease"
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.transform = "scale(1.05)";
-          e.target.style.boxShadow = "0 8px 32px rgba(0,0,0,0.25)";
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = "scale(1)";
-          e.target.style.boxShadow = "0 4px 24px rgba(0,0,0,0.18)";
-        }}
-        aria-label="AI 챗봇 열기"
-      >
-        <img 
-          src={botAvatar} 
-          alt="AI 챗봇" 
-          style={{
-            width: "28px",
-            height: "28px",
-            filter: "brightness(0) invert(1)"
-          }}
-        />
-      </button>
-
-      {/* 챗봇 컴포넌트 */}
-      <Chatbot 
-        isOpen={isChatbotOpen}
-        onClose={() => setIsChatbotOpen(false)}
-      />
     </div>
   );
 };

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Mail, Phone, MapPin, Shield, Edit, Eye, EyeOff } from "lucide-react";
+import { Mail, Phone, MapPin, Shield, Edit, Eye, EyeOff, Brain } from "lucide-react";
 import { useUserStore } from "../store/useUserStore.jsx";
 import FarmCode from "../utils/FarmCode.js";
+import AIAnalysisModal from "../Components/AIAnalysisModal.jsx";
 
 const UserProfilePage = () => {
   const { userInfo, updateUserInfo, updateProfileImage } = useUserStore();
@@ -32,6 +33,9 @@ const UserProfilePage = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [isImageEditing, setIsImageEditing] = useState(false);
   const fileInputRef = useRef(null);
+
+  // AI 분석 모달 상태
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   // 사용자 정보 로드 (실제로는 API 호출)
   useEffect(() => {
@@ -443,6 +447,34 @@ const UserProfilePage = () => {
                 >
                   <Shield size={16} />
                   비밀번호 변경
+                </button>
+                <button
+                  onClick={() => {
+                    if (!userInfo.farmCode) {
+                      alert('농장코드가 필요합니다. 회원가입 페이지로 이동합니다.');
+                      window.location.href = '/signup';
+                      return;
+                    }
+                    setIsAIModalOpen(true);
+                  }}
+                  disabled={!userInfo.farmCode}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 16px",
+                    background: userInfo.farmCode ? "#9c27b0" : "#cccccc",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: userInfo.farmCode ? "pointer" : "not-allowed",
+                    fontSize: "14px",
+                    opacity: userInfo.farmCode ? 1 : 0.6
+                  }}
+                  title={!userInfo.farmCode ? "농장코드가 필요합니다. 회원가입 페이지에서 설정해주세요." : "AI 분석 시작"}
+                >
+                  <Brain size={16} />
+                  AI 분석
                 </button>
               </>
             ) : (
@@ -935,6 +967,13 @@ const UserProfilePage = () => {
         onChange={handleImageUpload}
         accept="image/*"
         style={{ display: "none" }}
+      />
+
+      {/* AI 분석 모달 */}
+      <AIAnalysisModal
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        farmCode={userInfo.farmCode}
       />
     </div>
   );

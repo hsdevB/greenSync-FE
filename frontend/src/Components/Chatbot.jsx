@@ -38,11 +38,11 @@ const styles = `
 .cb-fullscreen-overlay {
   position: fixed;
   top: 0;
-  left: 0;
+  left: 256px;
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 2000;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -51,7 +51,7 @@ const styles = `
 .cb-fullscreen-layout {
   display: flex;
   height: 100vh;
-  width: 100%;
+  width: calc(100% - 256px);
   background: #ffffff;
   border-radius: 12px;
   overflow: hidden;
@@ -63,8 +63,8 @@ const styles = `
   flex-direction: column;
   flex: 1;
   background: #ffffff;
-  margin-left: 256px;
-  width: calc(100% - 256px);
+  width: 100%;
+  min-width: 0;
 }
 
 /* 헤더 */
@@ -75,6 +75,7 @@ const styles = `
   padding: 20px 24px;
   border-bottom: 1px solid #e5e5e5;
   background: #ffffff;
+  min-height: 80px;
 }
 
 .cb-header-left {
@@ -298,6 +299,8 @@ const styles = `
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-weight: 400;
   caret-color: #667eea;
+  position: relative;
+  z-index: 10000;
 }
 
 .cb-input-field::placeholder {
@@ -344,9 +347,24 @@ const styles = `
 }
 
 /* 반응형 */
+@media (max-width: 1024px) {
+  .cb-fullscreen-overlay {
+    left: 0;
+  }
+  
+  .cb-fullscreen-layout {
+    border-radius: 0;
+    width: 100%;
+  }
+}
+
 @media (max-width: 768px) {
-  .cb-fullscreen-container {
-    margin-left: 0;
+  .cb-fullscreen-overlay {
+    left: 0;
+  }
+  
+  .cb-fullscreen-layout {
+    border-radius: 0;
     width: 100%;
   }
   
@@ -364,6 +382,42 @@ const styles = `
   
   .cb-welcome-subtitle {
     font-size: 14px;
+  }
+  
+  .cb-fullscreen-header {
+    padding: 16px 20px;
+    min-height: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cb-message-content {
+    max-width: 90%;
+  }
+  
+  .cb-input-container {
+    padding: 12px 16px;
+  }
+  
+  .cb-welcome-title {
+    font-size: 20px;
+  }
+  
+  .cb-welcome-subtitle {
+    font-size: 13px;
+  }
+  
+  .cb-fullscreen-header {
+    padding: 12px 16px;
+    min-height: 60px;
+  }
+  
+  .cb-header-name {
+    font-size: 14px;
+  }
+  
+  .cb-header-status {
+    font-size: 12px;
   }
 }
 
@@ -417,8 +471,12 @@ export default function Chatbot({ isOpen, onClose, sidebar }) {
   useEffect(() => {
     if (isChatbotOpen && inputRef.current) {
       const timer = setTimeout(() => {
-        inputRef.current.focus();
-      }, 100);
+        if (inputRef.current) {
+          inputRef.current.focus();
+          // 강제로 포커스 설정
+          inputRef.current.click();
+        }
+      }, 200);
       return () => clearTimeout(timer);
     }
   }, [isChatbotOpen]);
@@ -508,20 +566,24 @@ export default function Chatbot({ isOpen, onClose, sidebar }) {
   }, [input, loading]);
 
   const handleKeyUp = useCallback((e) => {
+    e.stopPropagation();
     if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
       send();
     }
   }, [send, isComposing]);
 
-  const handleCompositionStart = useCallback(() => {
+  const handleCompositionStart = useCallback((e) => {
+    e.stopPropagation();
     setIsComposing(true);
   }, []);
 
-  const handleCompositionEnd = useCallback(() => {
+  const handleCompositionEnd = useCallback((e) => {
+    e.stopPropagation();
     setIsComposing(false);
   }, []);
 
   const handleInputChange = useCallback((e) => {
+    e.stopPropagation();
     setInput(e.target.value);
   }, []);
 
@@ -542,8 +604,8 @@ export default function Chatbot({ isOpen, onClose, sidebar }) {
         </button>
       )}
       {isChatbotOpen && (
-        <div className="cb-fullscreen-overlay">
-          <div className="cb-fullscreen-layout">
+        <div className="cb-fullscreen-overlay" onClick={(e) => e.stopPropagation()}>
+          <div className="cb-fullscreen-layout" onClick={(e) => e.stopPropagation()}>
             {sidebar}
             
             <div className="cb-fullscreen-container">
@@ -601,8 +663,8 @@ export default function Chatbot({ isOpen, onClose, sidebar }) {
                 )}
               </div>
 
-              <div className="cb-input-container">
-                <div className="cb-input-wrapper">
+              <div className="cb-input-container" onClick={(e) => e.stopPropagation()}>
+                <div className="cb-input-wrapper" onClick={(e) => e.stopPropagation()}>
                   <input
                     ref={inputRef}
                     className="cb-input-field"
@@ -611,10 +673,15 @@ export default function Chatbot({ isOpen, onClose, sidebar }) {
                     value={input}
                     onChange={handleInputChange}
                     onKeyUp={handleKeyUp}
+                    onKeyDown={(e) => e.stopPropagation()}
                     onCompositionStart={handleCompositionStart}
                     onCompositionEnd={handleCompositionEnd}
+                    onFocus={(e) => e.stopPropagation()}
+                    onBlur={(e) => e.stopPropagation()}
                     disabled={loading}
                     autoComplete="off"
+                    autoFocus
+                    spellCheck="false"
                   />
                   <div className="cb-input-actions">
                     <button 

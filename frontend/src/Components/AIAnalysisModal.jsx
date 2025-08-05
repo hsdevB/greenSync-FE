@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AIAnalysisModal.css';
+import { useNavigate } from 'react-router-dom';
 
-const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
+const AIAnalysisModal = ({ isOpen, onClose, farmCode }) => {
+  const navigate = useNavigate();
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -15,18 +17,18 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
   // 센서 데이터 가져오기
   const fetchSensorData = async () => {
     try {
-      //console.log('센서 데이터 요청 - Farm ID:', farmId);
+      //console.log('센서 데이터 요청 - Farm Code:', farmCode);
       
       // 온도 데이터 가져오기
-      const tempResponse = await axios.get(`/temperature/code/${farmId}`);
+      const tempResponse = await axios.get(`/temperature/code/${farmCode}`);
       //console.log('온도 응답:', tempResponse.data);
       
       // 습도 데이터 가져오기
-      const humidityResponse = await axios.get(`/humidity/code/${farmId}`);
+      const humidityResponse = await axios.get(`/humidity/code/${farmCode}`);
       //console.log('습도 응답:', humidityResponse.data);
       
       // 조명 데이터 가져오기 (일사량)
-      const lightResponse = await axios.get(`/weather/code/${farmId}`);
+      const lightResponse = await axios.get(`/weather/code/${farmCode}`);
       //console.log('조명 응답:', lightResponse.data);
       
       // 데이터 파싱
@@ -65,14 +67,21 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
     setLoading(true);
     setError(null);
     
-    //console.log('AI 분석 요청 시작 - Farm ID:', farmId);
+    //console.log('AI 분석 요청 시작 - Farm Code:', farmCode);
+    
+    // 농장코드 검증
+    if (!farmCode) {
+      setError('농장코드가 필요합니다. 회원가입 페이지에서 농장코드를 설정해주세요.');
+      setLoading(false);
+      return;
+    }
     
     try {
       // 먼저 센서 데이터 가져오기
       await fetchSensorData();
       
       const requestData = {
-        userMessage: `농장 ID ${farmId}의 토마토 AI 분석 결과를 알려줘 예를 들어 작물 상태, 환경최적화, 급수시스템, 예측분석, 권장사항 다음주 수확 수 kg은?`
+        userMessage: `농장 코드 ${farmCode}의 토마토 AI 분석 결과를 알려줘 예를 들어 작물 상태, 환경최적화, 급수시스템, 예측분석, 권장사항 다음주 수확 수 kg은?`
       };
       
       //console.log('AI 서버 요청 데이터:', requestData);
@@ -90,7 +99,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
       if (response.data && response.data.reply) {
         // AI 응답을 파싱하여 구조화된 데이터로 변환
         const aiResponse = response.data.reply;
-        const parsedData = parseAIResponse(aiResponse, farmId);
+        const parsedData = parseAIResponse(aiResponse, farmCode);
         setAnalysisData(parsedData);
       } else {
         throw new Error('AI 응답 데이터가 올바르지 않습니다.');
@@ -145,7 +154,7 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
   };
 
   // AI 응답을 파싱하는 함수
-  const parseAIResponse = (response, farmId) => {
+  const parseAIResponse = (response, farmCode) => {
     //console.log('AI 응답 파싱 시작:', response);
     //console.log('현재 센서 데이터:', sensorData);
     
@@ -267,12 +276,19 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
     };
   };
 
-  // 모달이 열릴 때 AI 분석 요청
-  useEffect(() => {
-    if (isOpen && farmId) {
-      requestAIAnalysis();
-    }
-  }, [isOpen, farmId]);
+      // 모달이 열릴 때 AI 분석 요청
+    useEffect(() => {
+      if (isOpen) {
+        if (!farmCode) {
+          // 농장코드가 없으면 회원가입 페이지로 이동
+          alert('농장코드가 필요합니다. 회원가입 페이지로 이동합니다.');
+          onClose();
+          navigate('/signup');
+          return;
+        }
+        requestAIAnalysis();
+      }
+    }, [isOpen, farmCode, navigate, onClose]);
 
   if (!isOpen) return null;
 
@@ -299,12 +315,40 @@ const AIAnalysisModal = ({ isOpen, onClose, farmId }) => {
               <h3>분석 오류</h3>
               <p>{error}</p>
               <div className="error-actions">
-                <button className="retry-btn" onClick={requestAIAnalysis}>
-                  다시 시도
-                </button>
-                <button className="close-btn" onClick={onClose}>
-                  닫기
-                </button>
+                {error.includes('농장코드가 필요합니다') ? (
+                  <>
+                    <button 
+                      className="retry-btn" 
+                      onClick={() => {
+                        onClose();
+                        navigate('/signup');
+                      }}
+                      style={{
+                        background: '#388e3c',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        marginRight: '8px'
+                      }}
+                    >
+                      회원가입 페이지로 이동
+                    </button>
+                    <button className="close-btn" onClick={onClose}>
+                      닫기
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className="retry-btn" onClick={requestAIAnalysis}>
+                      다시 시도
+                    </button>
+                    <button className="close-btn" onClick={onClose}>
+                      닫기
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ) : analysisData ? (

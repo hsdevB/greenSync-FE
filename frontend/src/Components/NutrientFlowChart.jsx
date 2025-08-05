@@ -126,10 +126,9 @@ const NutrientFlowChart = ({ farmCode }) => {
   }, [farmCode]);
 
   const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString('ko-KR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const hours = timestamp.getHours().toString().padStart(2, '0');
+    const minutes = timestamp.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
   };
 
   const getMetricColor = (metric) => {
@@ -217,7 +216,7 @@ const NutrientFlowChart = ({ farmCode }) => {
       );
     }
 
-    const chartWidth = 650;
+    const chartWidth = 490;
     const chartHeight = 400;
     const margin = { top: 20, right: 20, bottom: 40, left: 60 };
     const width = chartWidth - margin.left - margin.right;
@@ -279,16 +278,16 @@ const NutrientFlowChart = ({ farmCode }) => {
             {data.map((item, i) => {
               const x = margin.left + (i * width / (data.length - 1));
               return (
-                <text
-                  key={`time-${i}`}
-                  x={x}
-                  y={chartHeight - 10}
-                  fontSize="12"
-                  fill="#666"
-                  textAnchor="middle"
-                >
-                  {formatTime(item.timestamp)}
-                </text>
+                                 <text
+                   key={`time-${i}`}
+                   x={x}
+                   y={chartHeight - 10}
+                   fontSize="10"
+                   fill="#666"
+                   textAnchor="middle"
+                 >
+                   {formatTime(item.timestamp)}
+                 </text>
               );
             })}
 
@@ -351,8 +350,8 @@ const NutrientFlowChart = ({ farmCode }) => {
 
             {/* Y축 라벨 제거 - 오른쪽 범례만 유지 */}
 
-          {/* 범례 */}
-            <g transform={`translate(${chartWidth - 150}, ${margin.top})`}>
+            {/* 범례 */}
+            <g transform={`translate(10, ${margin.top})`}>
               {selectedMetrics.map((metric, index) => {
                 const color = getMetricColor(metric);
                 return (
@@ -368,7 +367,7 @@ const NutrientFlowChart = ({ farmCode }) => {
                     <text
                       x="30"
                       y="4"
-                      fontSize="12"
+                      fontSize="10"
                       fill={color}
                     >
                       {getMetricLabel(metric)}
@@ -393,7 +392,7 @@ const NutrientFlowChart = ({ farmCode }) => {
                   ))}
                 </tr>
               </thead>
-                             <tbody>
+                <tbody>
                  {hourlyData.slice(0, 24).map((item, index) => (
                    <tr key={index}>
                      <td>{formatTime(item.timestamp)}</td>

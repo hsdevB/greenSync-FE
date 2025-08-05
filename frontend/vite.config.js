@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-
+const BACKEND_IP_ADDRESS = '192.168.0.33';
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -8,30 +8,30 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/sensor': {
-        target: 'http://192.168.0.33:3000', // 실제 백엔드 서버 주소로 수정
+        target: `http://${BACKEND_IP_ADDRESS}:3000`, // 실제 백엔드 서버 주소로 수정
         changeOrigin: true,
         secure: false,
         timeout: 10000, // 타임아웃 추가
         onError: (err) => {
-          console.log('Proxy error:', err);
+          //console.log('Proxy error:', err);
         }
       },
       '/weather': {
-        target: 'http://192.168.0.33:3000', // 일사량 API 서버
+        target: `http://${BACKEND_IP_ADDRESS}:3000`, // 일사량 API 서버
         changeOrigin: true,
         secure: false,
         timeout: 10000,
         onError: (err) => {
-          console.log('Weather Proxy error:', err);
+          //console.log('Weather Proxy error:', err);
         }
       },
       '/chart': {
-        target: 'http://192.168.0.33:3000', // 차트 API 서버
+        target: `http://${BACKEND_IP_ADDRESS}:3000`, // 차트 API 서버
         changeOrigin: true,
         secure: false,
         timeout: 10000,
         onError: (err) => {
-          console.log('Chart Proxy error:', err);
+          //console.log('Chart Proxy error:', err);
         }
       },
       '/api/iotdata': {
@@ -41,13 +41,13 @@ export default defineConfig({
         timeout: 10000,
         configure: (proxy) => {
           proxy.on('error', (err) => {
-            console.log('IoT Data Proxy error:', err);
+            //console.log('IoT Data Proxy error:', err);
           });
           proxy.on('proxyReq', (proxyReq, req) => {
-            console.log('IoT Data Proxy request:', req.method, req.url);
+            //console.log('IoT Data Proxy request:', req.method, req.url);
           });
           proxy.on('proxyRes', (proxyRes) => {
-            console.log('IoT Data Proxy response:', proxyRes.statusCode);
+            //console.log('IoT Data Proxy response:', proxyRes.statusCode);
           });
         }
       },
@@ -59,25 +59,25 @@ export default defineConfig({
         timeout: 120000, // Ollama API는 시간이 오래 걸릴 수 있으므로 타임아웃 2분으로 증가
         configure: (proxy) => {
           proxy.on('error', (err) => {
-            console.log('Ollama Proxy error:', err);
+            //console.log('Ollama Proxy error:', err);
           });
           proxy.on('proxyReq', (proxyReq, req) => {
-            console.log('Ollama Proxy request:', req.method, req.url);
+            //console.log('Ollama Proxy request:', req.method, req.url);
             // Content-Type 헤더 추가
             proxyReq.setHeader('Content-Type', 'application/json');
           });
           proxy.on('proxyRes', (proxyRes) => {
-            console.log('Ollama Proxy response:', proxyRes.statusCode);
+            //console.log('Ollama Proxy response:', proxyRes.statusCode);
           });
         }
       },
       '/api': {
-        target: 'http://192.168.219.108:3000',
+        target: 'http://106.254.212.23:3001',
         changeOrigin: true,
         secure: false,
         timeout: 10000,
         onError: (err) => {
-          console.log('API Proxy error:', err);
+          //console.log('API Proxy error:', err);
         }
       },
     },

@@ -182,6 +182,7 @@ function DashboardLayout({ farmCode, farmType, houseType, onLogout }) {
               selected={selectedMenu}
               onSelect={handleMenuSelect}
               onLogout={onLogout}
+              onCloseChatbot={handleChatbotClose}
               // farmData={farmData}
             />
           }
