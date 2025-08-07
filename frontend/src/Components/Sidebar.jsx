@@ -1,10 +1,10 @@
 // src/Components/Sidebar.jsx
-import { User, BarChart3, Settings, Users, Brain } from "lucide-react";
+import { User, BarChart3, Settings, Users, Brain, MessageCircle } from "lucide-react";
 import React from "react";
 import { useUserStore } from "../store/useUserStore.jsx";
 import "./Sidebar.css";
 
-const Sidebar = ({ selected, onSelect, onLogout, onCloseChatbot }) => {
+const Sidebar = ({ selected, onSelect, onLogout, onCloseChatbot, onNavigateToChatbot }) => {
   const { userInfo } = useUserStore();
   
   return (
@@ -72,13 +72,21 @@ const Sidebar = ({ selected, onSelect, onLogout, onCloseChatbot }) => {
             </button>
           </li>
           <li></li>
-          <li>
+          {/* <li>
             <button
               className={`sidebar-menu-btn${selected === 'ai-analysis' ? ' selected' : ''}`}
               data-menu="ai-analysis"
               onClick={() => onSelect && onSelect('ai-analysis')}
             >
-              <Brain className="sidebar-menu-icon" /> 챗봇
+              <Brain className="sidebar-menu-icon" /> AI 분석
+            </button>
+          </li> */}
+          <li>
+            <button
+              className="sidebar-menu-btn"
+              onClick={() => onNavigateToChatbot && onNavigateToChatbot()}
+            >
+              <MessageCircle className="sidebar-menu-icon" /> 챗봇
             </button>
           </li>
         </ul>

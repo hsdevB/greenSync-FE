@@ -7,6 +7,7 @@ const NutrientFlowChart = ({ farmCode }) => {
   const [hourlyData, setHourlyData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMetrics, setSelectedMetrics] = useState(['phLevel', 'ecLevel']);
+  const [tooltip, setTooltip] = useState({ show: false, x: 0, y: 0, content: '' });
 
   useEffect(() => {
     const loadData = async () => {
@@ -25,12 +26,8 @@ const NutrientFlowChart = ({ farmCode }) => {
 
           phLevels = phResponse.data.data?.datasets?.[0]?.data?.phAverageData || [];
           ecLevels = ecResponse.data.data?.datasets?.[0]?.data?.ecAverageData || [];
-          
-          console.log("개별 엔드포인트 - pH 데이터:", phLevels);
-          console.log("개별 엔드포인트 - EC 데이터:", ecLevels);
+
         } catch (error) {
-          console.log("개별 엔드포인트 실패, 통합 엔드포인트 시도:", error.message);
-          
           // 개별 엔드포인트가 실패하면 통합 nutrient 엔드포인트 시도
           const nutrientResponse = await axios.get(`http://192.168.0.33:3000/chart/nutrient/daily/${farmCode}`);
           
@@ -45,48 +42,65 @@ const NutrientFlowChart = ({ farmCode }) => {
             phLevels = [nutrientResponse.data.phLevel];
             ecLevels = [nutrientResponse.data.ecLevel];
           }
-          
-          console.log("통합 엔드포인트 - pH 데이터:", phLevels);
-          console.log("통합 엔드포인트 - EC 데이터:", ecLevels);
+
         }
 
-        // 시간 라벨 생성 (24시간, 3시간 간격)
+        // 3시간 간격으로 데이터 평균화하는 함수
+        const calculate3HourAverage = (dataArray, startIndex) => {
+          const values = [];
+          for (let i = startIndex; i < startIndex + 3 && i < dataArray.length; i++) {
+            if (dataArray[i] !== null && dataArray[i] !== undefined && !isNaN(dataArray[i])) {
+              values.push(dataArray[i]);
+            }
+          }
+          
+          if (values.length === 0) return null;
+          return values.reduce((sum, val) => sum + val, 0) / values.length;
+        };
+
+        // 3시간 간격 데이터 생성 (차트용)
         const timeLabels = ['00시', '03시', '06시', '09시', '12시', '15시', '18시', '21시'];
-        
-        // 시계열 데이터 생성
         const timeSeriesData = timeLabels.map((label, index) => {
           const timestamp = new Date();
           timestamp.setHours(index * 3, 0, 0, 0);
           
+          let phValue = null;
+          let ecValue = null;
+          
+          if (index === 0) {
+            // 0번 인덱스는 따로 처리 (첫 번째 데이터)
+            phValue = phLevels[0] || null;
+            ecValue = ecLevels[0] || null;
+          } else {
+            // 1~3, 4~6, 7~9... 인덱스의 평균
+            const startIndex = (index - 1) * 3 + 1;
+            phValue = calculate3HourAverage(phLevels, startIndex);
+            ecValue = calculate3HourAverage(ecLevels, startIndex);
+          }
+          
           return {
             timestamp: timestamp,
-            phLevel: phLevels[index] || null, // 기본값 6.0
-            ecLevel: ecLevels[index] || null  // 기본값 2.0
+            phLevel: phValue,
+            ecLevel: ecValue
           };
         });
 
-        // 1시간 간격 데이터 생성 (테이블용)
+        // 24시간 데이터 생성 (테이블용) - 원본 데이터 그대로 사용
         const hourlyData = [];
         for (let i = 0; i < 24; i++) {
           const timestamp = new Date();
           timestamp.setHours(i, 0, 0, 0);
           
-          // 3시간 간격 데이터에서 가장 가까운 값 찾기
-          const closestIndex = Math.floor(i / 3);
-          const phValue = phLevels[closestIndex] || null;
-          const ecValue = ecLevels[closestIndex] || null;
-          
           hourlyData.push({
             timestamp: timestamp,
-            phLevel: phValue,
-            ecLevel: ecValue
+            phLevel: phLevels[i] || null,
+            ecLevel: ecLevels[i] || null
           });
         }
-
-        console.log("최종 시계열 데이터:", timeSeriesData);
+       
         setData(timeSeriesData);
         
-        // 1시간 간격 데이터도 상태로 저장
+        // 24시간 데이터도 상태로 저장
         setHourlyData(hourlyData);
       } catch (error) {
         console.error('Data loading error:', error);
@@ -216,14 +230,14 @@ const NutrientFlowChart = ({ farmCode }) => {
       );
     }
 
-    const chartWidth = 490;
+    const chartWidth = 470;
     const chartHeight = 400;
     const margin = { top: 20, right: 20, bottom: 40, left: 60 };
     const width = chartWidth - margin.left - margin.right;
     const height = chartHeight - margin.top - margin.bottom;
 
     return (
-      <div className="nutrient-chart-container">
+      <div className="nutrient-chart">
         <div className="nutrient-chart-header">
         <h3>양액 공급량 시계열 데이터 (24시간, 3시간 간격)</h3>
         <div className="nutrient-chart-controls">
@@ -296,9 +310,6 @@ const NutrientFlowChart = ({ farmCode }) => {
               const [min, max] = getYAxisRange(metric);
               const color = getMetricColor(metric);
               
-              console.log(`${metric} 렌더링 - 데이터:`, data.map(item => item[metric]));
-              console.log(`${metric} 렌더링 - 범위:`, [min, max]);
-              
               const points = data.map((item, i) => {
                 const x = margin.left + (i * width / Math.max(data.length - 1, 1));
                 const value = item[metric];
@@ -309,8 +320,6 @@ const NutrientFlowChart = ({ farmCode }) => {
                 const y = margin.top + (1 - normalizedValue) * height;
                 return `${x},${y}`;
               }).filter(point => point !== null).join(' ');
-
-              console.log(`${metric} 렌더링 - 포인트:`, points);
 
               return (
                 <g key={metric}>
@@ -341,6 +350,20 @@ const NutrientFlowChart = ({ farmCode }) => {
                         className="data-point"
                         data-value={value}
                         data-unit={getMetricUnit(metric)}
+                        onMouseEnter={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const tooltipContent = `${formatTime(item.timestamp)}\n${getMetricLabel(metric)}: ${value.toFixed(2)} ${getMetricUnit(metric)}`;
+                          setTooltip({
+                            show: true,
+                            x: rect.left + rect.width / 2,
+                            y: rect.top - 10,
+                            content: tooltipContent
+                          });
+                        }}
+                        onMouseLeave={() => {
+                          setTooltip({ show: false, x: 0, y: 0, content: '' });
+                        }}
+                        style={{ cursor: 'pointer' }}
                       />
                     );
                   }).filter(circle => circle !== null)}
@@ -379,6 +402,28 @@ const NutrientFlowChart = ({ farmCode }) => {
           </svg>
         </div>
 
+        {/* 툴팁 */}
+        {tooltip.show && (
+          <div
+            style={{
+              position: 'fixed',
+              left: tooltip.x,
+              top: tooltip.y,
+              transform: 'translate(-50%, -100%)',
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              color: 'white',
+              padding: '8px 12px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              whiteSpace: 'pre-line',
+              zIndex: 1000,
+              pointerEvents: 'none'
+            }}
+          >
+            {tooltip.content}
+          </div>
+        )}
+
         {/* 데이터 테이블 */}
         <div className="nutrient-data-table">
           <h4>최근 데이터</h4>
@@ -399,7 +444,7 @@ const NutrientFlowChart = ({ farmCode }) => {
                      {selectedMetrics.map(metric => {
                        const value = item[metric];
                        const displayValue = (isNaN(value) || value === null || value === undefined) 
-                         ? 'N/A' 
+                         ? '-' 
                          : `${value.toFixed(2)} ${getMetricUnit(metric)}`;
                        return (
                          <td key={metric} style={{ color: getMetricColor(metric) }}>

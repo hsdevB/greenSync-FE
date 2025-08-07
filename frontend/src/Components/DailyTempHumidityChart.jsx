@@ -310,7 +310,7 @@ const DailyTempHumidityChart = ({ farmCode }) => {
           display: 'flex', 
           justifyContent: 'center', 
           alignItems: 'center', 
-          height: '200px',
+          height: '100px',
           color: '#666'
         }}>
           데이터를 불러오는 중...

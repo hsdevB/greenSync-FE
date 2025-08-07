@@ -1,34 +1,56 @@
 import mqtt from 'mqtt';
 
 const brokerURL = import.meta.env.VITE_MQTT_BROKER_URL;
-const farmCode = 'ABCD1234';
+// const farmCode = 'ABCD1234';
 export class MQTTClient {
-  constructor() {
-    this.client = null;
-    this.isConnected = false;
-    this.isConnecting = false;
-  }
-  // constructor(farmCode) {
-  //   this.farmCode = farmCode;
+  // constructor() {
   //   this.client = null;
   //   this.isConnected = false;
   //   this.isConnecting = false;
   // }
+  constructor(farmCode) {
+    this.farmCode = farmCode;
+    this.client = null;
+    this.isConnected = false;
+    this.isConnecting = false;
+  }
 
   connect(brokerUrl = `${brokerURL}`) {
-    try {
-      // 실제 환경
-      this.client = mqtt.connect(brokerUrl);
-      // //console.log(`MQTT 브로커 연결 시도: ${brokerUrl}`);
-      // this.isConnected = true;
-      // 실제 환경에서는 mqtt.connect(brokerUrl) 사용
-      this.client.on('connect', () => {
-        //console.log('MQTT 브로커 연결 성공');
-        this.isConnected = true;
-      });
-    } catch (error) {
-      console.error('MQTT 연결 실패:', error);
+    if(this.client) {
+      return Promise.resolve();
     }
+
+    return new Promise((resolve, reject) => {
+      try {
+        // 실제 환경
+        this.client = mqtt.connect(brokerUrl);
+        // //console.log(`MQTT 브로커 연결 시도: ${brokerUrl}`);
+        // 실제 환경에서는 mqtt.connect(brokerUrl) 사용
+        this.client.on('connect', () => {
+          console.log('MQTT 브로커 연결 성공');
+          this.isConnected = true;
+          resolve();
+        });
+
+        this.client.on('error', (error) => {
+          console.error('MQTT 연결 실패:', error);
+          this.isConnected = false;
+          this.client.end();
+          this.client = null;
+          reject(error);
+        });
+
+        this.client.on('close', () => {
+          console.log('MQTT 연결 종료');
+          this.isConnected = false;
+          this.client = null;
+        });
+
+      } catch (error) {
+        console.error('MQTT 클라이언트 생성 실패: ', error);
+        reject(error);
+      }
+    });
   }
 
   publish(topic, message) {
@@ -53,13 +75,26 @@ export class MQTTClient {
 
   // LED 깜박임 제어 (각 센서별 개별 제어)
   async blinkLed(ledIndex, currentFanState) {
-    console.log("반짝");
+    if (!this.isConnected) {
+      console.warn('blinkLed: 연결 먼저 시도');
+      try {
+        await this.connect();
+      } catch (error) {
+        console.error('blinkLed: 연결 실패:', error);
+        return; // 연결 실패 시 함수 종료 
+      }
+    }
+
+    console.log("mqtt연결되어 blinkLed 실행됨: 반짝, ", this.farmCode);
+    const topic = `device/control/${this.farmCode}`;
+    console.log("MQTT topic: ", topic);
+    
     // 특정 LED만 켜기 (온도센서=0, 습도센서=1, 급수=2, LED밝기=3)
     const ledObject = [false, false, false, false];
     ledObject[ledIndex] = true;
     
-    // this.publish(`device/control/${this.farmCode}`, {
-    this.publish(`device/control/${farmCode}`, {
+    this.publish(`device/control/${this.farmCode}`, {
+    // this.publish(`device/control/${farmCode}`, {
       "fan": currentFanState,
       "leds": ledObject
     });
@@ -75,8 +110,8 @@ export class MQTTClient {
     const updatedLedState = [...currentStateAfterDelay];
     updatedLedState[ledIndex] = false;
     
-    // this.publish(`device/control/${this.farmCode}`, {
-    this.publish(`device/control/${farmCode}`, {
+    this.publish(`device/control/${this.farmCode}`, {
+    // this.publish(`device/control/${farmCode}`, {
       "fan": currentFanState,
       "leds": updatedLedState
     });
@@ -86,7 +121,7 @@ export class MQTTClient {
     if (this.client && this.isConnected) {
       this.client.end();
       this.isConnected = false;
-      //console.log('MQTT 연결 종료');
+      console.log('MQTT 연결 종료');
     }
   }
 }

@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import botAvatar from '../assets/4712035.png';
 import userAvatar from '../assets/4712036.png';
-import './AIChatbox.css';
+import '../Components/AIChatbox.css';
 
 function getTime() {
   const d = new Date();
@@ -11,7 +12,7 @@ function getTime() {
 const BOT_AVATAR = botAvatar;
 const USER_AVATAR = userAvatar;
 
-export default function AIChatComponent() {
+export default function ChatbotPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -19,15 +20,11 @@ export default function AIChatComponent() {
 
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (chatEndRef.current) {
-      const messagesContainer = chatEndRef.current.closest('.ac-messages-container');
-      if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      } else {
-        chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
@@ -36,23 +33,10 @@ export default function AIChatComponent() {
       const timer = setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
-          console.log('Input element focused');
         }
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, []);
-
-  // 컴포넌트가 마운트될 때 포커스 강제 설정
-  useEffect(() => {
-    const handleClick = () => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    };
-    
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
   }, []);
 
   const askOllama = async (userMessage) => {
@@ -113,7 +97,6 @@ Always answer in natural, fluent Korean.
       }
 
       const data = await response.json();
-      // <think> 태그 제거
       const cleanResponse = data.response.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
       return cleanResponse;
     } catch (err) {
@@ -148,7 +131,6 @@ Always answer in natural, fluent Korean.
   }, [input, loading]);
 
   const handleKeyDown = useCallback((e) => {
-    // 모든 키 입력을 허용하되, Enter만 특별 처리
     if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
       e.preventDefault();
       send();
@@ -164,53 +146,40 @@ Always answer in natural, fluent Korean.
   }, []);
 
   const handleInputChange = useCallback((e) => {
-    // 모든 문자 입력 허용 (한글, 영어, 숫자, 특수문자)
-    console.log('Input change:', e.target.value);
     setInput(e.target.value);
-    
-    // textarea 높이 자동 조정
-    const textarea = e.target;
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
-  }, []);
-
-  // 추가적인 입력 이벤트 핸들러
-  const handleInput = useCallback((e) => {
-    console.log('Input event:', e.target.value);
-    setInput(e.target.value);
-  }, []);
-
-  // 직접적인 DOM 이벤트 리스너 추가
-  useEffect(() => {
-    const inputElement = inputRef.current;
-    if (inputElement) {
-      const handleDirectInput = (e) => {
-        console.log('Direct input:', e.target.value);
-        setInput(e.target.value);
-      };
-      
-      inputElement.addEventListener('input', handleDirectInput);
-      
-      return () => {
-        inputElement.removeEventListener('input', handleDirectInput);
-      };
-    }
   }, []);
 
   const handleSendClick = useCallback(() => {
     send();
   }, [send]);
 
+  const handleBackToLogin = () => {
+    navigate('/');
+  };
+
   return (
-    <div className="ai-chat-dashboard">
+    <div className="ai-chat-page">
+      <div className="ai-chat-header">
+        <button className="back-button" onClick={handleBackToLogin}>
+          ← 대시보드 페이지로 돌아가기
+        </button>
+        <div className="ai-chat-title">챗봇</div>
+      </div>
+
       <div className="ai-chat-container">
         <div className="ai-chat-content">
           {messages.length === 0 ? (
             <div className="ac-welcome-screen">
-              <div className="ac-welcome-title">무엇을 도와드릴까요?</div>
+              <div className="ac-welcome-title">안녕하세요! GreenSync AI 챗봇입니다</div>
               <div className="ac-welcome-subtitle">
-                질문하시면 AI가 답변해드립니다
+                스마트팜과 농업에 관한 질문을 자유롭게 해주세요
               </div>
+              {/* <div className="ac-welcome-examples">
+                <div className="ac-example-title">예시 질문:</div>
+                <div className="ac-example-item">• 토마토 재배 온도는 어떻게 되나요?</div>
+                <div className="ac-example-item">• 수경재배에서 영양액 관리 방법은?</div>
+                <div className="ac-example-item">• LED 조명으로 작물 생장 촉진하는 법</div>
+              </div> */}
             </div>
           ) : (
             <div className="ac-messages-container">
@@ -247,31 +216,20 @@ Always answer in natural, fluent Korean.
 
         <div className="ac-input-container">
           <div className="ac-input-wrapper">
-            <textarea
+            <input
               ref={inputRef}
               className="ac-input-field"
-              placeholder="무엇이든 물어보세요"
+              type="text"
+              placeholder="스마트팜에 대해 궁금한 점을 물어보세요"
               value={input}
               onChange={handleInputChange}
-              onInput={handleInput}
               onKeyDown={handleKeyDown}
-              onKeyPress={(e) => console.log('Key press:', e.key, 'KeyCode:', e.keyCode)}
-              onKeyUp={(e) => console.log('Key up:', e.key, 'KeyCode:', e.keyCode)}
-              onFocus={(e) => console.log('Input focused')}
-              onBlur={(e) => console.log('Input blurred')}
               onCompositionStart={handleCompositionStart}
               onCompositionEnd={handleCompositionEnd}
               disabled={loading}
               autoComplete="off"
               autoFocus
               spellCheck="false"
-              rows="1"
-              style={{
-                resize: 'none',
-                overflow: 'hidden',
-                minHeight: '20px',
-                maxHeight: '100px'
-              }}
             />
             <div className="ac-input-actions">
               <button 
@@ -289,4 +247,4 @@ Always answer in natural, fluent Korean.
       </div>
     </div>
   );
-} 
+}

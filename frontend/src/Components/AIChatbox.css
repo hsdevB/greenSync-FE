@@ -83,6 +83,38 @@
   position: relative;
 }
 
+/* 새로운 챗봇 페이지용 스타일 */
+.ac-welcome-examples {
+  margin-top: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.ac-example-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 15px;
+}
+
+.ac-example-item {
+  font-size: 14px;
+  color: #6c757d;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  border-left: 3px solid #28a745;
+  transition: all 0.2s ease;
+}
+
+.ac-example-item:hover {
+  background: #e8f5e8;
+  transform: translateX(5px);
+}
+
 /* 기존 AIChatbox 스타일들 */
 .ac-fab {
   position: fixed;
@@ -377,6 +409,11 @@
   border-radius: 25px;
   padding: 6px 14px;
   transition: border-color 0.2s;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .ac-input-wrapper:focus-within {
@@ -391,6 +428,25 @@
   font-size: 14px;
   background: transparent;
   padding: 6px 0;
+  min-height: 20px;
+  line-height: 1.4;
+  color: #333;
+  caret-color: #007bff;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  pointer-events: auto;
+  touch-action: manipulation;
+  font-family: inherit;
+  resize: none;
+  overflow: hidden;
+}
+
+.ac-input-field:focus {
+  outline: none;
+  border: none;
+  background: transparent;
 }
 
 .ac-input-field::placeholder {

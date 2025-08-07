@@ -4,7 +4,7 @@ import RemoteControlPanel from './RemoteControlPanel';
 import AIChatComponent from './AIChatComponent';
 import './DashBoard.css';
 
-const Dashboard = ({ selectedMenu, unityContext, farmCode }) => {
+const Dashboard = ({ selectedMenu, unityContext, farmCode, onAIAnalysis }) => {
   // 디버깅을 위한 콘솔 로그
   console.log('Dashboard selectedMenu:', selectedMenu);
   console.log('showChatbot:', selectedMenu === 'ai-analysis');
@@ -18,7 +18,7 @@ const Dashboard = ({ selectedMenu, unityContext, farmCode }) => {
       {selectedMenu === 'dashboard' && <DashBoardCards 
           farmCode={farmCode}
         />}
-      {selectedMenu === 'remote' && <RemoteControlPanel unityContext={unityContext} farmCode={farmCode}/>}
+      {selectedMenu === 'remote' && <RemoteControlPanel unityContext={unityContext} farmCode={farmCode} onAIAnalysis={onAIAnalysis}/>}
       {selectedMenu === 'ai-analysis' && <AIChatComponent />}
       {/* 알림 등은 추후 추가 */}
     </div>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { validateUserId, validatePassword } from '../utils/validation';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -38,6 +38,7 @@ const LoginPage = ({ onLogin }) => {
   const [formData, setFormData] = useState({ userId: '', password: '' });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -68,6 +69,8 @@ const LoginPage = ({ onLogin }) => {
       setIsLoading(false);
     }
   };
+
+
 
   return (
     <div style={{

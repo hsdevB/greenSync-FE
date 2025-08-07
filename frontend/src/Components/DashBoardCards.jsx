@@ -345,7 +345,7 @@ useEffect(() => {
             <div className="dashboard-card crop-card-hover" data-type="temperature">
               <div className="dashboard-card-section">
                 <Thermometer className="dashboard-card-icon red" />
-                <h3 className="dashboard-card-title">자동 제어 기준 온도</h3>
+                <h3 className="dashboard-card-title">자동 제어된 A구역 온도</h3>
               </div>
               <div className="dashboard-card-value red" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
               {temp1}
@@ -361,7 +361,7 @@ useEffect(() => {
             <div className="dashboard-card crop-card-hover" data-type="humidity">
               <div className="dashboard-card-section">
                 <Droplets className="dashboard-card-icon blue" />
-                <h3 className="dashboard-card-title">자동 제어 기준 습도</h3>
+                <h3 className="dashboard-card-title">자동 제어된 A구역 습도</h3>
               </div>
               <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
                 {humid1}
@@ -537,15 +537,15 @@ useEffect(() => {
         <div style={{ flex: 1 }}>
           <div className="dashboard-card" data-type="rain">
             <div className="dashboard-card-section">
-              <Cloud className="dashboard-card-icon blue" />
+              <Cloud className="dashboard-card-icon" />
               <h3 className="dashboard-card-title">강수여부</h3>
             </div>
-            <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              {isRain === true ? '🌧️' : isRain === false ? '☀️' : isRain}
-            </div>
-            <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
-              상태
-            </div>
+            <div className="dashboard-card-value" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+               {isRain === true ? '🌧️' : isRain === false ? '☀️' : isRain}
+           </div>
+          <div className="dashboard-card-unit" style={{ fontSize: '0.9rem', marginTop: '4px' }}>
+            
+          </div>
           </div>
         </div>
       </div>
@@ -560,8 +560,9 @@ useEffect(() => {
         <NutrientFlowChart farmCode={farmCode} />
       </div>
 
-      {/* 일일 급수량 그래프 - 주석 처리됨 */}
-      {/* 온도 차트 그래프 - 주석 처리됨 */}
+
+
+
     </div>
   );
 };

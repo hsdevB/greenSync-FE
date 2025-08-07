@@ -289,7 +289,7 @@ const WateringPlantsIcon = ({ isOn }) => (
   </svg>
 );
 
-export default function RemoteControlPanel({unityContext, farmCode}) {
+export default function RemoteControlPanel({unityContext, farmCode, onAIAnalysis}) {
   // const iotData = useIotData();
   const { sendMessage } = unityContext || {};
 
@@ -297,23 +297,56 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
     console.warn('Unity sendMessage not available yet');
   });
 
+  
   // MQTT 클라이언트 인스턴스
   const mqttClientRef = useRef(null);
+  // console.log('useEffect 시작 전, farmCode:', farmCode); 
 
   // MQTT 클라이언트 초기화
   useEffect(() => {
-    // mqttClientRef.current = new MQTTClient(farmCode);
-    mqttClientRef.current = new MQTTClient();
-    mqttClientRef.current.connect(); // 실제 브로커 주소로 변경 필요
-    
-    return () => {
+    console.log('useEffect 시작, farmCode:', farmCode); 
+    if (farmCode) {
+
+      // 기존 클라이언트 있으면 연결 먼저 끊음
       if (mqttClientRef.current) {
         mqttClientRef.current.disconnect();
       }
-    };
-  }, []);
-  // }, [farmCode]);
 
+      // 새 클라이언트 인스턴스 생성 및 연결
+      const client = new MQTTClient(farmCode);
+      mqttClientRef.current = client;
+
+      console.log('!!!!!!!!!!!!!mqtt 인스턴스 생성 및 연결 완료');
+
+      client.connect().catch(err => {
+        console.error("컴포넌트 마운트 시 MQTT 자동 연결 실패:", err);
+      });
+
+      // 컴포넌트 언마운트될 때 연결 정리
+      return () => {
+        console.log("컴포넌트 언마운트, MQTT 연결 정리");
+        client.disconnect();
+        mqttClientRef.current = null;
+      };
+    } else {
+      console.log("farmCode 없음, MQTT 연결 정리");
+    }
+
+    // mqttClientRef.current = new MQTTClient(farmCode);
+    // // mqttClientRef.current = new MQTTClient();
+    // mqttClientRef.current.connect(); // 실제 브로커 주소로 변경 필요
+
+    // // 연결 상태 체크
+    // console.log("mqtt연결: ", mqttClientRef.current.isConnected);
+    
+    // return () => {
+    //   if (mqttClientRef.current) {
+    //     mqttClientRef.current.disconnect();
+    //   }
+    // };
+  }, [farmCode]);
+
+  
   // 전역 store 업데이트 및 저장
   const {
     water, fan, ledLevel,
@@ -344,6 +377,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
 
   // 자동 모드 커스텀 훅 사용
   const { simulatedData } = useAutoMode(farmCode, sendToUnity);
+  console.log(simulatedData);
 
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
@@ -470,10 +504,10 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
     
     try {
       // 2. 백그라운드에서 API 호출
-      await deviceStatusApi.updateTemperature(farmCode, newValue);
+      // await deviceStatusApi.updateTemperature(farmCode, newValue);
       console.log("온도 변경 성공!");
       // MQTT 로직은 성공 시에만 실행하는 것이 더 안정적일 수 있음
-      if (mqttClientRef.current?.isConnected) {
+      if (mqttClientRef.current) {
         await mqttClientRef.current.blinkLed(3, fan);
       }
     } catch (error) {
@@ -495,10 +529,10 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
 
     try {
       // 2. 백그라운드 API 호출
-      await deviceStatusApi.updateHumidity(farmCode, newValue);
+      // await deviceStatusApi.updateHumidity(farmCode, newValue);
       console.log("습도 변경 성공!");
       // MQTT 로직은 성공 시에만 실행하는 것이 더 안정적일 수 있음
-      if (mqttClientRef.current?.isConnected) {
+      if (mqttClientRef.current) {
         await mqttClientRef.current.blinkLed(2, fan);
       }
     } catch (error) {
@@ -518,7 +552,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
     setWater(true);
     sendToUnity("startWater", { status: true });
 
-    if (mqttClientRef.current?.isConnected) {
+    if (mqttClientRef.current) {
       await mqttClientRef.current.blinkLed(0, fan);
     }
     // 5초 후 자동 종료
@@ -558,7 +592,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
       await deviceStatusApi.updateLed(farmCode, level);
       console.log("LED 밝기 변경 성공!");
       console.log("ledLevel: ", ledLevel);
-      if (mqttClientRef.current?.isConnected && level > 0) {
+      if (mqttClientRef.current && level > 0) {
         mqttClientRef.current.blinkLed(1, fan);
       }
     } catch (error) {
@@ -623,21 +657,21 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
 
 
         {/* 자동 모드일 때 시뮬레이션 데이터 표시 */}
-        {autoMode && (
-          <div className="realtime-data-section">
-            <div className="section-title">자동 제어 기준 데이터 (데이터확인용)</div>
-            <div className="data-grid">
-              <DataCard label="센서1 온도" value={simulatedData.sensor1?.temp || '--'} unit="℃" />
-              <DataCard label="센서1 습도" value={simulatedData.sensor1?.humid || '--'} unit="%" />
+        {/* {autoMode && ( */}
+          {/* <div className="realtime-data-section"> */}
+            {/* <div className="section-title">자동 제어 기준 데이터 (데이터확인용)</div> */}
+            {/* <div className="data-grid"> */}
+              {/* <DataCard label="센서1 온도" value={simulatedData.sensor1?.temp || '--'} unit="℃" /> */}
+              {/* <DataCard label="센서1 습도" value={simulatedData.sensor1?.humid || '--'} unit="%" /> */}
               {/* <DataCard label="센서2 온도" value={simulatedData.sensor2?.temp || '--'} unit="℃" /> */}
               {/* <DataCard label="센서2 습도" value={simulatedData.sensor2?.humid || '--'} unit="%" /> */}
               {/* <DataCard label="센서3 온도" value={simulatedData.sensor3?.temp || '--'} unit="℃" /> */}
               {/* <DataCard label="센서3 습도" value={simulatedData.sensor3?.humid || '--'} unit="%" /> */}
               {/* <DataCard label="센서4 온도" value={simulatedData.sensor4?.temp || '--'} unit="℃" /> */}
               {/* <DataCard label="센서4 습도" value={simulatedData.sensor4?.humid || '--'} unit="%" /> */}
-            </div>
-          </div>
-        )}
+            {/* </div> */}
+          {/* </div> */}
+        {/* )} */}
 
         {/* 원격제어 상태 section-title 추가 */}
         <div className="section-title">💻 원격제어 상태</div>
@@ -655,7 +689,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
           {/* AI 스마트팜 분석 버튼 추가 */}
           <div style={{ display: "flex", justifyContent: "center", margin: "12px 0" }}>
             <button
-              onClick={() => setAiModalOpen(true)}
+              onClick={onAIAnalysis}
               style={{
                 padding: "10px 24px",
                 background: "#388e3c",
@@ -772,7 +806,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
           <div className="control-card-temp-humid">
             <div className="control-card-header" style={{ gridColumn: "1 / -1", marginBottom: "16px" ,justifyContent : "center" }}>
               <span className="control-card-icon" style={{ color: "#e57373" }}>🌡️</span>
-              <span className="control-card-title" style={{ color: "#e57373" }}>온·습도 제어1</span>
+              <span className="control-card-title" style={{ color: "#e57373" }}>A구역 온·습도 제어</span>
             </div>
             
             {/* 온도 제어 섹션 */}
@@ -820,7 +854,7 @@ export default function RemoteControlPanel({unityContext, farmCode}) {
                 />
               </div>
               <div className="control-card-desc">
-                {autoMode ? `자동 제어 중 (${ledLevel ?? 0})` : `LED 밝기 제어(${ledLevel ?? 0})`}
+                {autoMode ? `자동 제어 중 (${ledLevel ?? 0})` : `LED 밝기 제어(${ledLevel ?? 0}단계)`}
               </div>
             </div>
           </div>

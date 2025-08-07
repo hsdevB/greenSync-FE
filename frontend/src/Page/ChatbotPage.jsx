@@ -12,7 +12,7 @@ function getTime() {
 const BOT_AVATAR = botAvatar;
 const USER_AVATAR = userAvatar;
 
-export default function AIChatPage() {
+export default function ChatbotPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -97,7 +97,6 @@ Always answer in natural, fluent Korean.
       }
 
       const data = await response.json();
-      // <think> 태그 제거
       const cleanResponse = data.response.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
       return cleanResponse;
     } catch (err) {
@@ -132,7 +131,6 @@ Always answer in natural, fluent Korean.
   }, [input, loading]);
 
   const handleKeyDown = useCallback((e) => {
-    // 모든 키 입력을 허용하되, Enter만 특별 처리
     if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
       e.preventDefault();
       send();
@@ -148,7 +146,6 @@ Always answer in natural, fluent Korean.
   }, []);
 
   const handleInputChange = useCallback((e) => {
-    // 모든 문자 입력 허용 (한글, 영어, 숫자, 특수문자)
     setInput(e.target.value);
   }, []);
 
@@ -156,27 +153,28 @@ Always answer in natural, fluent Korean.
     send();
   }, [send]);
 
-  const handleBackToDashboard = () => {
-    navigate('/dashboard');
+  const handleBackToLogin = () => {
+    navigate('/');
   };
 
   return (
     <div className="ai-chat-page">
       <div className="ai-chat-header">
-        <button className="back-button" onClick={handleBackToDashboard}>
-          ← 대시보드로 돌아가기
+        <button className="back-button" onClick={handleBackToLogin}>
+          ← 로그인 페이지로 돌아가기
         </button>
-        <div className="ai-chat-title">AI 어시스턴트</div>
+        <div className="ai-chat-title">챗봇</div>
       </div>
 
       <div className="ai-chat-container">
         <div className="ai-chat-content">
           {messages.length === 0 ? (
             <div className="ac-welcome-screen">
-              <div className="ac-welcome-title">무엇을 도와드릴까요?</div>
+              <div className="ac-welcome-title">안녕하세요! GreenSync AI 챗봇입니다</div>
               <div className="ac-welcome-subtitle">
-                질문하시면 AI가 답변해드립니다
+                스마트팜과 농업에 관한 질문을 자유롭게 해주세요
               </div>
+              
             </div>
           ) : (
             <div className="ac-messages-container">
@@ -217,7 +215,7 @@ Always answer in natural, fluent Korean.
               ref={inputRef}
               className="ac-input-field"
               type="text"
-              placeholder="무엇이든 물어보세요"
+              placeholder="스마트팜에 대해 궁금한 점을 물어보세요"
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
@@ -244,4 +242,4 @@ Always answer in natural, fluent Korean.
       </div>
     </div>
   );
-} 
+}
