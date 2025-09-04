@@ -27,6 +27,18 @@ public class CameraZoomController : MonoBehaviour
     private bool isRotating = false;
     private Quaternion targetRotation;
 
+    private void OnEnable()
+    {
+        // 이벤트 매니저에 이벤트 핸들러(메서드)를 등록(구독)
+        FarmEventManager.OnViewTargetRequested += HandleViewTargetRequest;
+    }
+
+    private void OnDisable()
+    {
+        // 오브젝트가 비활성화되거나 파괴될 때 등록했던 핸들러를 해제(구독 취소)
+        FarmEventManager.OnViewTargetRequested -= HandleViewTargetRequest;
+    }
+
     void Start()
     {
         defaultPosition = mainCamera.transform.position;
@@ -83,6 +95,22 @@ public class CameraZoomController : MonoBehaviour
             {
                 isRotating = false;
             }
+        }
+    }
+
+    private void HandleViewTargetRequest(FarmEventManager.ViewTarget target)
+    {
+        switch (target)
+        {
+            case FarmEventManager.ViewTarget.Fan:
+                FanView();
+                break;
+            case FarmEventManager.ViewTarget.Water:
+                WaterView();
+                break;
+            case FarmEventManager.ViewTarget.Sensor:
+                SensorView();
+                break;
         }
     }
 

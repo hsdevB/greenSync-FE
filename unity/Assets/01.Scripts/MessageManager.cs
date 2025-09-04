@@ -43,6 +43,9 @@ public class MessageManager : MonoBehaviour
     public GameObject houseTypeUI;      // 온실타입 UI
     //public GameObject debugUI;         // 디버그 정보 UI
 
+    // 이벤트 목록
+
+
     private bool isFanOn = false;
     private bool isWatering = false;
     private float wateringTimer = 0f;
@@ -281,6 +284,9 @@ public class MessageManager : MonoBehaviour
                         wateringTimer = flowDuration;
                         Debug.Log("Starting water flow");
 
+                        // 급수 시작 시 카메라 뷰 변경 요청
+                        FarmEventManager.RequestViewChange(FarmEventManager.ViewTarget.Water);
+
                         if (waterParticle != null)
                         {
                             foreach (ParticleSystem wp in waterParticle)
@@ -358,6 +364,13 @@ public class MessageManager : MonoBehaviour
                 if (jobj != null && jobj["status"] != null)
                 {
                     isFanOn = jobj["status"].ToObject<bool>();
+
+                    // 팬이 켜질 때만 카메라 뷰 변경 요청
+                    if (isFanOn)
+                    {
+                        FarmEventManager.RequestViewChange(FarmEventManager.ViewTarget.Fan);
+                    }
+
                     if (fanObject != null)
                     {
                         fanObject.SetActive(isFanOn);
@@ -379,6 +392,11 @@ public class MessageManager : MonoBehaviour
             temperatures[sensorNum] = temp; // 배열 인덱스 0-4에 저장
             Debug.Log($"Sensor {sensorNum} temperature updated to: {temp}°C");
 
+            if (sensorNum > 0)
+            {
+                FarmEventManager.RequestViewChange(FarmEventManager.ViewTarget.Sensor);
+            }
+
             // UI 업데이트 (배열 인덱스도 1-4 사용)
             if (temperatureUI != null && sensorNum < temperatureUI.Length && temperatureUI[sensorNum] != null)
             {
@@ -398,6 +416,11 @@ public class MessageManager : MonoBehaviour
             float humid = jobj["value"].ToObject<float>();
             humidities[sensorNum] = humid; // 배열 인덱스 0-4에 저장
             Debug.Log($"Sensor {sensorNum} humidity updated to: {humid}%");
+
+            if (sensorNum > 0)
+            {
+                FarmEventManager.RequestViewChange(FarmEventManager.ViewTarget.Sensor);
+            }
 
             // UI 업데이트 (배열 인덱스도 1-4 사용)
             if (humidityUI != null && sensorNum < humidityUI.Length && humidityUI[sensorNum] != null)
