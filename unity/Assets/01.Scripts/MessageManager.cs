@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Runtime.InteropServices;
 using TMPro;
 //using UnityEditor.VersionControl;
@@ -10,40 +11,40 @@ using UnityEngine;
 public class UnityDataMessage
 {
     public string name;
-    // JObject¸¦ »ç¿ëÇÏ¿© ´Ù¸¥ µ¥ÀÌÅÍ Å¸ÀÔ¿¡µµ À¯¿¬ÇÏ°Ô ´ëÃ³
+    // JObjectë¥¼ ì‚¬ìš©í•˜ì—¬ ë‹¤ë¥¸ ë°ì´í„° íƒ€ì…ì—ë„ ìœ ì—°í•˜ê²Œ ëŒ€ì²˜
     public JObject data;
 }
 
-// ³óÀå ÃÊ±âÈ­ µ¥ÀÌÅÍ ±¸Á¶ Ãß°¡
+// ë†ì¥ ì´ˆê¸°í™” ë°ì´í„° êµ¬ì¡° ì¶”ê°€
 [System.Serializable]
 public class FarmInitData
 {
     //public string farmId;
     //public string farmName;
     //public string owner;
-    public string farmType;    // "¼ö°æ", "°íÇü¹èÁö"
-    public string houseType;   // "À¯¸®", "ÇÃ¶ó½ºÆ½"
-    //public string cropType;    // "¹æ¿ïÅä¸¶Åä"
+    public string farmType;    // "ìˆ˜ê²½", "ê³ í˜•ë°°ì§€"
+    public string houseType;   // "ìœ ë¦¬", "í”Œë¼ìŠ¤í‹±"
+    //public string cropType;    // "ë°©ìš¸í† ë§ˆí† "
 }
 
 public class MessageManager : MonoBehaviour
 {
-    public GameObject fanObject; // ÆÒ È¸Àü ´ë»ó
-    public Light[] ledLights;       // ÀÏ»ç·® Á¶Àı¿ë ¶óÀÌÆ®
-    public ParticleSystem[] waterParticle;  // ±Ş¼ö Èå¸§ Ç¥Çö¿ë ÆÄÆ¼Å¬
-    public GameObject[] temperatureUI; // ¿Âµµ ÅØ½ºÆ® UI
-    public GameObject[] humidityUI;    // ½Àµµ ÅØ½ºÆ® UI
+    public GameObject fanObject; // íŒ¬ íšŒì „ ëŒ€ìƒ
+    public Light[] ledLights;       // ì¼ì‚¬ëŸ‰ ì¡°ì ˆìš© ë¼ì´íŠ¸
+    public ParticleSystem[] waterParticle;  // ê¸‰ìˆ˜ íë¦„ í‘œí˜„ìš© íŒŒí‹°í´
+    public GameObject[] temperatureUI; // ì˜¨ë„ í…ìŠ¤íŠ¸ UI
+    public GameObject[] humidityUI;    // ìŠµë„ í…ìŠ¤íŠ¸ UI
     public Material daySkybox;
     public Material nightSkybox;
 
     [Header("Farm Information UI")]
-    //public GameObject farmNameUI;      // ³óÀå¸í UI
-    //public GameObject ownerUI;         // ³óÀåÁÖ UI  
-    public GameObject farmTypeUI;      // Àç¹èÅ¸ÀÔ UI
-    public GameObject houseTypeUI;      // ¿Â½ÇÅ¸ÀÔ UI
-    //public GameObject debugUI;         // µğ¹ö±× Á¤º¸ UI
+    //public GameObject farmNameUI;      // ë†ì¥ëª… UI
+    //public GameObject ownerUI;         // ë†ì¥ì£¼ UI  
+    public GameObject farmTypeUI;      // ì¬ë°°íƒ€ì… UI
+    public GameObject houseTypeUI;      // ì˜¨ì‹¤íƒ€ì… UI
+    //public GameObject debugUI;         // ë””ë²„ê·¸ ì •ë³´ UI
 
-    // ÀÌº¥Æ® ¸ñ·Ï
+    // ì´ë²¤íŠ¸ ëª©ë¡
 
 
     private bool isFanOn = false;
@@ -53,11 +54,11 @@ public class MessageManager : MonoBehaviour
     public float flowSpeed = 1f;
     private Vector2 startOffset;
 
-    // ¼¾¼­º° ¿Âµµ/½Àµµ °ª ÀúÀå (ÀÎµ¦½º 0: main, 1-4: ¼¾¼­1-4)
+    // ì„¼ì„œë³„ ì˜¨ë„/ìŠµë„ ê°’ ì €ì¥ (ì¸ë±ìŠ¤ 0: main, 1-4: ì„¼ì„œ1-4)
     private float[] temperatures = { 0f, 25f, 25f, 25f, 25f };
     private float[] humidities = { 0f, 50f, 50f, 50f, 50f };
 
-    // ³óÀå µ¥ÀÌÅÍ ÀúÀå
+    // ë†ì¥ ë°ì´í„° ì €ì¥
     private FarmInitData currentFarmData;
 
     [DllImport("__Internal")]
@@ -65,7 +66,7 @@ public class MessageManager : MonoBehaviour
 
     void Start()
     {
-        // ÄÄÆ÷³ÍÆ® È®ÀÎ
+        // ì»´í¬ë„ŒíŠ¸ í™•ì¸
         if (temperatureUI != null)
         {
             Debug.Log("Temperature UI assigned");
@@ -93,7 +94,7 @@ public class MessageManager : MonoBehaviour
             Debug.LogError("LED Lights array is not assigned or empty!");
         }
 
-        // ÃÊ±âÈ­ ½Ã ¸ğµç ÆÄÆ¼Å¬ ½Ã½ºÅÛ Á¤Áö
+        // ì´ˆê¸°í™” ì‹œ ëª¨ë“  íŒŒí‹°í´ ì‹œìŠ¤í…œ ì •ì§€
         if (waterParticle != null)
         {
             foreach (ParticleSystem wp in waterParticle)
@@ -106,20 +107,20 @@ public class MessageManager : MonoBehaviour
             }
         }
 
-        // ÃÊ±â »óÅÂ ¼³Á¤
+        // ì´ˆê¸° ìƒíƒœ ì„¤ì •
         isWatering = false;
         wateringTimer = 0f;
 
-        // ÃÊ±â ³óÀå UI ¼³Á¤
-        //UpdateTextComponent(farmNameUI, "³óÀå ·Îµù Áß...", "³óÀå ·Îµù Áß...");
-        //UpdateTextComponent(ownerUI, "³óÀåÁÖ: ´ë±âÁß", "³óÀåÁÖ: ´ë±âÁß");
+        // ì´ˆê¸° ë†ì¥ UI ì„¤ì •
+        //UpdateTextComponent(farmNameUI, "ë†ì¥ ë¡œë”© ì¤‘...", "ë†ì¥ ë¡œë”© ì¤‘...");
+        //UpdateTextComponent(ownerUI, "ë†ì¥ì£¼: ëŒ€ê¸°ì¤‘", "ë†ì¥ì£¼: ëŒ€ê¸°ì¤‘");
         UpdateTextComponent(farmTypeUI, "Type: loading...", "Type: loading...");
         UpdateTextComponent(houseTypeUI, "Type: loading...", "Type: loading...");
     }
 
     private void CheckUIComponents()
     {
-        // ³óÀå Á¤º¸ UI Ã¼Å©
+        // ë†ì¥ ì •ë³´ UI ì²´í¬
         //Debug.Log($"Farm Name UI: {(farmNameUI != null ? "OK" : "NULL")}");
         //Debug.Log($"Owner UI: {(ownerUI != null ? "OK" : "NULL")}");
         Debug.Log($"Farm Type UI: {(farmTypeUI != null ? "OK" : "NULL")}");
@@ -133,7 +134,7 @@ public class MessageManager : MonoBehaviour
         {
             Debug.Log($"Received JSON: {json}");
 
-            // JSON ÆÄ½Ì ½Ãµµ
+            // JSON íŒŒì‹± ì‹œë„
             UnityDataMessage jsonData = JsonConvert.DeserializeObject<UnityDataMessage>(json);
 
             if (jsonData == null || jsonData.data == null)
@@ -144,16 +145,16 @@ public class MessageManager : MonoBehaviour
 
             Debug.Log($"Event name: {jsonData.name}");
 
-            // ÀÌº¥Æ® ÀÌ¸§¿¡ µû¶ó data °´Ã¼ Ã³¸®
+            // ì´ë²¤íŠ¸ ì´ë¦„ì— ë”°ë¼ data ê°ì²´ ì²˜ë¦¬
             if (jsonData.name == "INITIALIZE_FARM")
             {
-                // JObject¸¦ FarmInitData·Î º¯È¯
+                // JObjectë¥¼ FarmInitDataë¡œ ë³€í™˜
                 FarmInitData farmData = jsonData.data.ToObject<FarmInitData>();
                 InitializeFarmData(farmData);
             }
             else
             {
-                // ´Ù¸¥ ¸ğµç ÀÌº¥Æ®´Â ProcessMessage·Î Àü´Ş
+                // ë‹¤ë¥¸ ëª¨ë“  ì´ë²¤íŠ¸ëŠ” ProcessMessageë¡œ ì „ë‹¬
                 ProcessMessage(jsonData.name, jsonData.data);
             }
         }
@@ -163,19 +164,19 @@ public class MessageManager : MonoBehaviour
         }
     }
 
-    // ³óÀå ÃÊ±âÈ­ ¸Ş¼­µå Ãß°¡ (React¿¡¼­ Á÷Á¢ È£Ãâ °¡´É)
+    // ë†ì¥ ì´ˆê¸°í™” ë©”ì„œë“œ ì¶”ê°€ (Reactì—ì„œ ì§ì ‘ í˜¸ì¶œ ê°€ëŠ¥)
     public void InitializeFarmData(FarmInitData farmData)
     {
         try
         {
             currentFarmData = farmData;
-            // ³óÀå UI ¾÷µ¥ÀÌÆ®
+            // ë†ì¥ UI ì—…ë°ì´íŠ¸
             UpdateFarmUI(farmData);
         }
         catch (Exception e)
         {
-            Debug.LogError($"³óÀå ÃÊ±âÈ­ ½ÇÆĞ: {e.Message}");
-            //UpdateTextComponent(debugUI, $"ÃÊ±âÈ­ ½ÇÆĞ: {e.Message}", $"ÃÊ±âÈ­ ½ÇÆĞ: {e.Message}");
+            Debug.LogError($"ë†ì¥ ì´ˆê¸°í™” ì‹¤íŒ¨: {e.Message}");
+            //UpdateTextComponent(debugUI, $"ì´ˆê¸°í™” ì‹¤íŒ¨: {e.Message}", $"ì´ˆê¸°í™” ì‹¤íŒ¨: {e.Message}");
         }
     }
 
@@ -183,7 +184,7 @@ public class MessageManager : MonoBehaviour
     {
         try
         {
-            Debug.Log("³óÀå UI ¾÷µ¥ÀÌÆ® ½ÃÀÛ...");
+            Debug.Log("ë†ì¥ UI ì—…ë°ì´íŠ¸ ì‹œì‘...");
 
             //if (farmNameUI != null)
             //{
@@ -191,7 +192,7 @@ public class MessageManager : MonoBehaviour
             //}
             //else
             //{
-            //    Debug.LogWarning("farmNameUI°¡ ÇÒ´çµÇÁö ¾ÊÀ½");
+            //    Debug.LogWarning("farmNameUIê°€ í• ë‹¹ë˜ì§€ ì•ŠìŒ");
             //}
 
             //if (ownerUI != null)
@@ -201,7 +202,7 @@ public class MessageManager : MonoBehaviour
             //}
             //else
             //{
-            //    Debug.LogWarning("ownerUI°¡ ÇÒ´çµÇÁö ¾ÊÀ½");
+            //    Debug.LogWarning("ownerUIê°€ í• ë‹¹ë˜ì§€ ì•ŠìŒ");
             //}
 
             if (farmTypeUI != null)
@@ -212,7 +213,7 @@ public class MessageManager : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("farmTypeUI°¡ ÇÒ´çµÇÁö ¾ÊÀ½");
+                Debug.LogWarning("farmTypeUIê°€ í• ë‹¹ë˜ì§€ ì•ŠìŒ");
             }
 
             if (houseTypeUI != null)
@@ -223,14 +224,14 @@ public class MessageManager : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("farmTypeUI°¡ ÇÒ´çµÇÁö ¾ÊÀ½");
+                Debug.LogWarning("farmTypeUIê°€ í• ë‹¹ë˜ì§€ ì•ŠìŒ");
             }
 
-            Debug.Log("¸ğµç ³óÀå UI ¾÷µ¥ÀÌÆ® ¿Ï·á");
+            Debug.Log("ëª¨ë“  ë†ì¥ UI ì—…ë°ì´íŠ¸ ì™„ë£Œ");
         }
         catch (Exception e)
         {
-            Debug.LogError($"³óÀå UI ¾÷µ¥ÀÌÆ® ½ÇÆĞ: {e.Message}");
+            Debug.LogError($"ë†ì¥ UI ì—…ë°ì´íŠ¸ ì‹¤íŒ¨: {e.Message}");
         }
     }
 
@@ -277,28 +278,19 @@ public class MessageManager : MonoBehaviour
                     bool waterStatus = jobj["status"].ToObject<bool>();
                     Debug.Log($"Water control: {waterStatus}");
 
-                    // ±Ş¼ö ½ÃÀÛ Á¶°Ç: ¿äÃ»ÀÌ trueÀÌ°í ÇöÀç ±Ş¼ö ÁßÀÌ ¾Æ´Ò ¶§¸¸
+                    // ê¸‰ìˆ˜ ì‹œì‘ ì¡°ê±´: ìš”ì²­ì´ trueì´ê³  í˜„ì¬ ê¸‰ìˆ˜ ì¤‘ì´ ì•„ë‹ ë•Œë§Œ
                     if (waterStatus && !isWatering)
                     {
                         isWatering = true;
                         wateringTimer = flowDuration;
                         Debug.Log("Starting water flow");
 
-                        // ±Ş¼ö ½ÃÀÛ ½Ã Ä«¸Ş¶ó ºä º¯°æ ¿äÃ»
+                        // ê¸‰ìˆ˜ ì‹œì‘ ì‹œ ì¹´ë©”ë¼ ë·° ë³€ê²½ ìš”ì²­
                         FarmEventManager.RequestViewChange(FarmEventManager.ViewTarget.Water);
 
-                        if (waterParticle != null)
-                        {
-                            foreach (ParticleSystem wp in waterParticle)
-                            {
-                                if (wp != null)
-                                {
-                                    wp.Play();
-                                }
-                            }
-                        }
+                        StartCoroutine(StartWaterFlowAfterDelay(2f));
                     }
-                    // ±Ş¼ö ÁßÁö ¿äÃ»
+                    // ê¸‰ìˆ˜ ì¤‘ì§€ ìš”ì²­
                     else if (!waterStatus && isWatering)
                     {
                         isWatering = false;
@@ -341,7 +333,7 @@ public class MessageManager : MonoBehaviour
                         {
                             if (ledLights[i] != null)
                             {
-                                // 0,1,2,3 ·¹º§À» 0.0, 0.5, 1.0, 1.5 intensity·Î ¸ÅÇÎ
+                                // 0,1,2,3 ë ˆë²¨ì„ 0.0, 0.5, 1.0, 1.5 intensityë¡œ ë§¤í•‘
                                 float intensity = level * 0.5f;
                                 float previousIntensity = ledLights[i].intensity;
                                 ledLights[i].intensity = intensity;
@@ -365,7 +357,7 @@ public class MessageManager : MonoBehaviour
                 {
                     isFanOn = jobj["status"].ToObject<bool>();
 
-                    // ÆÒÀÌ ÄÑÁú ¶§¸¸ Ä«¸Ş¶ó ºä º¯°æ ¿äÃ»
+                    // íŒ¬ì´ ì¼œì§ˆ ë•Œë§Œ ì¹´ë©”ë¼ ë·° ë³€ê²½ ìš”ì²­
                     if (isFanOn)
                     {
                         FarmEventManager.RequestViewChange(FarmEventManager.ViewTarget.Fan);
@@ -389,18 +381,18 @@ public class MessageManager : MonoBehaviour
         if (jobj != null && jobj["value"] != null)
         {
             float temp = jobj["value"].ToObject<float>();
-            temperatures[sensorNum] = temp; // ¹è¿­ ÀÎµ¦½º 0-4¿¡ ÀúÀå
-            Debug.Log($"Sensor {sensorNum} temperature updated to: {temp}¡ÆC");
+            temperatures[sensorNum] = temp; // ë°°ì—´ ì¸ë±ìŠ¤ 0-4ì— ì €ì¥
+            Debug.Log($"Sensor {sensorNum} temperature updated to: {temp}Â°C");
 
             if (sensorNum > 0)
             {
                 FarmEventManager.RequestViewChange(FarmEventManager.ViewTarget.Sensor);
             }
 
-            // UI ¾÷µ¥ÀÌÆ® (¹è¿­ ÀÎµ¦½ºµµ 1-4 »ç¿ë)
+            // UI ì—…ë°ì´íŠ¸ (ë°°ì—´ ì¸ë±ìŠ¤ë„ 1-4 ì‚¬ìš©)
             if (temperatureUI != null && sensorNum < temperatureUI.Length && temperatureUI[sensorNum] != null)
             {
-                UpdateTextComponent(temperatureUI[sensorNum], $"{temp}¡ÆC", $"¼¾¼­{sensorNum} ¿Âµµ: {temp}¡ÆC");
+                UpdateTextComponent(temperatureUI[sensorNum], $"{temp}Â°C", $"ì„¼ì„œ{sensorNum} ì˜¨ë„: {temp}Â°C");
             }
             else
             {
@@ -414,7 +406,7 @@ public class MessageManager : MonoBehaviour
         if (jobj != null && jobj["value"] != null)
         {
             float humid = jobj["value"].ToObject<float>();
-            humidities[sensorNum] = humid; // ¹è¿­ ÀÎµ¦½º 0-4¿¡ ÀúÀå
+            humidities[sensorNum] = humid; // ë°°ì—´ ì¸ë±ìŠ¤ 0-4ì— ì €ì¥
             Debug.Log($"Sensor {sensorNum} humidity updated to: {humid}%");
 
             if (sensorNum > 0)
@@ -422,10 +414,10 @@ public class MessageManager : MonoBehaviour
                 FarmEventManager.RequestViewChange(FarmEventManager.ViewTarget.Sensor);
             }
 
-            // UI ¾÷µ¥ÀÌÆ® (¹è¿­ ÀÎµ¦½ºµµ 1-4 »ç¿ë)
+            // UI ì—…ë°ì´íŠ¸ (ë°°ì—´ ì¸ë±ìŠ¤ë„ 1-4 ì‚¬ìš©)
             if (humidityUI != null && sensorNum < humidityUI.Length && humidityUI[sensorNum] != null)
             {
-                UpdateTextComponent(humidityUI[sensorNum], $"{humid}%", $"¼¾¼­{sensorNum} ½Àµµ: {humid}%");
+                UpdateTextComponent(humidityUI[sensorNum], $"{humid}%", $"ì„¼ì„œ{sensorNum} ìŠµë„: {humid}%");
             }
             else
             {
@@ -440,7 +432,7 @@ public class MessageManager : MonoBehaviour
         {
             if (temperatureUI != null && i < temperatureUI.Length && temperatureUI[i] != null)
             {
-                UpdateTextComponent(temperatureUI[i], $"{temperatures[i]}¡ÆC", $"¼¾¼­{i} ¿Âµµ: {temperatures[i]}¡ÆC");
+                UpdateTextComponent(temperatureUI[i], $"{temperatures[i]}Â°C", $"ì„¼ì„œ{i} ì˜¨ë„: {temperatures[i]}Â°C");
             }
         }
     }
@@ -451,14 +443,14 @@ public class MessageManager : MonoBehaviour
         {
             if (humidityUI != null && i < humidityUI.Length && humidityUI[i] != null)
             {
-                UpdateTextComponent(humidityUI[i], $"{humidities[i]}%", $"¼¾¼­{i} ½Àµµ: {humidities[i]}%");
+                UpdateTextComponent(humidityUI[i], $"{humidities[i]}%", $"ì„¼ì„œ{i} ìŠµë„: {humidities[i]}%");
             }
         }
     }
 
     private void UpdateTextComponent(GameObject uiObject, string simpleText, string detailedText)
     {
-        // TextMeshProUGUI ÄÄÆ÷³ÍÆ® (UI Canvas¿ë)
+        // TextMeshProUGUI ì»´í¬ë„ŒíŠ¸ (UI Canvasìš©)
         TextMeshProUGUI textMeshProUI = uiObject.GetComponent<TextMeshProUGUI>();
         if (textMeshProUI != null)
         {
@@ -467,7 +459,7 @@ public class MessageManager : MonoBehaviour
             return;
         }
 
-        // TextMeshPro ÄÄÆ÷³ÍÆ® (3D World Space¿ë)
+        // TextMeshPro ì»´í¬ë„ŒíŠ¸ (3D World Spaceìš©)
         TextMeshPro textMeshPro = uiObject.GetComponent<TextMeshPro>();
         if (textMeshPro != null)
         {
@@ -476,7 +468,7 @@ public class MessageManager : MonoBehaviour
             return;
         }
 
-        // ±âº» UI Text ÄÄÆ÷³ÍÆ® (Legacy)
+        // ê¸°ë³¸ UI Text ì»´í¬ë„ŒíŠ¸ (Legacy)
         UnityEngine.UI.Text legacyText = uiObject.GetComponent<UnityEngine.UI.Text>();
         if (legacyText != null)
         {
@@ -488,9 +480,29 @@ public class MessageManager : MonoBehaviour
         Debug.LogError($"No TextMeshProUGUI, TextMeshPro, or UI Text component found on {uiObject.name}");
     }
 
+    private IEnumerator StartWaterFlowAfterDelay(float delay)
+    {
+        // ì§€ì •ëœ ì‹œê°„(ì´ˆ)ë§Œí¼ ëŒ€ê¸°í•©ë‹ˆë‹¤.
+        yield return new WaitForSeconds(delay);
+
+        Debug.Log($"Delay of {delay}s finished. Playing water particles.");
+
+        // íŒŒí‹°í´ ì‹œìŠ¤í…œì„ ì¬ìƒí•©ë‹ˆë‹¤.
+        if (waterParticle != null)
+        {
+            foreach (ParticleSystem wp in waterParticle)
+            {
+                if (wp != null)
+                {
+                    wp.Play();
+                }
+            }
+        }
+    }
+
     void Update()
     {
-        // ±Ş¼ö Å¸ÀÌ¸Ó Ã³¸®
+        // ê¸‰ìˆ˜ íƒ€ì´ë¨¸ ì²˜ë¦¬
         if (isWatering)
         {
             wateringTimer -= Time.deltaTime;
@@ -510,7 +522,7 @@ public class MessageManager : MonoBehaviour
             }
         }
 
-        // ÆÒ È¸Àü
+        // íŒ¬ íšŒì „
         if (isFanOn && fanObject != null)
         {
             fanObject.transform.Rotate(Vector3.forward * 200 * Time.deltaTime);
