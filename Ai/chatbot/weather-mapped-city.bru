@@ -1,0 +1,18 @@
+meta {
+  name: Weather Mapped City API Test
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/weather/mapped/seoul
+  query: {
+    farmId: 1
+  }
+  auth: inherit
+}
+
+docs {
+  Weather API의 /mapped/seoul 엔드포인트 테스트
+  서울 날씨 데이터를 농장 ID와 함께 조회
+} 

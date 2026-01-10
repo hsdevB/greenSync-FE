@@ -1,0 +1,61 @@
+meta {
+  name: "FarmCode Generation POST"
+  type: "http"
+  seq: 2
+}
+
+post {
+  url: "http://localhost:3000/api/farm"
+  body: json {
+    farmType: "토마토"
+    houseType: "비닐하우스"
+  }
+  auth: {
+    type: "bearer"
+    token: "{{jwt_token}}"
+  }
+}
+
+headers {
+  Content-Type: "application/json"
+  Accept: "application/json"
+}
+
+docs {
+  name: "Farm Creation with FarmCode"
+  description: "농장 정보와 함께 농장 코드를 생성하는 API"
+  request: {
+    method: "POST"
+    url: "http://localhost:3000/api/farm"
+    body: {
+      farmType: "토마토"
+      houseType: "비닐하우스"
+    }
+    description: "농장 타입과 하우스 타입을 지정하여 농장을 생성합니다."
+  }
+  response: {
+    success: {
+      status: 201
+      body: {
+        success: true
+        message: "농장이 성공적으로 생성되었습니다."
+        data: {
+          farmId: 1
+          farmCode: "FARM123456"
+          farmType: "토마토"
+          houseType: "비닐하우스"
+          createdAt: "2024-01-01T00:00:00.000Z"
+        }
+      }
+      description: "농장이 성공적으로 생성됨"
+    }
+    error: {
+      status: 400
+      body: {
+        success: false
+        message: "잘못된 요청입니다."
+      }
+      description: "잘못된 데이터 형식"
+    }
+  }
+} 

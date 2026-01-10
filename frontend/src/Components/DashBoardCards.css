@@ -14,6 +14,31 @@
   background: #f3f4f6;
 }
 
+/* 스크롤바 스타일 - 원격제어와 동일 */
+.dashboard-cards-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.dashboard-cards-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.dashboard-cards-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.dashboard-cards-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Firefox 스크롤바 스타일 */
+.dashboard-cards-container {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
 .dashboard-cards-container {
   width: 100%;
   max-width: 1500px;   /* 최대 너비 지정 */
@@ -22,8 +47,9 @@
   min-width: 0;
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 0;
+  padding: 0 8px; /* 원격제어와 동일한 패딩 추가 */
   /* background: #f3f4f6; */
+  overflow-x: scroll; /* 원격제어와 동일한 스크롤바 추가 - 항상 표시 */
 }
 
 .dashboard-single-card-row {

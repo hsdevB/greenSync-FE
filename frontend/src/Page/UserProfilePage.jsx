@@ -33,10 +33,12 @@ const UserProfilePage = () => {
   const [isImageEditing, setIsImageEditing] = useState(false);
   const fileInputRef = useRef(null);
 
+
+
   // 사용자 정보 로드 (실제로는 API 호출)
   useEffect(() => {
     // TODO: API에서 사용자 정보 로드
-    console.log("사용자 정보 로드");
+    //console.log("사용자 정보 로드");
     
     // 농장 코드가 없으면 생성
     if (!userInfo.farmCode) {
@@ -444,6 +446,7 @@ const UserProfilePage = () => {
                   <Shield size={16} />
                   비밀번호 변경
                 </button>
+
               </>
             ) : (
               <div style={{ display: "flex", gap: "8px" }}>
@@ -636,55 +639,29 @@ const UserProfilePage = () => {
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "70%" }}>
                       <input
                         type="text"
-                        value={isEditing ? editData.farmCode : userInfo.farmCode}
-                        onChange={(e) => {
-                          const newCode = e.target.value.toUpperCase();
-                          setEditData({...editData, farmCode: newCode});
-                        }}
-                        disabled={!isEditing}
+                        value={userInfo.farmCode}
+                        disabled={true}
                         style={{
                           flex: 1,
                           padding: "8px 12px",
                           border: "1px solid #ddd",
                           borderRadius: "4px",
                           fontSize: "14px",
-                          background: isEditing ? "white" : "#f5f5f5",
+                          background: "#f5f5f5",
                           fontFamily: "monospace",
-                          letterSpacing: "1px"
+                          letterSpacing: "1px",
+                          color: "#666"
                         }}
-                        placeholder={isEditing ? "농장 코드를 입력하세요" : ""}
+                        placeholder="농장 코드"
                       />
-                      {isEditing && (
-                        <button
-                          onClick={generateFarmCode}
-                          style={{
-                            padding: "8px 12px",
-                            background: "#4CAF50",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            whiteSpace: "nowrap"
-                          }}
-                          title="새 농장 코드 생성"
-                        >
-                          생성
-                        </button>
-                      )}
                     </div>
-                    {isEditing && editData.farmCode && (
-                      <div style={{
-                        fontSize: "11px",
-                        color: validateFarmCode(editData.farmCode) ? "#4CAF50" : "#f44336",
-                        marginTop: "4px"
-                      }}>
-                        {validateFarmCode(editData.farmCode) 
-                          ? "✓ 유효한 농장 코드입니다" 
-                          : "✗ 유효하지 않은 농장 코드입니다"
-                        }
-                      </div>
-                    )}
+                    <div style={{
+                      fontSize: "11px",
+                      color: "#666",
+                      marginTop: "4px"
+                    }}>
+                      {/* 농장 코드는 수정할 수 없습니다 */}
+                    </div>
                   </div>
                 </div>
 
@@ -936,6 +913,8 @@ const UserProfilePage = () => {
         accept="image/*"
         style={{ display: "none" }}
       />
+
+
     </div>
   );
 };

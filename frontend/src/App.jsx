@@ -7,16 +7,19 @@ import Dashboard from './Components/DashBoard';
 import MainPage from './Page/MainPage';
 import LoginPage from './Page/LoginPage';
 import SignupPage from './Page/SignupPage';
+import AIChatBotPage from './Page/AIChatBotPage';
+
 import CropControlUI from './Components/CropControlUI';
 import AIAnalysisModal from './Components/AIAnalysisModal';
 import UserProfilePage from './Page/UserProfilePage';
-import Chatbot from './Components/Chatbot';
+
 import { IotDataProvider } from './api/IotDataProvider.jsx';
 import { UserProvider } from './store/useUserStore.jsx';
 import { MQTTProvider } from './hooks/MQTTProvider';
 import axios from 'axios';
 import './App.css';
 import DashBoardCards from './Components/DashBoardCards.jsx';
+import NutrientFlowChart from './Components/NutrientFlowChart.jsx';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const API_LOGIN_API = import.meta.env.VITE_LOGIN_API;
@@ -51,30 +54,34 @@ function getCurrentTimeString() {
   return `${year}년 ${month}월 ${date}일 ${days[day]}요일 ${ampm} ${hour}:${min}`;
 }
 
-function DashboardLayout({ farmCode, farmType, houseType, onLogout }) {
+function DashboardLayout({ farmCode, farmType, houseType, onLogout, onNavigateToChatbot }) {
   // 기존 대시보드 레이아웃을 별도 컴포넌트로 분리
   const unityContext = useSharedUnityContext(farmCode, farmType, houseType);
-  const [selectedMenu, setSelectedMenu] = React.useState('dashboard');
-  const [showAIModal, setShowAIModal] = React.useState(false);
-  const [showChatbot, setShowChatbot] = React.useState(false);
+  const [selectedMenu, setSelectedMenu] = useState('dashboard');
+  const [showAIModal, setShowAIModal] = useState(false);
   
   const handleMenuSelect = (menu) => {
     setSelectedMenu(menu);
-    // AI 분석 버튼 클릭 시 채팅봇 열기
-    if (menu === 'ai-analysis') {
-      setShowChatbot(true);
-    }
   };
 
   const handleAIModalClose = () => {
     setShowAIModal(false);
-    // AI 분석 모달이 닫혀도 selectedMenu는 'ai-analysis'로 유지
-    setSelectedMenu('ai-analysis');
+    // AI 분석 모달이 닫힐 때 원격제어 탭으로 이동
+    setSelectedMenu('remote');
   };
 
-  const handleChatbotClose = () => {
-    setShowChatbot(false);
-    setSelectedMenu('dashboard'); // 채팅봇 닫을 때 대시보드로 돌아가기
+  const handleAIAnalysis = () => {
+    setShowAIModal(true);
+  };
+  
+6  // 메뉴 이름 매핑 함수
+  const getMenuTitle = (menu) => {
+    const menuTitles = {
+      'dashboard': '대시보드',
+      'remote': '원격제어',
+      'ai-analysis': '챗봇'
+    };
+    return menuTitles[menu] || '대시보드';
   };
   
   return (
@@ -85,12 +92,13 @@ function DashboardLayout({ farmCode, farmType, houseType, onLogout }) {
           selected={selectedMenu}
           onSelect={handleMenuSelect}
           onLogout={onLogout}
+          onNavigateToChatbot={onNavigateToChatbot}
           // farmData={farmData}
         />
         {/* 상단 고정된 대시보드 헤더 */}
         <div className="dashboard-header-fixed">
           <div className="dashboard-header-content">
-            <div className="dashboard-title">대시보드</div>
+            <div className="dashboard-title">{getMenuTitle(selectedMenu)}</div>
             <div className="dashboard-time">{getCurrentTimeString()}</div>
           </div>
         </div>
@@ -124,10 +132,10 @@ function DashboardLayout({ farmCode, farmType, houseType, onLogout }) {
                     console.error('Unity 에러:', error);
                   }}
                   onProgress={(progress) => {
-                    console.log('Unity 로딩 진행률:', progress);
+                    //console.log('Unity 로딩 진행률:', progress);
                   }}
                   onInitialized={() => {
-                    console.log('Unity 초기화 완료!');
+                    //console.log('Unity 초기화 완료!');
                   }}
                 />
                 {/* Unity 로딩 오버레이 */}
@@ -160,6 +168,7 @@ function DashboardLayout({ farmCode, farmType, houseType, onLogout }) {
                 selectedMenu={selectedMenu} 
                 unityContext={unityContext} 
                 farmCode={farmCode}
+                onAIAnalysis={handleAIAnalysis}
               />
             </main>
           </div>
@@ -169,21 +178,8 @@ function DashboardLayout({ farmCode, farmType, houseType, onLogout }) {
         <AIAnalysisModal 
           isOpen={showAIModal}
           onClose={handleAIModalClose}
-          farmId="farm001"
-        />
-
-        {/* AI 분석 채팅봇 */}
-        <Chatbot 
-          isOpen={showChatbot}
-          onClose={handleChatbotClose}
-          sidebar={
-            <Sidebar
-              selected={selectedMenu}
-              onSelect={handleMenuSelect}
-              onLogout={onLogout}
-              // farmData={farmData}
-            />
-          }
+          // farmId="farm001"
+          farmCode={farmCode}
         />
       </div>
     </MQTTProvider>
@@ -277,6 +273,10 @@ function AppContent() {
     navigate('/login', { replace: true });
   };
 
+  const handleNavigateToChatbot = () => {
+    navigate('/ai-chatbot');
+  };
+
   if (isLoading) {
     return <div>로딩 중...</div>;
   }
@@ -288,20 +288,24 @@ function AppContent() {
         <Route path="/" element={<MainPage />} />
         <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
         <Route path="/signup" element={<SignupPage onNavigate={navigate}/>} />
+        <Route path="/ai-chatbot" element={<AIChatBotPage />} />
+
         <Route path="*" element={<LoginPage onLogin={handleLogin} />} />
       </Routes>
     );
   }
 
   // 로그인된 상태에서의 라우팅
-  if (isLoggedIn ) {
+  if (isLoggedIn) {
     return (
       <Routes>
-        <Route path="/dashboard" element={<DashboardLayout farmType={farmType} houseType={houseType} farmCode={farmCode} onLogout={handleLogout} />} />
+        <Route path="/dashboard" element={<DashboardLayout farmType={farmType} houseType={houseType} farmCode={farmCode} onLogout={handleLogout} onNavigateToChatbot={handleNavigateToChatbot} />} />
         <Route path="/user-profile" element={<UserProfilePage />} />
         <Route path="/crop-control" element={<CropControlUI />} />
-        <Route path="*" element={<DashboardLayout farmType={farmType} houseType={houseType} farmCode={farmCode} onLogout={handleLogout} />} />
-        <Route path="*" element={<DashBoardCards farmCode={farmCode}/>} />
+        <Route path="/ai-chatbot" element={<AIChatBotPage />} />
+        <Route path="*" element={<DashboardLayout farmType={farmType} houseType={houseType} farmCode={farmCode} onLogout={handleLogout} onNavigateToChatbot={handleNavigateToChatbot} />} />
+        {/* <Route path="*" element={<DashBoardCards farmCode={farmCode}/>} />
+        <Route path="*" element={<NutrientFlowChart farmCode={farmCode}/>} /> */}
       </Routes>
     );
   }
@@ -312,6 +316,7 @@ function AppContent() {
       <Route path="/" element={<MainPage />} />
       <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
       <Route path="/signup" element={<SignupPage onNavigate={navigate}/>} />
+      <Route path="/ai-chatbot" element={<AIChatBotPage />} />
       <Route path="*" element={<LoginPage onLogin={handleLogin} />} />
     </Routes>
   );

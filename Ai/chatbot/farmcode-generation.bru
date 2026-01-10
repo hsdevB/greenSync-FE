@@ -1,0 +1,51 @@
+meta {
+  name: "FarmCode Generation"
+  type: "http"
+  seq: 1
+}
+
+get {
+  url: "http://localhost:3000/api/farm/farmcode"
+  body: none
+  auth: {
+    type: "bearer"
+    token: "{{jwt_token}}"
+  }
+}
+
+headers {
+  Content-Type: "application/json"
+  Accept: "application/json"
+}
+
+docs {
+  name: "FarmCode Generation API"
+  description: "농장 코드를 생성하고 발급하는 API"
+  request: {
+    method: "GET"
+    url: "http://localhost:3000/api/farm/farmcode"
+    description: "새로운 농장 코드를 생성합니다."
+  }
+  response: {
+    success: {
+      status: 200
+      body: {
+        success: true
+        message: "농장코드가 성공적으로 생성되었습니다."
+        data: {
+          farmId: 1
+          farmCode: "FARM123456"
+        }
+      }
+      description: "농장 코드가 성공적으로 생성됨"
+    }
+    error: {
+      status: 500
+      body: {
+        success: false
+        message: "농장코드 생성 중 오류가 발생했습니다."
+      }
+      description: "서버 오류 또는 데이터베이스 오류"
+    }
+  }
+} 

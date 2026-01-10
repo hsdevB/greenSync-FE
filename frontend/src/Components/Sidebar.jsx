@@ -1,10 +1,10 @@
 // src/Components/Sidebar.jsx
-import { User, BarChart3, Settings, Users, Brain } from "lucide-react";
+import { User, BarChart3, Settings, Users, Brain, MessageCircle } from "lucide-react";
 import React from "react";
 import { useUserStore } from "../store/useUserStore.jsx";
 import "./Sidebar.css";
 
-const Sidebar = ({ selected, onSelect, onLogout }) => {
+const Sidebar = ({ selected, onSelect, onLogout, onCloseChatbot, onNavigateToChatbot }) => {
   const { userInfo } = useUserStore();
   
   return (
@@ -52,7 +52,10 @@ const Sidebar = ({ selected, onSelect, onLogout }) => {
           <li>
             <button
               className={`sidebar-menu-btn${selected === 'dashboard' ? ' selected' : ''}`}
-              onClick={() => onSelect && onSelect('dashboard')}
+              onClick={() => {
+                onSelect && onSelect('dashboard');
+                onCloseChatbot && onCloseChatbot();
+              }}
             >
               <BarChart3 className="sidebar-menu-icon" /> 대시보드
             </button>
@@ -60,19 +63,30 @@ const Sidebar = ({ selected, onSelect, onLogout }) => {
           <li>
             <button
               className={`sidebar-menu-btn${selected === 'remote' ? ' selected' : ''}`}
-              onClick={() => onSelect && onSelect('remote')}
+              onClick={() => {
+                onSelect && onSelect('remote');
+                onCloseChatbot && onCloseChatbot();
+              }}
             >
               <Settings className="sidebar-menu-icon" /> 원격제어
             </button>
           </li>
           <li></li>
-          <li>
+          {/* <li>
             <button
               className={`sidebar-menu-btn${selected === 'ai-analysis' ? ' selected' : ''}`}
               data-menu="ai-analysis"
               onClick={() => onSelect && onSelect('ai-analysis')}
             >
-              <Brain className="sidebar-menu-icon" /> 챗봇
+              <Brain className="sidebar-menu-icon" /> AI 분석
+            </button>
+          </li> */}
+          <li>
+            <button
+              className="sidebar-menu-btn"
+              onClick={() => onNavigateToChatbot && onNavigateToChatbot()}
+            >
+              <MessageCircle className="sidebar-menu-icon" /> 챗봇
             </button>
           </li>
         </ul>

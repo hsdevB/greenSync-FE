@@ -14,7 +14,7 @@ import {
 } from "chart.js";
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-const WS_URL = "ws://192.168.0.10:3001"; // 실제 WebSocket 주소로 변경
+const WS_URL = "ws://192.168.0.33:3001"; // 실제 WebSocket 주소로 변경
 
 export default function RealTimeLineChart() {
   const iotData = useIotWebSocket(WS_URL);

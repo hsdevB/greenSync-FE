@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { validateUserId, validatePassword, validateEmail, validateName, validatePhoneNumber } from '../utils/validation';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useUserStore } from '../store/useUserStore.jsx';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const API_SIGNUP = import.meta.env.VITE_SIGNUP_API;
@@ -36,6 +37,7 @@ apiClient.interceptors.response.use(
 
 const SignupPage = () => {
   const navigate = useNavigate();
+  const { updateUserInfo } = useUserStore();
   const [role, setRole] = useState("admin"); 
   const [formData, setFormData] = useState({
     userId: '',
@@ -262,7 +264,21 @@ const SignupPage = () => {
         signupData.houseType = formData.houseType;
       }
       
-      await apiClient.post(`${API_SIGNUP}`, signupData);
+      const response = await apiClient.post(`${API_SIGNUP}`, signupData);
+      
+      // 회원가입 성공 시 사용자 정보를 UserStore에 저장 2025-08-04
+      const newUserInfo = {
+        userId: formData.userId,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phoneNumber,
+        role: role,
+        farmCode: formData.farmCode,
+        joinDate: new Date().toISOString().split('T')[0], // 오늘 날짜
+        profileImage: null
+      };
+      
+      updateUserInfo(newUserInfo);
       
       // 성공 시 로그인 페이지로 이동
       navigate('/login');

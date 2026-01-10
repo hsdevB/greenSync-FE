@@ -1,10 +1,10 @@
 import React from 'react';
 import DashBoardCards from './DashBoardCards';
-import DashBoardCardsTest from './DashBoardCardsTest';
 import RemoteControlPanel from './RemoteControlPanel';
+import AIChatComponent from './AIChatComponent';
 import './DashBoard.css';
 
-const Dashboard = ({ selectedMenu, unityContext, farmCode }) => {
+const Dashboard = ({ selectedMenu, unityContext, farmCode, onAIAnalysis }) => {
   // 디버깅을 위한 콘솔 로그
   console.log('Dashboard selectedMenu:', selectedMenu);
   console.log('showChatbot:', selectedMenu === 'ai-analysis');
@@ -18,12 +18,9 @@ const Dashboard = ({ selectedMenu, unityContext, farmCode }) => {
       {selectedMenu === 'dashboard' && <DashBoardCards 
           farmCode={farmCode}
         />}
-      {selectedMenu === 'dashboard-test' && <DashBoardCardsTest unityContext={unityContext}/>}
-      {selectedMenu === 'remote' && <RemoteControlPanel unityContext={unityContext} farmCode={farmCode}/>}
-      {/* AI 분석은 사이드바에서 처리됨 */}
+      {selectedMenu === 'remote' && <RemoteControlPanel unityContext={unityContext} farmCode={farmCode} onAIAnalysis={onAIAnalysis}/>}
+      {selectedMenu === 'ai-analysis' && <AIChatComponent />}
       {/* 알림 등은 추후 추가 */}
-      
-      {/* AI 분석은 사이드바에서 처리됨 */}
     </div>
   );
 };

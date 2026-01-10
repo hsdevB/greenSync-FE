@@ -191,7 +191,7 @@ useEffect(() => {
   const fetchInsolation = async () => {
     try {
       const res = await axios.get(`/weather/mapped`);
-      console.log("Insolation response: ", res.data);
+      //console.log("Insolation response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setInsolation(res.data);
       } else if (res.data && res.data.data && res.data.data.insolation) {
@@ -216,7 +216,7 @@ useEffect(() => {
   const fetchWindDirection = async () => {
     try {
       const res = await axios.get(`/weather/mapped`);
-      console.log("Wind Direction response: ", res.data);
+      //console.log("Wind Direction response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setWindDirection(res.data);
       } else if (res.data && res.data.data && res.data.data.windDirection) {
@@ -240,7 +240,7 @@ useEffect(() => {
   const fetchWindSpeed = async () => {
     try {
       const res = await axios.get(`/weather/mapped`);
-      console.log("Wind Speed response: ", res.data);
+      //console.log("Wind Speed response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setWindSpeed(res.data);
       } else if (res.data && res.data.data && res.data.data.windSpeed) {
@@ -264,7 +264,7 @@ useEffect(() => {
   const fetchDewPoint = async () => {
     try {
       const res = await axios.get(`/weather/mapped`);
-      console.log("Dew Point response: ", res.data);
+      //console.log("Dew Point response: ", res.data);
       if (res.data && typeof res.data === 'number') {
         setDewPoint(res.data);
       } else if (res.data && res.data.data && res.data.data.dewPoint) {
@@ -289,13 +289,16 @@ useEffect(() => {
     try {
       const res = await axios.get(`/weather/mapped`);
       console.log("Is Rain response: ", res.data);
+      console.log("Response structure: ", JSON.stringify(res.data, null, 2));
+      
       if (res.data && typeof res.data === 'number') {
         setIsRain(res.data);
-      } else if (res.data && res.data.data && res.data.data.isRain) {
+      } else if (res.data && res.data.data && res.data.data.isRain !== undefined) {
         setIsRain(res.data.data.isRain);
-      } else if (res.data && res.data.isRain) {
+      } else if (res.data && res.data.isRain !== undefined) {
         setIsRain(res.data.isRain);
       } else {
+        console.log("No isRain data found in response");
         setIsRain('--');
       }
     } catch (e) {
@@ -342,7 +345,7 @@ useEffect(() => {
             <div className="dashboard-card crop-card-hover" data-type="temperature">
               <div className="dashboard-card-section">
                 <Thermometer className="dashboard-card-icon red" />
-                <h3 className="dashboard-card-title">자동 제어 기준 온도</h3>
+                <h3 className="dashboard-card-title">자동 제어된 A구역 온도</h3>
               </div>
               <div className="dashboard-card-value red" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
               {temp1}
@@ -358,7 +361,7 @@ useEffect(() => {
             <div className="dashboard-card crop-card-hover" data-type="humidity">
               <div className="dashboard-card-section">
                 <Droplets className="dashboard-card-icon blue" />
-                <h3 className="dashboard-card-title">자동 제어 기준 습도</h3>
+                <h3 className="dashboard-card-title">자동 제어된 A구역 습도</h3>
               </div>
               <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
                 {humid1}
@@ -534,15 +537,15 @@ useEffect(() => {
         <div style={{ flex: 1 }}>
           <div className="dashboard-card" data-type="rain">
             <div className="dashboard-card-section">
-              <Cloud className="dashboard-card-icon blue" />
+              <Cloud className="dashboard-card-icon" />
               <h3 className="dashboard-card-title">강수여부</h3>
             </div>
-            <div className="dashboard-card-value blue" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-            { isRain }
-            </div>
-            <div className="dashboard-card-unit" style={{ color: '#3b82f6', fontSize: '0.9rem', marginTop: '4px' }}>
-              상태
-            </div>
+            <div className="dashboard-card-value" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+               {isRain === true ? '🌧️' : isRain === false ? '☀️' : isRain}
+           </div>
+          <div className="dashboard-card-unit" style={{ fontSize: '0.9rem', marginTop: '4px' }}>
+            
+          </div>
           </div>
         </div>
       </div>
@@ -557,8 +560,9 @@ useEffect(() => {
         <NutrientFlowChart farmCode={farmCode} />
       </div>
 
-      {/* 일일 급수량 그래프 - 주석 처리됨 */}
-      {/* 온도 차트 그래프 - 주석 처리됨 */}
+
+
+
     </div>
   );
 };

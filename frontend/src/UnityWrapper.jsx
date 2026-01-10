@@ -14,7 +14,7 @@ class WebGLMessage {
 const getFolderName = (farmType, houseType) => {
   const farmTypeCode = farmType === '고형배지' ? 'S' : farmType === '수경재배' ? 'W' : farmType;
   const houseTypeCode = houseType === '플라스틱온실' ? 'P' : houseType === '유리온실' ? 'G' : houseType;
-  console.log(`getFolderName: ${farmTypeCode}${houseTypeCode} (${farmType} + ${houseType})`);
+  // //console.log(`getFolderName: ${farmTypeCode}${houseTypeCode} (${farmType} + ${houseType})`);
   return `${farmTypeCode}${houseTypeCode}`; // SP, SG, WP, WG
 };
 
@@ -84,7 +84,7 @@ const useSharedUnityContext = (farmCode,farmType, houseType) => {
   // sendToUnity 함수 (RemoteControlPanel 방식과 동일)
   const sendToUnity = useCallback((eventName, payload) => {
     const message = new WebGLMessage(eventName, payload);
-    console.log("Sending to Unity:", JSON.stringify(message));
+    //console.log("Sending to Unity:", JSON.stringify(message));
     
     try {
       // 여러 가능한 매니저에 시도 (MessageManager 우선)
@@ -157,10 +157,10 @@ const useSharedUnityContext = (farmCode,farmType, houseType) => {
     if (unityContext.loadingProgression === 0 && !unityContext.isLoaded) return;
 
     const progress = Math.round(unityContext.loadingProgression * 100);
-    console.log(`${folderName} Unity 로딩: ${progress}%`);
+    //console.log(`📊 ${folderName} Unity 로딩: ${progress}%`);
     
     if (unityContext.isLoaded && !initializationRef.current) {
-      // console.log(`${folderName} Unity 로딩 완료!`);
+      //console.log(`🎉 ${folderName} Unity 로딩 완료!`);
     }
   }, [unityContext.loadingProgression, unityContext.isLoaded, folderName]);
 
@@ -168,12 +168,12 @@ const useSharedUnityContext = (farmCode,farmType, houseType) => {
   useEffect(() => {
     // 테스트용 전역 함수
     window.sendFarmDataToUnity = () => {
-      console.log('수동으로 농장 데이터 전송 시도...');
+      //console.log('🔧 수동으로 농장 데이터 전송 시도...');
       return sendFarmDataToUnity();
     };
 
     window.testUnityMessage = (eventName = "TEST_EVENT", payload = { test: "data" }) => {
-      console.log('Unity 메시지 테스트...');
+      //console.log('🔧 Unity 메시지 테스트...');
       return sendToUnity(eventName, payload);
     };
 
